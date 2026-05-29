@@ -1,0 +1,120 @@
+.toast-region {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--spacing-2);
+    border-radius: var(--radius-lg);
+    outline: none;
+
+    &[data-focus-visible] {
+        outline: 2px solid var(--focus-ring-color);
+        outline-offset: 2px;
+    }
+}
+
+.toast-container {
+    width: 400px;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .5rem;
+    border-radius: 10px;
+    outline: none;
+    forced-color-adjust: none;
+    view-transition-class: toast;
+
+    &[data-focus-visible] {
+        outline: 2px solid red;
+        outline-offset: 2px;
+    }
+
+    .toast-Button[slot=close] {
+        flex: 0 0 auto;
+        background: none;
+        border: none;
+        appearance: none;
+        height: 1rem;
+        width: 1rem;
+        color: black;
+        padding: 0;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+
+        &[data-hovered] {
+            background: var(--tint-900);
+            box-shadow: none;
+        }
+
+        &[data-focus-visible] {
+            outline: 2px solid var(--highlight-foreground);
+            outline-offset: 2px;
+        }
+
+        &[data-pressed] {
+            background: var(--highlight-pressed);
+            box-shadow: none;
+        }
+    }
+}
+
+.toast-success {
+  background-color: rgb(220, 251, 220) !important;
+  border: 1px solid rgb(0, 180, 0) !important;
+
+  .toast-icon {
+    color: green !important;
+  }
+}
+
+.toast-error {
+  background-color: rgb(255, 220, 220) !important;
+  border: 1px solid red !important;
+
+  .toast-icon {
+    color: red !important;
+  }
+}
+
+.toast-warning {
+  background-color: rgb(255, 240, 210) !important;
+  border: 1px solid orange !important;
+
+  .toast-icon {
+    color: orange !important;
+  }
+}
+
+.toast-info {
+  background-color: rgb(220, 220, 255) !important;
+  border: 1px solid blue !important;
+
+  .toast-icon {
+    color: blue !important;
+  }
+}
+
+::view-transition-new(.toast):only-child {
+  animation: slide-in 400ms;
+}
+
+::view-transition-old(.toast):only-child {
+  animation: slide-out 400ms;
+  animation-fill-mode: forwards;
+}
+
+@keyframes slide-out {
+  to {
+    translate: 100% 0;
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
