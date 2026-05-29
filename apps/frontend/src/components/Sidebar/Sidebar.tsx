@@ -1,6 +1,6 @@
 import './Sidebar.css'
 import logo from '../../assets/logo.png'
-import { RiWrenchLine, RiHome2Line, RiCpuLine, RiPencilRulerLine, RiLogoutBoxRLine, RiGroupLine } from '@remixicon/react';
+import { RiWrenchLine, RiHome2Line, RiCpuLine, RiPencilRulerLine, RiLogoutBoxRLine } from '@remixicon/react';
 import { Link } from '@tanstack/react-router';
 
 interface NavItem {
@@ -45,18 +45,6 @@ const navGroups: NavGroup[] = [
         label: 'Proyectos',
         icon: (
           <RiPencilRulerLine />
-        ),
-      },
-    ],
-  },
-  {
-    title: 'Administrar',
-    items: [
-      {
-        id: 'admin',
-        label: 'Admin',
-        icon: (
-          < RiGroupLine  /> 
         ),
       },
     ],

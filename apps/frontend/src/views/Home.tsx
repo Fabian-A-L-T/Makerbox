@@ -4,10 +4,11 @@ import CardContainer from "@components/ui/CardContainer";
 import { Await, CatchBoundary, getRouteApi } from "@tanstack/react-router";
 import type { Component, Tool } from "@utils/schemas";
 import { AxiosError, type AxiosResponse } from "axios";
+import AdminIndex from "./admin/AdminIndex";
 
 export default function Home(){
     const route = getRouteApi('/_auth/manager/');
-    const {auth: {checkAuth}} = route.useRouteContext();
+    const {auth: {checkAuth, user}} = route.useRouteContext();
     const { toolData, componentData } = route.useLoaderData() as {toolData: Promise<AxiosResponse<Tool[]>>, componentData: Promise<AxiosResponse<Component[]>>, test: Promise<string>};
     return (
         <>
@@ -15,6 +16,9 @@ export default function Home(){
                 <h1 className="text-3xl">Inicio</h1>
                 <p>Bienvenido a makerbox</p>
             </div>
+            { user.role === 'admin' && (
+                <AdminIndex/>
+            )}
             <CardContainer title="Componentes" subtitle="Subidos recientemente" link={{href: '/manager/components', text:'Ver más'}}>
                 <CatchBoundary 
                     getResetKey={() => 'reset'} 

@@ -49,20 +49,18 @@ export default function AdminIndex() {
     ]
 
     return (
-        <div className="w-full flex flex-col gap-4">
-            <div className="">
+        <div className="py-4 w-full flex flex-col gap-4">
+            <div className="text-[var(--color-text)] text-xl">
                 <h1>Panel de control para administradores</h1>
-                <p>Aquí podrás gestionar los distintos componentes del sistema</p>
             </div>
-            <div className="grid grid-cols-4 gap-10">
+            <div className="grid grid-cols-5 gap-10">
                 {features.map((feature) => (
-                    <Link key={feature.link} to={feature.link} className='card flex flex-col'>
-                        <div className="p-10 flex items-center justify-center">
-                            <feature.icon size={64} color="var(--color-text)"/>
+                    <Link key={feature.link} to={feature.link} className='bg-[var(--color-card)] hover:bg-[var(--color-background)] border-1 border-[var(--color-border)] hover:border-[var(--color-primary)] rounded-[var(--border-radius-ui)] flex flex-col hover:-translate-y-[5px] transition-all'>
+                        <div className="p-5 flex items-center justify-center">
+                            <feature.icon size={48} color="var(--color-text)"/>
                         </div>
-                        <div className='card-content'>
+                        <div className='p-2 mx-auto'>
                             <h2 className="card-title" >{feature.title}</h2>
-                            <p className="card-description" >{feature.description}</p>
                         </div>
                     </Link>
                 ))}

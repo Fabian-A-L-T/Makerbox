@@ -32,7 +32,7 @@ function Card({ title, description, status, subtitle, image, link }: cardProps) 
                 </div>
                 <p className="card-description" >{description}</p>
             </div>
-            <div className='p-3 flex gap-1 mt-auto rounded-b-[var(--border-radius-ui)] flex items-center justify-center bg-[#066B69]'>
+            <div className='p-3 flex gap-1 mt-auto rounded-b-[var(--border-radius-ui)] flex items-center justify-center bg-[var(--color-border)]'>
                 <p className="text-md font-semibold text-[var(--color-text-muted)]">Más información</p>
                 <RiArrowRightLine size={18} color='var(--color-text)'/>
             </div>
