@@ -52,7 +52,7 @@ const ComponentSchema = v.object({
     manufacturer_id: v.pipe(v.string(), v.toNumber()),
     stock: v.pipe(v.string(), v.toNumber()),
     stock_min: v.pipe(v.string(), v.toNumber()),
-    metric: v.string(),
+    metric: v.optional(v.string()),
     datasheet_url: v.optional(v.string()),
     image_url: v.optional(v.string()),
     notes: v.optional(v.string()),

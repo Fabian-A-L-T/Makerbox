@@ -24,7 +24,7 @@ class Category {
             if(!validatedId.success) throw new ValidationError();
 
             const rows = await sql`
-                SELECT * FROM categories 
+                SELECT * FROM component_categories 
                 WHERE id = ${validatedId.output} AND deleted_at IS NULL`;
             
             if(!rows.length) throw new NotFoundError();
@@ -36,7 +36,7 @@ class Category {
             if(!validatedData.success) throw new ValidationError();
 
             const rows = await sql`
-                SELECT * FROM categories
+                SELECT * FROM component_categories
                 WHERE name ILIKE ${'%' + (validatedData.output.search ?? '') + '%'} AND deleted_at IS NULL
                 ORDER BY ${sql(validatedData.output.orderBy || 'id')} ${validatedData.output.desc ? sql`DESC` : sql`ASC`}
                 LIMIT ${validatedData.output.limit || 50} OFFSET ${validatedData.output.offset || 0}`;
@@ -49,7 +49,7 @@ class Category {
         if(!validatedData.success) throw validatedData.issues;
 
         const rows = await sql`
-            INSERT INTO categories ${sql(validatedData.output)} 
+            INSERT INTO component_categories ${sql(validatedData.output)} 
             RETURNING *`;
         
         return rows[0];
@@ -63,13 +63,13 @@ class Category {
         if(!validatedData.success) throw validatedData.issues;
 
         const rows = await sql`
-            UPDATE categories SET ${sql(validatedData.output)}, updated_at = now()
+            UPDATE component_categories SET ${sql(validatedData.output)}, updated_at = now()
             WHERE id = ${validatedId.output}
             RETURNING OLD.path as old_path, *`;
 
         if(rows && validatedData.output.path) {
             await sql`
-                UPDATE categories
+                UPDATE component_categories
                 SET path = ${validatedData.output.path} || subpath(path,nlevel(${validatedData.output.path})), updated_at = now() 
                 where path ~ ${`${rows[0].old_path}.*{1,}`}
             `;
@@ -84,7 +84,7 @@ class Category {
         if(!validatedId.success) throw new ValidationError();
 
         const rows = await sql`
-            UPDATE categories SET deleted_at = now(), updated_at = now()
+            UPDATE component_categories SET deleted_at = now(), updated_at = now()
             WHERE id = ${validatedId.output}  AND deleted_at IS NULL
             RETURNING *`;
         
@@ -95,7 +95,7 @@ class Category {
     static async getChildren(path?: string){
         if (!path) {
             const rows = await sql`
-                SELECT * FROM categories 
+                SELECT * FROM component_categories 
                 WHERE nlevel(path) = 1`;
             return rows;
         }
@@ -105,7 +105,7 @@ class Category {
         const queryPath = '*.' + validatedPath.output + '.*';
 
         const rows = await sql`
-            SELECT * FROM categories 
+            SELECT * FROM component_categories 
             WHERE path ~ ${queryPath}`;
         return rows;
     }

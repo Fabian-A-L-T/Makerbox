@@ -13,7 +13,7 @@ class User {
             const rows = await sql`
                 SELECT ${sql(userShow)}
                 FROM users
-                WHERE id = ${validatedId.output}`;
+                WHERE id = ${validatedId.output} AND deleted_at IS NULL`;
 
             if(!rows.length) throw new NotFoundError();
             return rows[0];
@@ -22,7 +22,7 @@ class User {
             const rows = await sql`
                 SELECT ${sql(userShow)}
                 FROM users
-                WHERE active = true`;
+                WHERE deleted_at IS NULL`;
             return rows;
         }
     }
@@ -52,7 +52,7 @@ class User {
             
             const rows = await sql`
                 UPDATE users SET ${sql(validatedData.output)}
-                WHERE id = ${validatedId.output}
+                WHERE id = ${validatedId.output} AND deleted_at IS NULL
                 RETURNING ${sql(userShow)}`;
             
             if(!rows.length) throw new NotFoundError();
@@ -68,8 +68,8 @@ class User {
             if(!validatedId.success) throw new ValidationError();
             
             const rows = await sql`
-                UPDATE users SET active = true, deleted_at = null, updated_at = now() 
-                WHERE id = ${validatedId.output} AND active = false 
+                UPDATE users SET deleted_at = null, updated_at = now() 
+                WHERE id = ${validatedId.output} AND deleted_at IS NOT NULL
                 RETURNING ${sql(userShow)}`;
 
             if(!rows.length) throw new NotFoundError();
@@ -85,8 +85,8 @@ class User {
             if(!validatedId.success) throw new ValidationError();
             
             const rows = await sql`
-                UPDATE users SET active = false, deleted_at = now(), updated_at = now() 
-                WHERE id = ${validatedId.output} AND active = true 
+                UPDATE users SET deleted_at = now(), updated_at = now() 
+                WHERE id = ${validatedId.output} deleted_at IS NULL
                 RETURNING ${sql(userShow)}`;
             
             if(!rows.length) throw new NotFoundError();
@@ -100,11 +100,11 @@ class User {
         try {
             const validatedEmail = safeParse(UserEmail, email);
             if(!validatedEmail.success) throw new ValidationError();
-
+            
             const rows = await sql`
                 SELECT id, name, email, role, passwd
                 FROM users
-                WHERE email = ${validatedEmail.output} AND active = true`;
+                WHERE email = ${validatedEmail.output} AND deleted_at IS NULL`;
 
             if(!rows.length) throw new NotFoundError();
             return rows[0];
@@ -121,7 +121,7 @@ class User {
             const rows = await sql`
                 SELECT id
                 FROM users
-                WHERE email = ${validatedEmail.output} AND active = true`;
+                WHERE email = ${validatedEmail.output} AND deleted_at IS NULL`;
 
             if(!rows.length) return false;
             return true;

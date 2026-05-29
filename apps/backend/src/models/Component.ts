@@ -27,7 +27,7 @@ class Component {
 
             const rows = await sql`
                 SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.metric, comp.datasheet_url, comp.image_url, comp.notes, c.name AS category, m.name AS manufacturer FROM components comp
-                JOIN categories c ON comp.category_id = c.id
+                JOIN component_categories c ON comp.category_id = c.id
                 JOIN manufacturers m ON comp.manufacturer_id = m.id
                 WHERE id = ${validatedId.output} AND comp.deleted_at IS NULL`;
 
@@ -40,7 +40,7 @@ class Component {
             if (validatedData.issues) throw new ValidationError();
             const rows = await sql`
                 SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.metric, comp.datasheet_url, comp.image_url, comp.notes, c.name AS category, m.name AS manufacturer FROM components comp
-                JOIN categories c ON comp.category_id = c.id
+                JOIN component_categories c ON comp.category_id = c.id
                 JOIN manufacturers m ON comp.manufacturer_id = m.id
                 WHERE comp.name ILIKE ${'%' + (validatedData.output.search || '') + '%'} AND comp.deleted_at IS NULL
                 ${validatedData.output.category ? sql`AND category_id = ${validatedData.output.category}` : sql``}
