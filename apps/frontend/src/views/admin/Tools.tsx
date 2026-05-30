@@ -7,6 +7,7 @@ import type { Tool, Category, Manufacturer, Location } from "@utils/schemas";
 import { useState } from "react";
 import axios, { type AxiosResponse } from "axios";
 import {getRouteApi} from '@tanstack/react-router';
+import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
 
 export default function Tools() {
 
@@ -132,6 +133,11 @@ export default function Tools() {
     }
 
     return (
+        <>
+        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <Breadcrumb>Herramientas</Breadcrumb>
+        </Breadcrumbs>
         <CRUDView<Tool>
             title="Herramientas"
             columns={columns}
@@ -142,5 +148,6 @@ export default function Tools() {
             createForm={<ToolForm allCategories={categories} allManufacturers={manufacturers} allLocation={locations} setImage={setImage} setFile={setFile} />}
             editForm={<ToolForm target={crud.targetData} allCategories={categories} allManufacturers={manufacturers} allLocation={locations} setImage={setImage} setFile={setFile}/>}
         />
+        </>
     );
 }   

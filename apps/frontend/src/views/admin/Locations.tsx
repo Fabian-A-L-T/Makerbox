@@ -7,6 +7,7 @@ import { LocationForm } from '../forms/LocationForms';
 import type { Location } from '@utils/schemas';
 import {getRouteApi} from '@tanstack/react-router';
 import CRUDTableActions from '@components/CRUDTableActions';
+import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 
 const route = getRouteApi('/_auth/manager/admin/locations');
 
@@ -67,6 +68,11 @@ export default function Locations() {
     }
 
     return (
+        <>
+        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <Breadcrumb>Ubicaciones</Breadcrumb>
+        </Breadcrumbs>
         <CRUDView<Location>
             title="Ubicaciones"
             subtitle="Gestión de ubicaciones de componentes y herramientas"
@@ -78,5 +84,6 @@ export default function Locations() {
             createForm={<LocationForm allLocations={allLocations} />}
             editForm={<LocationForm target={crud.targetData} allLocations={allLocations} />}
         />
+        </>
     );
 }

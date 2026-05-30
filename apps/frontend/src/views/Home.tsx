@@ -28,7 +28,7 @@ export default function Home(){
                     }}
                 >
                     <Await promise={componentData} fallback={<div className='col-span-4 my-20'><LoadingCircle/></div>}>
-                        {(response) => { return response.data.length 
+                        {(response) => { return response.data.length
                             ? response.data.map((component) => (
                                 <Card
                                     key={component.id} 

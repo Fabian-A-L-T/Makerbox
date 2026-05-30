@@ -177,8 +177,7 @@ function Components() {
                             title={component.name} 
                             description={component.description} 
                             subtitle={component.manufacturer} 
-                            image={'/' + component.image_url} 
-                            footer={`Stock: ${component.stock}`} 
+                            image={'/' + component.image_url}
                             link={`/manager/components/${component.id}`}
                         />
                     )) : null}

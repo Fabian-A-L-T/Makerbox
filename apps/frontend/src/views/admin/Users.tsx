@@ -6,6 +6,7 @@ import type { User } from '@utils/schemas';
 import {getRouteApi} from '@tanstack/react-router';
 import CRUDTableActions from '@components/CRUDTableActions';
 import type { AxiosResponse } from 'axios';
+import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 
 export default function Users(){
 
@@ -45,6 +46,11 @@ export default function Users(){
     ];
 
     return(
+        <>
+        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <Breadcrumb>Usuarios</Breadcrumb>
+        </Breadcrumbs>
         <CRUDView<User>
             title="Usuarios"
             subtitle="Aquí puedes gestionar los usuarios del sistema"
@@ -56,5 +62,6 @@ export default function Users(){
             createForm={<UserCreateForm />}
             editForm={<UserEditForm user={crud.targetData} />}
         />
+        </>
     )
 }

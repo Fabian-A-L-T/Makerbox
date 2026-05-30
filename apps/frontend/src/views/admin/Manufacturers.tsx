@@ -6,6 +6,7 @@ import type { Manufacturer } from '@utils/schemas';
 import ManufacturerForm from '@views/forms/ManufacturerForms';
 import {getRouteApi} from '@tanstack/react-router';
 import type { AxiosResponse } from 'axios';
+import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 
 export default function Manufacturers(){
 
@@ -31,6 +32,11 @@ export default function Manufacturers(){
     ];
     
     return(
+        <>
+        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <Breadcrumb>Fabricantes</Breadcrumb>
+        </Breadcrumbs>
         <CRUDView<Manufacturer>
             title="Fabricantes"
             subtitle="Aquí puedes gestionar los fabricantes de componentes electrónicos y herramientas."
@@ -42,5 +48,6 @@ export default function Manufacturers(){
             createForm={<ManufacturerForm/>}
             editForm={<ManufacturerForm target={crud.targetData}/>}
         />
+        </>
     )
 }

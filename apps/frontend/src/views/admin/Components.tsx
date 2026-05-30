@@ -7,6 +7,7 @@ import type { Component, Category, Manufacturer } from "@utils/schemas";
 import { useState } from "react";
 import axios, { type AxiosResponse } from "axios";
 import {getRouteApi} from '@tanstack/react-router';
+import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
 
 export default function Components() {
 
@@ -130,6 +131,11 @@ export default function Components() {
     }
 
     return (
+        <>
+        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <Breadcrumb>Componentes</Breadcrumb>
+        </Breadcrumbs>
         <CRUDView<Component>
             title="Componentes"
             columns={columns}
@@ -140,5 +146,6 @@ export default function Components() {
             createForm={<ComponentForm allCategories={categories} allManufacturers={manufacturers} setImage={setImage} setFile={setFile} />}
             editForm={<ComponentForm target={crud.targetData} allCategories={categories} allManufacturers={manufacturers} setImage={setImage} setFile={setFile}/>}
         />
+        </>
     );
 }   

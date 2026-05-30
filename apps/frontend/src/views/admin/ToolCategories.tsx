@@ -8,6 +8,7 @@ import axios from 'axios';
 import CategoryForm from '@views/forms/CategoryForms';
 import CRUDView from '@components/CRUDView';
 import CRUDTableActions from '@components/CRUDTableActions';
+import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 
 export default function ToolCategories() {
     
@@ -68,6 +69,11 @@ export default function ToolCategories() {
     }
 
     return (
+        <>
+        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <Breadcrumb>Categorias de herramientas</Breadcrumb>
+        </Breadcrumbs>
         <CRUDView<Category>
             title="Categorías de herramientas" 
             subtitle="Gestión de categorías de herramientas"
@@ -79,5 +85,6 @@ export default function ToolCategories() {
             createForm={<CategoryForm allCategories={allCategories}/>}
             editForm={<CategoryForm allCategories={allCategories} target={crud.targetData}/>}
         />
+        </>
     )
 }
