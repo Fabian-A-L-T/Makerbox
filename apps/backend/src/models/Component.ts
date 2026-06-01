@@ -13,7 +13,7 @@ const componentQuerySchema = v.object({
     manufacturer: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number())),
     limit: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.maxValue(100))),
     offset: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(0))),
-    orderBy: v.optional(v.picklist(sortableColumns)),
+    orderBy: v.optional(v.fallback(v.picklist(sortableColumns), 'name')),
     desc: v.optional(v.pipe(v.string(), v.transform(value => value === 'true'), v.boolean()))
 });
 export type ComponentQueryData = v.InferOutput<typeof componentQuerySchema>;
@@ -35,15 +35,28 @@ class Component {
             return rows[0];
         }
         else {
-            const data = {search, limit, offset, orderBy, desc, category, manufacturer}
+            const data = {search, limit, offset, orderBy, desc, category, manufacturer};
+            let categories: number[] = [];
             const validatedData = safeParse(componentQuerySchema, data);
             if (validatedData.issues) throw new ValidationError();
+
+            if(validatedData.output.category) {
+                const categoryData = await sql`
+                    SELECT * FROM component_categories
+                    WHERE id = ${validatedData.output.category}`;
+                const data = await sql`
+                    SELECT id FROM component_categories
+                    WHERE path ~ ${'*.' + categoryData[0]['path'] + '.*'} AND deleted_at IS NULL`;
+                
+                data.forEach((value) => categories.push(value['id']));
+            }
+
             const rows = await sql`
                 SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.metric, comp.datasheet_url, comp.image_url, comp.notes, c.name AS category, m.name AS manufacturer FROM components comp
                 JOIN component_categories c ON comp.category_id = c.id
                 JOIN manufacturers m ON comp.manufacturer_id = m.id
                 WHERE comp.name ILIKE ${'%' + (validatedData.output.search || '') + '%'} AND comp.deleted_at IS NULL
-                ${validatedData.output.category ? sql`AND category_id = ${validatedData.output.category}` : sql``}
+                ${validatedData.output.category ? sql`AND category_id IN ${sql(categories)}` : sql``}
                 ${validatedData.output.manufacturer ? sql`AND manufacturer_id = ${validatedData.output.manufacturer}` : sql``}
                 ORDER BY ${sql(validatedData.output.orderBy ? 'comp.'+validatedData.output.orderBy : 'comp.name')} ${validatedData.output.desc ? sql`DESC` : sql`ASC`}
                 LIMIT ${validatedData.output.limit || 50} OFFSET ${validatedData.output.offset || 0}`;
