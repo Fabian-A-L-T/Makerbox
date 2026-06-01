@@ -50,10 +50,8 @@ export default function CRUDView<T extends { id: number; name: string }>({
     createForm,
     editForm,
 }: CRUDViewProps<T>) {
-    const {
-        resourceLabel, modalMode, isModalOpen, setIsModalOpen, isSubmitting, modalProps, openModal, handleSubmit,
-    } = crud;
 
+    const { resourceLabel, modalMode, isModalOpen, setIsModalOpen, isSubmitting, modalProps, openModal, handleSubmit } = crud;
     const { currentPage, limit, maxPages } = paginationData;
     
     const activeForm: React.ReactNode =
@@ -82,8 +80,6 @@ export default function CRUDView<T extends { id: number; name: string }>({
                                     totalPages={parsed.length}
                                     currentPage={currentPage}
                                     cursor={Math.floor((currentPage-1)/maxPages)}
-                                    prev={() => null}
-                                    next={() => null}
                                 />
                             </>
                         ):

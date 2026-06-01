@@ -6,71 +6,58 @@ interface PaginationProps {
     totalPages: number,
     currentPage: number,
     cursor: number,
-    prev: (page: number) => void,
-    next: (page: number) => void;
-
+    filters?: Record<string, string | number | boolean>,
+    mask?: Record<string, string | number | boolean | undefined>
 }
 
-function PaginationLink({ children, ...props}: {children: React.ReactNode, className?: string, to:string, onClick?: (() => void) | undefined, search: Record<string, any>} ){
-    return (
-        <Link 
-            to={props.to} 
-            onClick={props.onClick} 
-            search={props.search}
-            preload={false}
-            activeProps={{
-                className: '!bg-[var(--color-primary)] text-white font-bold !border-none',
-            }}
-            className= {`p-2 h-10 inline-flex justify-center items-center bg-[var(--color-card)] text-[var(--color-text)] text-semibold hover:bg-[var(--color-secondary)]/25 rounded-[var(--border-radius-ui)] border border-[var(--color-border)] ${props.className}`}
-        >
-            {children}
-        </Link>
-    )
-}
-
-export default function Pagination({maxPages, totalPages, currentPage, cursor, prev ,next}: PaginationProps){
+export default function Pagination({maxPages, totalPages, currentPage, cursor, filters, mask}: PaginationProps){
     const nPages = totalPages >= maxPages 
         ? maxPages 
         : totalPages;
+    const activeStyle = '!bg-[var(--color-primary)] text-white font-bold !border-none'
+    const linkStyle = 'p-2 h-10 inline-flex justify-center items-center bg-[var(--color-card)] text-[var(--color-text)] text-semibold hover:bg-[var(--color-secondary)]/25 rounded-[var(--border-radius-ui)] border border-[var(--color-border)]'
     
     return (
         <div className='w-full flex justify-center my-10'>
             <div className='flex gap-2'>
-                <PaginationLink 
-                        className={currentPage >= maxPages ? '' : 'invisible'}
-                        to={'.'}
-                        onClick={() => currentPage%maxPages == 1 ? prev(currentPage - 1) : undefined} 
-                        key={'anterior'} 
-                        aria-label={`Página anterior`}
-                        search={{page: currentPage - 1}}
-                    >
-                        <RiArrowLeftSLine size={20}/>
-                        <span className="px-2">Anterior</span>
-                </PaginationLink>
+                <Link 
+                    to={'.'}
+                    search={{...filters, page: currentPage - 1}}
+                    mask={{to: '.', search: {...filters, page: currentPage - 1, ...mask}}}
+                    key={'anterior'} 
+                    aria-label={`Página anterior`}
+                    className={`${linkStyle} ${currentPage >= maxPages ? '' : 'invisible'}`}
+                >
+                    <RiArrowLeftSLine size={20}/>
+                    <span className="px-2">Anterior</span>
+                </Link>
                 {
                     Array.from({ length: nPages }).map((_, index) => (
-                        <PaginationLink
-                            className="w-10"
+                        <Link
+                            disabled={cursor*maxPages + index + 1 === currentPage}
+                            to={`.`}
+                            search={{...filters, page: cursor*maxPages + index + 1}}
+                            mask={{to: '.', search: {...filters, page: cursor*maxPages + index + 1, ...mask}}}
                             key={index}
                             aria-label={`Página ${cursor*maxPages + index + 1}`} 
-                            to={`.`}
-                            search={{page: cursor*maxPages + index + 1}}
+                            className={`w-10 ${linkStyle} ${cursor*maxPages + index + 1 === currentPage ? '!bg-[var(--color-primary)] text-white font-bold !border-none' : ''}`}
                         >
                             {cursor*maxPages + index + 1}
-                        </PaginationLink>
+                        </Link>
                     ))
                 }
-                <PaginationLink 
-                    className={!(totalPages <= maxPages && currentPage%totalPages == 0) ? '' : 'invisible'}
-                    onClick={() => currentPage%maxPages == 0 ? next(currentPage + 1) : undefined} 
+                <Link 
+                    to={'.'} 
+                    search={{...filters, page: currentPage + 1}}
+                    mask={{to: '.', search: {...filters, page: currentPage + 1, ...mask}}}
                     key={'siguiente'} 
                     aria-label={`Página siguiente`} 
-                    to={`.`} 
-                    search={{page: currentPage + 1}}
+                    className={`${linkStyle} ${!(totalPages <= maxPages && currentPage%totalPages == 0) ? '' : 'invisible'}`}
+                    
                 >
                     <span className="px-2">Siguiente</span>
                     <RiArrowRightSLine size={20}/>
-                </PaginationLink>
+                </Link>
             </div>
         </div>
     )
