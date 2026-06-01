@@ -1,192 +1,176 @@
 import Card from "@components/ui/Card";
-import { RiFilterLine, RiSearchLine, RiCloseLine, RiSortNumberAsc, RiSortNumberDesc, RiSortAlphabetDesc, RiSortAlphabetAsc } from '@remixicon/react';
+import { RiSearchLine, RiSortNumberAsc, RiSortNumberDesc, RiSortAlphabetDesc, RiSortAlphabetAsc } from '@remixicon/react';
 import "@styles/components.css";
 import type { Category, Component, Manufacturer } from '@utils/schemas';
-import useFetch from '@utils/useFetch';
 import Pagination from "@components/ui/Pagination";
-import { getRouteApi, Link } from '@tanstack/react-router';
-import StatusWrapper from "@components/StatusWrapper";
-import { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
+import { useRef, useState } from 'react';
+import { AxiosError, type AxiosResponse } from 'axios';
+import TextField from "@components/form/TextField";
+import { Select, SelectItem } from "@components/form/Select";
+import { chunk } from "lodash";
+import { Button } from "@components/form/Button";
+import AwaitWrapper from "@components/AwaitWrapper";
 
-const route = getRouteApi('/_auth/manager/components');
+export default function Components() {
 
-function Components() {
-    const { page = 1 } = route.useSearch();
-    const { data: components, maxPages, status, filter, setFilter } = useFetch<Component>({url: '/api/components', page});
+    const route = getRouteApi('/_auth/manager/components');
+    const { page, desc, orderBy, category, manufacturer, search } = route.useSearch();
+    const {checkAuth, pagination: {limit, maxPages}} = route.useRouteContext();
+    const { categories, manufacturers, components } = route.useLoaderData() as {categories: AxiosResponse<Category[]>, manufacturers: AxiosResponse<Manufacturer[]>, components: Promise<AxiosResponse<Component[]>>};
+    const navigate = useNavigate();
 
-    // Local search state with debounce
-    const [searchInput, setSearchInput] = useState(filter.search ?? '');
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [filters, setFilters] = useState<Record<string, any>>({
+        page: page,
+        search: search || '',
+        desc: desc || false,
+        orderBy: orderBy || 'name',
+        category: category || 0,
+        manufacturer: manufacturer || 0
+    });
 
-    // Categories & manufacturers for selects
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
+    function handleFilterChange(value: string | number | boolean, key: 'page' | 'search' | 'orderBy' | 'desc' | 'category' | 'manufacturer', debounce?: number) {
+        
+        let temp: Record<string, any> = {...filters, page: 1};
+        if(value || value != 0) temp[key] = value;
+        else temp[key] = undefined;
+        setFilters(temp);
 
-    useEffect(() => {
-        axios.get<Category[]>('/api/component-categories').then(r => setCategories(r.data)).catch(() => {});
-        axios.get<Manufacturer[]>('/api/manufacturers').then(r => setManufacturers(r.data)).catch(() => {});
-    }, []);
-
-    function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const value = e.target.value;
-        setSearchInput(value);
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(() => {
-            setFilter(prev => ({ ...prev, cursor: 0, search: value || undefined }));
-        }, 400);
-    }
-
-    function clearSearch() {
-        setSearchInput('');
-        setFilter(prev => ({ ...prev, cursor: 0, search: undefined }));
-    }
-
-    function handleCategoryChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        const val = e.target.value;
-        setFilter(prev => ({ ...prev, cursor: 0, category: val ? parseInt(val) : undefined }));
-    }
-
-    function handleManufacturerChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        const val = e.target.value;
-        setFilter(prev => ({ ...prev, cursor: 0, manufacturer: val ? parseInt(val) : undefined }));
-    }
-
-    function handleOrderByChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        const val = e.target.value as 'id' | 'name' | '';
-        setFilter(prev => ({ ...prev, cursor: 0, orderBy: val || undefined }));
-    }
-
-    function handleOrderDirChange() {
-        setFilter(prev => ({ ...prev, cursor: 0, desc: !prev.desc }));
-    }
-
-    function next(){
-        setFilter({
-            ...filter,
-            cursor: filter.cursor + 1
-        });
-    }
-
-    function prev(){
-        if(filter.cursor == 0) return;
-        setFilter({ 
-            ...filter,
-            cursor: filter.cursor - 1
-        });
+            navigate({
+                to: '.',
+                search: temp,
+                mask: {to: '.', search: {...temp, orderBy: undefined, desc: undefined, search: undefined}}
+            });
+        }, debounce);
     }
 
     return (
         <div>
-            <div className="flex justify-between items-center">
-                <h1 className="header-text">Componentes</h1>
+            <div className="flex flex-col">
+                <h1 className="text-[var(--color-text)] text-2xl">Componentes</h1>
+                <span className="text-[var(--color-text-muted)] text-md">Aquí podrás encontrar los componentes electronicos disponibles en inventario</span>
             </div>
-            <div className="filter-container flex flex-col gap-2">
-                <div className="filter-header flex items-center gap-2">
-                    <RiFilterLine/>
-                    <h2>Filtros</h2>
-                </div>
-                <div className="filter-options flex gap-4 flex-wrap">
-                    {/* Search */}
-                    <div className="filter-field">
-                        <label className="filter-label">Buscar</label>
-                        <div className="filter-search-wrapper">
-                            <RiSearchLine className="filter-search-icon" size={16}/>
-                            <input
-                                id="filter-search"
-                                type="text"
-                                placeholder="Nombre, SKU…"
-                                value={searchInput}
-                                onChange={handleSearchChange}
-                                className="filter-search-input"
-                            />
-                            {searchInput && (
-                                <button className="filter-clear-btn" onClick={clearSearch} aria-label="Limpiar búsqueda">
-                                    <RiCloseLine size={14}/>
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Category */}
-                    <div className="filter-field">
-                        <label htmlFor="filter-category" className="filter-label">Categoría</label>
-                        <select
-                            id="filter-category"
-                            value={filter.category ?? ''}
-                            onChange={handleCategoryChange}
+            <div className="flex flex-col gap-4 my-8 p-4 text-[var(--color-text)] bg-[var(--color-card)] border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)]">
+                <div className="pb-4 flex items-center gap-4 border-b-2 border-[var(--color-border)]">
+                    <TextField label="Buscar"
+                        value={filters.search}
+                        onChange={(value) => handleFilterChange(value, 'search', 400)}
+                        placeholder="Ej: LED Rojo" 
+                        className='w-full border-r-2 border-[var(--color-border)] pr-4' 
+                        icon={<RiSearchLine className="m-2" color="var(--color-text-muted)" size={18}/>}
+                    />
+                    <div className="flex gap-2">
+                        <Select label="Ordenar por"
+                            value={filters.orderBy}
+                            placeholder="Seleccione"
+                            onChange={(value) => handleFilterChange(value as string, 'orderBy')}
+                            className='!w-[var(--select-w-xs)]'
                         >
-                            <option value="">Todas</option>
-                            {categories.map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Manufacturer */}
-                    <div className="filter-field">
-                        <label htmlFor="filter-manufacturer" className="filter-label">Fabricante</label>
-                        <select
-                            id="filter-manufacturer"
-                            value={filter.manufacturer ?? ''}
-                            onChange={handleManufacturerChange}
-                        >
-                            <option value="">Todos</option>
-                            {manufacturers.map(m => (
-                                <option key={m.id} value={m.id}>{m.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Order by */}
-                    <div className="filter-field">
-                        <label htmlFor="filter-orderby" className="filter-label">Ordenar por</label>
-                        <select
-                            id="filter-orderby"
-                            value={filter.orderBy ?? ''}
-                            onChange={handleOrderByChange}
-                        >
-                            <option value="name">Nombre</option>
-                            <option value="stock">Stock</option>
-                        </select>
-                    </div>
-
-                    {/* Order direction */}
-                    <div className="filter-field">
+                            <SelectItem id='name'>Nombre</SelectItem>
+                            <SelectItem id='created_at'>Fecha</SelectItem>
+                            <SelectItem id='stock'>Stock</SelectItem>
+                        </Select>
                         <Link
-                            id="filter-orderdir"
-                            onClick={handleOrderDirChange}
-                            className="filter-btn"
+                            onClick={() => handleFilterChange(!desc, 'desc')}
                             to={'.'}
-                            search={{page: 1}}
+                            search={{...filters, page: 1}}
                             resetScroll={false}
+                            className="mt-auto p-2 aspect-square text-[var(--color-text)] bg-[var(--color-form-select-bg)] hover:bg-[var(--color-form-select-bg)]/60 border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)] outline-none"
                         >
-                            {filter.orderBy == 'stock'
-                                ? (filter.desc ? <RiSortNumberDesc /> : <RiSortNumberAsc />) 
-                                : (filter.desc ? <RiSortAlphabetDesc /> : <RiSortAlphabetAsc />)}
+                            {filters.orderBy == 'stock'
+                                ? (filters.desc ? <RiSortNumberDesc size={20}/> : <RiSortNumberAsc size={20}/>) 
+                                : (filters.desc ? <RiSortAlphabetDesc size={20} /> : <RiSortAlphabetAsc size={20}/>)}
                         </Link>
                     </div>
                 </div>
-            </div>
-            <StatusWrapper status={status} loadingMsg="Buscando componentes...">
-                <>
-                <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
-                    {components[(page-1)%maxPages] ? components[(page-1)%maxPages].map((component) => (
-                        <Card
-                            key={component.id} 
-                            title={component.name} 
-                            description={component.description} 
-                            subtitle={component.manufacturer} 
-                            image={'/' + component.image_url}
-                            link={`/manager/components/${component.id}`}
-                        />
-                    )) : null}
+                <div className="flex justify-between gap-4 flex-wrap">
+                    <div className="flex gap-2">
+                        <Select label="Categoría" 
+                            defaultValue={0}
+                            value={filters.category}
+                            placeholder="Seleccione"
+                            onChange={(value) => handleFilterChange(value as number, 'category')} 
+                            items={categories.data} 
+                            className='!w-[var(--select-w-sm)]'
+                        >
+                            <SelectItem key='' id={0} >Todos</SelectItem>
+                            {categories.data.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
+                        </Select>
+                        <Select label="Fabricante" 
+                            defaultValue={0}
+                            value={filters.manufacturer}
+                            placeholder="Seleccione"
+                            onChange={(value) => handleFilterChange(value as number, 'manufacturer')}
+                            className='!w-[var(--select-w-sm)]'
+                        >
+                            <SelectItem key='' id={0} >Todos</SelectItem>
+                            {manufacturers.data.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
+                        </Select>
+                    </div>
+                    <Button 
+                        variant="primary"
+                        className='my-auto'
+                        onPress={() => {
+                            setFilters((prev) => ({...prev, page:1, manufacturer: 0, category: 0}));
+                            navigate({
+                                to: '.', 
+                                search: {...filters, page: 1, category: undefined, manufacturer:undefined},
+                                mask: {to: '.', search: {page:1}}
+                            })
+                        }}
+                    >
+                        Limpiar filtros
+                    </Button>
                 </div>
-                <Pagination maxPages={maxPages} totalPages={components.length} currentPage={page} cursor={filter.cursor} prev={prev} next={next}/>
-                </>
-            </StatusWrapper>
+            </div>
+            <AwaitWrapper<AxiosResponse<Component[]>> asyncData={components} onCatch={(error) => {if(error instanceof AxiosError) checkAuth(); throw error;}}>
+                {(response) => {
+                    let chunks = chunk(response.data, Math.floor(limit/maxPages));
+                    return chunks.length && chunks[(page-1)%maxPages] ? (
+                        <>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 gap-4'>
+                            {chunks[(page-1)%maxPages].map((component) => (
+                                <Card
+                                    key={component.id} 
+                                    title={component.name} 
+                                    {... component.stock > component.stock_min 
+                                        ? {status:{text:'Stock disponible', color:'var(--color-success)'}} 
+                                        : (component.stock != 0) 
+                                            ? {status:{text:'Quedan pocos', color:'var(--color-warning)'}}  
+                                            : {status:{text:'Sin stock', color:'var(--color-danger)'}}}
+                                    description={component.description} 
+                                    subtitle={component.manufacturer} 
+                                    {... component.image_url ? {image:'/' + component.image_url} : {}}
+                                    link={`/manager/components/${component.id}`}
+                                />
+                            ))}
+                        </div>
+                        <Pagination 
+                            maxPages={maxPages} 
+                            totalPages={chunks.length} 
+                            currentPage={page} 
+                            cursor={Math.floor((page-1)/maxPages)} 
+                            filters={filters}
+                            mask={{ 
+                                orderBy: undefined, 
+                                desc: undefined, 
+                                search: undefined, 
+                                ...(filters.category === 0 && {category: undefined}),
+                                ...(filters.manufacturer === 0 && {manufacturer: undefined})
+                            }}
+                        />
+                        </>
+                    ) :
+                    (
+                        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-400 text-sm">
+                            <strong>No se han encontrado resultados</strong>
+                        </div>
+                    )
+                }}
+            </AwaitWrapper>
         </div>
     )
 }
-
-export default Components

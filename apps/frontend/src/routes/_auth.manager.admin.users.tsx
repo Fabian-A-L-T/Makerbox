@@ -11,7 +11,7 @@ export const Route = createFileRoute('/_auth/manager/admin/users')({
 		desc: search.desc 
 	}),
 	loader: async ({deps: {page, search, orderBy, desc}, context: { pagination: {limit, maxPages} }}) => {
-		const data = fetchData<User>('/api/users', {page, limit, maxPages, search, orderBy, desc});
+		const data = fetchData<User>('/api/users', {pagination: {page, limit, maxPages}, search, orderBy, desc});
 		const test = await 'asd';
 		return { data, test };
 	},

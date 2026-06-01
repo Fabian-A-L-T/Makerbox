@@ -1,10 +1,10 @@
-import { object, optional, fallback, pipe, number, minValue, string, minLength, maxLength, boolean } from "valibot";
+import { object, optional, fallback, pipe, number, minValue, string, maxLength, boolean } from "valibot";
 
 export const resourceQuerySchema = object({
     page: optional(fallback(pipe(number(), minValue(1)),1),1),
-    search: optional(pipe(string(), minLength(3), maxLength(128))),
-    orderBy: optional(pipe(string(), minLength(1))),
-    desc: optional( boolean())
+	search: optional(pipe(string(), maxLength(200, 'Texto de búsqueda muy largo'))),
+	orderBy: optional(string()),
+	desc: optional(fallback(boolean(), false))
 })
 
 export interface User {

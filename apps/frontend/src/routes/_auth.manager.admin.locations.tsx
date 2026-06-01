@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_auth/manager/admin/locations')({
         desc: search.desc 
     }),
     loader: async ({deps: {page, search, orderBy, desc}, context: { pagination: {limit, maxPages} }}) => {
-        const data = fetchData<Location>('/api/locations', {page, limit, maxPages, search, orderBy, desc});
+        const data = fetchData<Location>('/api/locations', {pagination: {page, limit, maxPages}, search, orderBy, desc});
         const test = await 'asd';
         return { data, test };
     },

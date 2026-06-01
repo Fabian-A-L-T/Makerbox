@@ -11,7 +11,7 @@ export const Route = createFileRoute('/_auth/manager/admin/categories/components
       desc: search.desc
     }),
 	loader: async ({deps: {page, search, orderBy, desc}, context: { pagination: {limit, maxPages} }}) => {
-		const data = fetchData<Category>('/api/component-categories', {page, limit, maxPages, search, orderBy, desc});
+		const data = fetchData<Category>('/api/component-categories', {pagination: {page, limit, maxPages}, search, orderBy, desc});
 		const test = await 'asd';
 		return { data, test };
 	},
