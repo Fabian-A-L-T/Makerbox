@@ -36,7 +36,7 @@ function Card({ title, description, status, subtitle, image, link }: cardProps) 
     return (
         <a href={link} className={cardStyle} target='_blank' rel='noopener noreferrer'>
             <div className='p-2 card-image'>
-                <AsyncImg className='rounded-[var(--border-radius-ui)]' src={image ?? 'uploads/images/placeholder.png'} alt={title}/>
+                <AsyncImg className='rounded-[var(--border-radius-ui)]' src={image ?? '/uploads/images/placeholder.png'} alt={title}/>
             </div>
             <div className='px-4 py-2 flex flex-col gap-2'>
                 {status &&
