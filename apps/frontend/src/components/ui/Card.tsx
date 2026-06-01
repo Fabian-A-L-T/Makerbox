@@ -40,7 +40,7 @@ function Card({ title, description, status, subtitle, image, link }: cardProps) 
             </div>
             <div className='px-4 py-2 flex flex-col gap-2'>
                 {status &&
-                <div className='px-2 py-1 flex gap-1 align-center items-center rounded-full bg-[#4F4F4F] w-max'>
+                <div className='px-2 py-1 flex gap-1 align-center items-center rounded-full bg-[var(--color-border)] w-max'>
                      <RiCircleFill size={14} color={status?.color}/> 
                      <span className=' text-[var(--color-text)] text-xs'>{status?.text}</span>
                 </div>
