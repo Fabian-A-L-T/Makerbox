@@ -29,7 +29,7 @@ export function FieldButton(props: ButtonProps) {
 }
 
 export function FieldGroup(props: GroupProps) {
-  return <Group {...props} className={`${props.className || ''} flex`} />;
+  return <Group {...props} className={`${props.className || ''} flex items-center`} />;
 }
 
 export function Input(props: InputProps){
