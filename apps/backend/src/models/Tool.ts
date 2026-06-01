@@ -55,11 +55,9 @@ class Tool {
 
     static async create(data: ToolCreateData) {
         try {
-            console.log(data);
+
             const validatedData = safeParse(ToolCreate, data);
-            if (!validatedData.success) {
-                console.log(validatedData.issues);
-                throw new ValidationError();}
+            if (!validatedData.success) throw new ValidationError();
 
             const tool = await sql`
                 INSERT INTO tools ${sql(validatedData.output)} 
