@@ -1,9 +1,8 @@
-import LoadingCircle from '@components/LoadingCircle';
 import { RiCircleFill, RiArrowRightLine } from '@remixicon/react';
 import '@styles/card.scss'
 import { useEffect, useState, type DetailedHTMLProps, type ImgHTMLAttributes } from 'react';
 
-const cardStyle = 'h-[440px] w-[260px] bg-[var(--color-card)] hover:bg-[var(--color-background)] border-1 border-[var(--color-border)] hover:border-[var(--color-primary)] rounded-[var(--border-radius-ui)] flex flex-col hover:-translate-y-[5px] transition-all';
+const cardStyle = 'h-[440px] w-[260px] bg-[var(--color-card)] hover:bg-[var(--color-background)] border-1 border-[var(--color-border)] hover:border-[var(--color-primary)] rounded-[var(--border-radius-ui)] flex flex-col hover:-translate-y-[5px] transition-transform';
 
 interface cardProps {
     title: string, 

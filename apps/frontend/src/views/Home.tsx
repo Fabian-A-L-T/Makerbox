@@ -73,7 +73,7 @@ export default function Home(){
                                             case 'in_use': return {status:{text:'En uso', color:'var(--color-warning)'}};
                                             case 'maintenance':   return {status:{text:'En mantenimiento', color:'var(--color-primary)'}};
                                             case 'disposed':   return {status:{text:'Desechado', color:'var(--color-danger)'}};
-                                            case 'lent':   return {status:{text:'En mantenimiento', color:'var(--color-primary)'}};
+                                            case 'lent':   return {status:{text:'Prestado', color:'var(--color-warning)'}};
                                             default:        return null;
                                             }
                                         })()}
