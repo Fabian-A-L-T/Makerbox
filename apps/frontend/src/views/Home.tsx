@@ -41,7 +41,7 @@ export default function Home(){
                                     description={component.description} 
                                     subtitle={component.manufacturer} 
                                     {... component.image_url ? {image:'/' + component.image_url} : {}}
-                                    link={`/manager/components/${component.id}`}
+                                    link={{pathname: '/manager/components/$id', id: component.id}}
                                 />
                             )) 
                             :(
@@ -80,7 +80,7 @@ export default function Home(){
                                         description={tool.location}
                                         subtitle={tool.manufacturer}
                                         {... tool.image_url ? {image:'/' + tool.image_url} : {}}
-                                        link={`/manager/components/${tool.id}`}
+                                        link={{pathname: '/manager/tools/$id', id: tool.id}}
                                     />
                                 )) 
                                 :(

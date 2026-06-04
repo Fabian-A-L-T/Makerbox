@@ -1,5 +1,5 @@
 import Card from "@components/ui/Card";
-import { RiSearchLine, RiSortNumberAsc, RiSortNumberDesc, RiSortAlphabetDesc, RiSortAlphabetAsc } from '@remixicon/react';
+import { RiSearchLine, RiSortAlphabetDesc, RiSortAlphabetAsc } from '@remixicon/react';
 import "@styles/components.css";
 import type { Category, Manufacturer, Tool } from '@utils/schemas';
 import Pagination from "@components/ui/Pagination";
@@ -157,7 +157,7 @@ export default function Tools() {
                                     description={''}
                                     subtitle={tool.manufacturer}
                                     {... tool.image_url ? {image:'/' + tool.image_url} : {}}
-                                    link={`/manager/components/${tool.id}`}
+                                    link={{pathname: '/manager/tools/$id', id: tool.id}}
                                 />
                             ))}
                         </div>

@@ -11,10 +11,11 @@ import { Select, SelectItem } from "@components/form/Select";
 import { chunk } from "lodash";
 import { Button } from "@components/form/Button";
 import AwaitWrapper from "@components/AwaitWrapper";
+import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
 
 export default function Components() {
 
-    const route = getRouteApi('/_auth/manager/components');
+    const route = getRouteApi('/_auth/manager/components/');
     const { page, desc, orderBy, category, manufacturer, search } = route.useSearch();
     const {checkAuth, pagination: {limit, maxPages}} = route.useRouteContext();
     const { categories, manufacturers, components } = route.useLoaderData() as {categories: AxiosResponse<Category[]>, manufacturers: AxiosResponse<Manufacturer[]>, components: Promise<AxiosResponse<Component[]>>};
@@ -49,6 +50,10 @@ export default function Components() {
 
     return (
         <div>
+            <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+                <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+                <Breadcrumb>Componentes</Breadcrumb>
+            </Breadcrumbs>
             <div className="flex flex-col">
                 <h1 className="text-[var(--color-text)] text-2xl">Componentes</h1>
                 <span className="text-[var(--color-text-muted)] text-md">Aquí podrás encontrar los componentes electronicos disponibles en inventario</span>
@@ -131,7 +136,7 @@ export default function Components() {
                     let chunks = chunk(response.data, Math.floor(limit/maxPages));
                     return chunks.length && chunks[(page-1)%maxPages] ? (
                         <>
-                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 gap-4'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-4'>
                             {chunks[(page-1)%maxPages].map((component) => (
                                 <Card
                                     key={component.id} 
@@ -144,7 +149,7 @@ export default function Components() {
                                     description={component.description} 
                                     subtitle={component.manufacturer} 
                                     {... component.image_url ? {image:'/' + component.image_url} : {}}
-                                    link={`/manager/components/${component.id}`}
+                                    link={{pathname: '/manager/components/$id', id: component.id}}
                                 />
                             ))}
                         </div>

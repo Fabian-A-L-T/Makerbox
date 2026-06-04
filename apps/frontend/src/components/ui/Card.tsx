@@ -1,7 +1,7 @@
 import { RiCircleFill, RiArrowRightLine } from '@remixicon/react';
 import '@styles/card.scss'
 import { useEffect, useState, type DetailedHTMLProps, type ImgHTMLAttributes } from 'react';
-
+import {Link} from '@tanstack/react-router';
 const cardStyle = 'h-[440px] w-[260px] bg-[var(--color-card)] hover:bg-[var(--color-background)] border-1 border-[var(--color-border)] hover:border-[var(--color-primary)] rounded-[var(--border-radius-ui)] flex flex-col hover:-translate-y-[5px] transition-transform';
 
 interface cardProps {
@@ -13,7 +13,10 @@ interface cardProps {
         color: string
     },
     image?: string, 
-    link?: string 
+    link: {
+        pathname: string,
+        id?: string | number
+    }
 }
 
 function AsyncImg(props: DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>,HTMLImageElement>): React.ReactNode{
@@ -33,7 +36,11 @@ function AsyncImg(props: DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>,H
 
 function Card({ title, description, status, subtitle, image, link }: cardProps) {
     return (
-        <a href={link} className={cardStyle} target='_blank' rel='noopener noreferrer'>
+        <Link 
+            to={link?.pathname} 
+            {...(link?.id && { params: { id: link?.id } })}
+            className={cardStyle}
+        >
             <div className='p-2 card-image'>
                 <AsyncImg className='rounded-[var(--border-radius-ui)]' src={image ?? '/uploads/images/placeholder.png'} alt={title}/>
             </div>
@@ -54,7 +61,7 @@ function Card({ title, description, status, subtitle, image, link }: cardProps) 
                 <p className="text-md font-semibold text-[var(--color-text-muted)]">Más información</p>
                 <RiArrowRightLine size={18} color='var(--color-text)'/>
             </div>
-        </a>
+        </Link>
     )
 }
 export default Card;
