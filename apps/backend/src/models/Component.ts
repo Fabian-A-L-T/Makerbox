@@ -26,10 +26,10 @@ class Component {
             if (!validatedId.success) throw new ValidationError();
 
             const rows = await sql`
-                SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.metric, comp.datasheet_url, comp.image_url, comp.notes, c.name AS category, m.name AS manufacturer FROM components comp
+                SELECT comp.*, c.name AS category, m.name AS manufacturer FROM components comp
                 JOIN component_categories c ON comp.category_id = c.id
                 JOIN manufacturers m ON comp.manufacturer_id = m.id
-                WHERE id = ${validatedId.output} AND comp.deleted_at IS NULL`;
+                WHERE comp.id = ${validatedId.output} AND comp.deleted_at IS NULL`;
 
             if (!rows.length) throw new NotFoundError();
             return rows[0];
