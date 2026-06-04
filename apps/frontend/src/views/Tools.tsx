@@ -14,7 +14,7 @@ import AwaitWrapper from "@components/AwaitWrapper";
 
 export default function Tools() {
 
-    const route = getRouteApi('/_auth/manager/tools');
+    const route = getRouteApi('/_auth/manager/tools/');
     const { page, desc, orderBy, category, manufacturer, search } = route.useSearch();
     const {checkAuth, pagination: {limit, maxPages}} = route.useRouteContext();
     const { categories, manufacturers, components } = route.useLoaderData() as {categories: AxiosResponse<Category[]>, manufacturers: AxiosResponse<Manufacturer[]>, components: Promise<AxiosResponse<Tool[]>>};
