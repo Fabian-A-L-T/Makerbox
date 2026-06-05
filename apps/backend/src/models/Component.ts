@@ -122,10 +122,10 @@ class Component {
         if(!validatedId.success) throw new ValidationError();
 
         const rows = await sql`
-            SELECT cu.*, u.name AS location_name
-            FROM component_location cu
-            JOIN locations u ON cu.location_id = u.id
-            WHERE cu.component_id = ${validatedId.output}`;
+            SELECT cl.*, l.name AS location_name
+            FROM component_location cl
+            JOIN locations l ON cl.location_id = l.id
+            WHERE cl.component_id = ${validatedId.output}`;
 
         return rows;
     }
