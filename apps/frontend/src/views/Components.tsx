@@ -136,17 +136,17 @@ export default function Components() {
                     let chunks = chunk(response.data, Math.floor(limit/maxPages));
                     return chunks.length && chunks[(page-1)%maxPages] ? (
                         <>
-                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-5 gap-4'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 3xl:grid-cols-5 gap-4'>
                             {chunks[(page-1)%maxPages].map((component) => (
                                 <Card
                                     key={component.id} 
                                     title={component.name} 
-                                    {... component.stock > component.stock_min 
+                                    {... component.stock >= component.stock_min 
                                         ? {status:{text:'Stock disponible', color:'var(--color-success)'}} 
                                         : (component.stock != 0) 
                                             ? {status:{text:'Quedan pocos', color:'var(--color-warning)'}}  
                                             : {status:{text:'Sin stock', color:'var(--color-danger)'}}}
-                                    description={component.description} 
+                                    description={''} 
                                     subtitle={component.manufacturer} 
                                     {... component.image_url ? {image:'/' + component.image_url} : {}}
                                     link={{pathname: '/manager/components/$id', id: component.id}}
