@@ -29,8 +29,7 @@ export interface Location {
 }
 
 export interface ComponentLocation {
-    id: number;
-    name: string;
+    location_name: string;
     component_id: number;
     location_id: number;
     amount: number;
@@ -51,6 +50,7 @@ export interface Component {
     datasheet_url: string;
     image_url: string;
     notes: string;
+    created_at: string
 }
 
 export interface Manufacturer {
@@ -78,4 +78,5 @@ export interface Tool {
     calibration_required: boolean
     next_calibration_date: string
     notes: string
+    created_at: string
 }
