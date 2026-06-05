@@ -90,6 +90,13 @@ class ToolCategory {
             WHERE id = ${validatedId.output}  AND deleted_at IS NULL
             RETURNING *`;
         
+        if(rows) {
+            await sql`
+                UPDATE tool_categories
+                SET deleted_at = now(), updated_at = now() 
+                where path ~ ${`${rows[0].path}.*{1,}`}
+            `;
+        }
         if(!rows.length) throw new NotFoundError();
         return rows[0];
     }
