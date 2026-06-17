@@ -1,9 +1,9 @@
 import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from '@components/ui/Tabs';
 import { parseAbsoluteToLocal } from '@internationalized/date';
-import { RiCircleFill, RiFileDownloadLine } from '@remixicon/react';
+import { RiArrowRightSLine, RiCircleFill, RiFileDownloadLine } from '@remixicon/react';
 import { getRouteApi } from '@tanstack/react-router';
-import type { Tool } from '@utils/schemas';
+import type { Tool } from '../interfaces/schemas';
 
 export default function ToolInfo() {
     
@@ -12,6 +12,9 @@ export default function ToolInfo() {
 
     const parseDate = parseAbsoluteToLocal(tool.created_at);
     const publishedDate = parseDate.day.toString() + '/' + parseDate.month.toString() + '/' + parseDate.year.toString();
+
+    const categoryRoute = tool.category.replaceAll('_', ' ').split('.');
+    const category = categoryRoute.at(-1);
 
     let statusColor;
     
@@ -50,11 +53,22 @@ export default function ToolInfo() {
                 <div className="flex flex-col justify-between xl:w-3/5 lg:w-1/2">
                     <div className='flex flex-col'>
                         <div className="flex justify-between mb-4">
-                            <span className="text-xs text-[var(--color-text-muted)]">SKU: {tool.sku}</span>
-                            <span className="text-xs text-[var(--color-text-muted)]">Publicado el: {publishedDate}</span>
+                            <div className='flex items-center'>
+                                <p className="text-sm text-[var(--color-text-muted)] mr-2">Categoría:</p>
+                                {categoryRoute.map((cat, index) => (
+                                    <div key={index} className='flex w-max'>
+                                        <p className="text-sm text-[var(--color-text-muted)]">{cat}</p>
+                                        {index !== categoryRoute.length - 1 && (<RiArrowRightSLine color='var(--color-text-muted)' size={20}/>)}
+                                    </div>
+                                ))}
+                            </div>
+                            <span className="text-sm text-[var(--color-text-muted)]">Publicado el: {publishedDate}</span>
                         </div>
                         <div className="flex flex-col gap-4 mb-4 text-[var(--color-text)]">
-                            <h1 className="text-3xl font-bold ">{tool.name}</h1>
+                            <div className='flex flex-col gap-1 py-2'>
+                                <h1 className="text-3xl font-bold ">{tool.name}</h1>
+                                <span className="text-sm text-[var(--color-text-muted)]">SKU: {tool.sku}</span>
+                            </div>
                             <div className=' border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)] overflow-hidden'>
                                 <div className='w-full px-3 py-2 flex justify-between align-center items-center bg-[var(--color-border)]'>
                                     <div className='flex gap-2 items-center'>
@@ -68,7 +82,7 @@ export default function ToolInfo() {
                             <p className="text-[var(--color-text-muted)] py-2">Modelo: {tool.model}</p>
                             <p className="text-[var(--color-text-muted)] py-2">Número de serie: {tool.serial_number}</p>
                             <p className="text-[var(--color-text-muted)] py-2">Fabricante: {tool.manufacturer}</p>
-                            <p className="text-[var(--color-text-muted)] py-2">Categoría: {tool.category}</p>
+                            <p className="text-[var(--color-text-muted)] py-2">Categoría: {category}</p>
                             <p className="text-[var(--color-text-muted)] py-2">Ubicación: {tool.location}</p>
                         </div>
                     </div>

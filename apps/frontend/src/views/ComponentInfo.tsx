@@ -1,9 +1,9 @@
 import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from '@components/ui/Tabs';
 import { parseAbsoluteToLocal } from '@internationalized/date';
-import { RiCircleFill, RiFileDownloadLine } from '@remixicon/react';
+import { RiArrowRightSLine, RiCircleFill, RiFileDownloadLine } from '@remixicon/react';
 import { getRouteApi } from '@tanstack/react-router';
-import type { Component, ComponentLocation } from '@utils/schemas';
+import type { Component, ComponentLocation } from '../interfaces/schemas';
 
 export default function ComponentInfo() {
     
@@ -12,7 +12,10 @@ export default function ComponentInfo() {
 
     const parseDate = parseAbsoluteToLocal(components.created_at);
     const publishedDate = parseDate.day.toString() + '/' + parseDate.month.toString() + '/' + parseDate.year.toString();
-
+    
+    const categoryRoute = components.category.replaceAll('_', ' ').split('.');
+    const category = categoryRoute.at(-1);
+    
     let statusColor = {color: 'var(--color-success)', status: 'Disponible'};
     
     if (components.stock == 0) {
@@ -38,11 +41,21 @@ export default function ComponentInfo() {
                 <div className="flex flex-col justify-between xl:w-3/5 lg:w-1/2">
                     <div className='flex flex-col'>
                         <div className="flex justify-between mb-4">
-                            <span className="text-xs text-[var(--color-text-muted)]">SKU: {components.sku}</span>
-                            <span className="text-xs text-[var(--color-text-muted)]">Publicado el: {publishedDate}</span>
+                            <div className='flex items-center'>
+                                {categoryRoute.map((cat, index) => (
+                                    <div key={index} className='flex w-max'>
+                                        <p className="text-sm text-[var(--color-text-muted)]">{cat}</p>
+                                        {index !== categoryRoute.length - 1 && (<RiArrowRightSLine color='var(--color-text-muted)' size={20}/>)}
+                                    </div>
+                                ))}
+                            </div>
+                            <span className="text-sm text-[var(--color-text-muted)]">Publicado el: {publishedDate}</span>
                         </div>
                         <div className="flex flex-col gap-4 mb-4 text-[var(--color-text)]">
-                            <h1 className="text-3xl font-bold ">{components.name}</h1>
+                            <div className='flex flex-col gap-1 py-2'>
+                                <h1 className="text-3xl font-bold ">{components.name}</h1>
+                                <span className="text-sm text-[var(--color-text-muted)]">SKU: {components.sku}</span>
+                            </div>
                             <div className=' border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)] overflow-hidden'>
                                 <div className='w-full px-3 py-2 flex justify-between align-center items-center bg-[var(--color-border)]'>
                                     <div className='flex gap-2 items-center'>
@@ -52,10 +65,13 @@ export default function ComponentInfo() {
                                     <span className='text-sm'>{'Stock: ' + components.stock.toString()}</span>
                                 </div>
                                 {locations.length > 0 &&
-                                    <div className='p-4 divide-y-2 divide-[var(--color-border)]'>
+                                    <div className='p-2 divide-y-2 divide-[var(--color-border)]'>
                                         {locations.map((value) => 
-                                            <div className='flex justify-between w-full'>
-                                                <span>{value.location_name}</span>
+                                            <div key={value.location_id} className='flex justify-between items-center w-full p-2'>
+                                                <div className='flex flex-col'>
+                                                    <span>{value.location_name}</span>
+                                                    <span className='text-xs text-[var(--color-text-muted)]'>{value.location_route.replaceAll('_', ' ').replaceAll('.', ' > ')}</span>
+                                                </div>
                                                 <span>{value.amount}</span>
                                             </div>
                                         )}
@@ -65,7 +81,7 @@ export default function ComponentInfo() {
                         </div>
                         <div className='divide-y-2 divide-[var(--color-border)]'>
                             <p className="text-[var(--color-text-muted)] py-2">Fabricante: {components.manufacturer}</p>
-                            <p className="text-[var(--color-text-muted)] py-2">Categoría: {components.category}</p>
+                            <p className="text-[var(--color-text-muted)] py-2">Categoría: {category}</p>
                             {components.metric && <p className="text-[var(--color-text-muted)] py-2">Valor: {components.metric}</p>}
                         </div>
                     </div>
