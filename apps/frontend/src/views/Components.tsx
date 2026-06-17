@@ -1,7 +1,7 @@
 import Card from "@components/ui/Card";
 import { RiSearchLine, RiSortNumberAsc, RiSortNumberDesc, RiSortAlphabetDesc, RiSortAlphabetAsc } from '@remixicon/react';
 import "@styles/components.css";
-import type { Category, Component, Manufacturer } from '@utils/schemas';
+import type { Category, Component, Manufacturer } from '../interfaces/schemas';
 import Pagination from "@components/ui/Pagination";
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
 import { useRef, useState } from 'react';
@@ -50,15 +50,15 @@ export default function Components() {
 
     return (
         <div>
-            <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+            <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
                 <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
                 <Breadcrumb>Componentes</Breadcrumb>
             </Breadcrumbs>
-            <div className="flex flex-col">
-                <h1 className="text-[var(--color-text)] text-2xl">Componentes</h1>
-                <span className="text-[var(--color-text-muted)] text-md">Aquí podrás encontrar los componentes electronicos disponibles en inventario</span>
+            <div className="m-5">
+                <h1 className="text-[var(--color-text)] text-3xl">Componentes</h1>
+                <p className="text-[var(--color-text-muted)]">Aquí podrás encontrar los componentes electronicos disponibles en inventario</p>
             </div>
-            <div className="flex flex-col gap-4 my-8 p-4 text-[var(--color-text)] bg-[var(--color-card)] border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)]">
+            <div className="m-5 makerbox-box flex flex-col gap-5">
                 <div className="pb-4 flex items-center gap-4 border-b-2 border-[var(--color-border)]">
                     <TextField label="Buscar"
                         value={filters.search}
@@ -136,7 +136,7 @@ export default function Components() {
                     let chunks = chunk(response.data, Math.floor(limit/maxPages));
                     return chunks.length && chunks[(page-1)%maxPages] ? (
                         <>
-                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 3xl:grid-cols-5 gap-4'>
+                        <div className='m-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 3xl:grid-cols-5 gap-4'>
                             {chunks[(page-1)%maxPages].map((component) => (
                                 <Card
                                     key={component.id} 
