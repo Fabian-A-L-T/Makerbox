@@ -49,7 +49,7 @@ export interface UseCRUDReturn<T> {
     handleSubmit: (formData?: FormData) => Promise<void>;
 }
 
-export function useCRUD<T extends { id: number; name: string }>({apiRoute, resourceLabel, extraFetch, checkAuth}: UseCRUDOptions<T>): UseCRUDReturn<T> {
+export function useCRUD<T extends { id: number }>({apiRoute, resourceLabel, extraFetch, checkAuth}: UseCRUDOptions<T>): UseCRUDReturn<T> {
 
     const [modalMode, setModalMode] = useState<CRUDMode>('post');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -147,7 +147,7 @@ export function useCRUD<T extends { id: number; name: string }>({apiRoute, resou
 
                 queueMsg = {
                     title: 'Operación exitosa',
-                    description: `${resourceLabel} "${formData.get('name') ?? targetData?.name}" ${modalMode === 'post' ? 'creado' : 'actualizado'} exitosamente.`,
+                    description: `${resourceLabel} ${modalMode === 'post' ? 'creado' : 'actualizado'} exitosamente.`,
                     color: 'success',
                 };
             }
@@ -156,7 +156,7 @@ export function useCRUD<T extends { id: number; name: string }>({apiRoute, resou
 
                 queueMsg = {
                     title: 'Operación exitosa',
-                    description: `${resourceLabel} {${targetData.name}} eliminado exitosamente.`,
+                    description: `${resourceLabel} eliminado exitosamente.`,
                     color: 'success',
                 };
             }
