@@ -19,11 +19,9 @@ function CMSLayout({ children, userData, logout }: { children: React.ReactNode, 
         activeId={cleanPath}
         logout={logout}
       />
-      <div className="app__body">
-        <main className="app__main">
-          {children}
-        </main>
-      </div>
+      <main className="w-full p-5 overflow-y-auto bg-[var(--color-background)]">
+        {children}
+      </main>
     </div>
   )
 }
