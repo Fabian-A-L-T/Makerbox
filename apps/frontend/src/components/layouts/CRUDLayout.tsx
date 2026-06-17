@@ -2,15 +2,15 @@ import CRUDHeader from '@components/CRUDHeader';
 import CRUDModal from '@components/CRUDModal';
 import { StatusToast } from '@components/ReactAria/Toast';
 import { type ColumnDef } from '@components/ui/Table';
-import { type UseCRUDReturn } from '@utils/useCRUD';
-import Pagination from './ui/Pagination';
-import Table from './ui/Table';
+import { type UseCRUDReturn } from '../../hooks/useCRUD';
+import Pagination from '../ui/Pagination';
+import Table from '../ui/Table';
 import { Await, CatchBoundary } from '@tanstack/react-router';
-import LoadingCircle from './LoadingCircle';
+import LoadingCircle from '../LoadingCircle';
 import { chunk } from 'lodash';
 import { AxiosError, type AxiosResponse } from 'axios';
 
-interface CRUDViewProps<T extends { id: number; name: string }> {
+interface CRUDLayoutProps<T extends { id: number; name: string }> {
     /** Page heading and "create" button label source */
     title: string;
     /** Page subtitle source */
@@ -39,7 +39,7 @@ interface CRUDViewProps<T extends { id: number; name: string }> {
  *  - CRUD Modal with form and actions
  *  - Status Toast
  */
-export default function CRUDView<T extends { id: number; name: string }>({
+export default function CRUDLayout<T extends { id: number; name: string }>({
     title,
     subtitle,
     data,
@@ -49,7 +49,7 @@ export default function CRUDView<T extends { id: number; name: string }>({
     crud,
     createForm,
     editForm,
-}: CRUDViewProps<T>) {
+}: CRUDLayoutProps<T>) {
 
     const { resourceLabel, modalMode, isModalOpen, setIsModalOpen, isSubmitting, modalProps, openModal, handleSubmit } = crud;
     const { currentPage, limit, maxPages } = paginationData;
@@ -74,7 +74,7 @@ export default function CRUDView<T extends { id: number; name: string }>({
                         let parsed = chunk(response.data, Math.floor(limit/maxPages));
                         return parsed.length ? (
                             <>
-                                <Table aria-label={`Tabla de ${resourceLabel}s`} columns={columns} rows={parsed[(currentPage-1)%maxPages] || []}/>
+                                <Table aria-label={`Tabla de ${resourceLabel}s`} columns={columns} rows={parsed[(currentPage-1)%maxPages] || []} rowHeader='id'/>
                                 <Pagination
                                     maxPages={maxPages}
                                     totalPages={parsed.length}
