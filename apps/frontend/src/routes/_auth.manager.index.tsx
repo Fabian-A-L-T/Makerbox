@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { type Component, type Tool } from '@utils/schemas'
+import { type Project } from '../interfaces/schemas'
 import { fetchData } from '@utils/CRUDUtils';
 import Home from '@views/Home';
 

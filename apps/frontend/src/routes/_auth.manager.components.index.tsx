@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { fetchData } from '@utils/CRUDUtils';
-import { resourceQuerySchema, type Category, type Component, type Manufacturer } from '@utils/schemas';
+import { resourceQuerySchema, type Category, type Component, type Manufacturer } from '../interfaces/schemas';
 import Components from '@views/Components';
 import { AxiosError } from 'axios';
 import { object, optional, pipe, number, minValue } from "valibot";

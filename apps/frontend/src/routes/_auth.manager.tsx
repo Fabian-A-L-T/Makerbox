@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import CMSLayout from '@layouts/CMSLayout';
+import CMSLayout from '@components/layouts/MakerboxLayout';
 import NotFound from '@views/errors/NotFound';
 
 export const Route = createFileRoute('/_auth/manager')({

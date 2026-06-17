@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import Components from '@views/admin/Components';
-import { type Component } from '@utils/schemas';
+import { type Component } from '../interfaces/schemas';
 import { fetchData } from '@utils/CRUDUtils';
 
 export const Route = createFileRoute('/_auth/manager/admin/components')({

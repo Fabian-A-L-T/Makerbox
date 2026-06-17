@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import Manufacturers from '@views/admin/Manufacturers';
-import { type Manufacturer} from '@utils/schemas';
+import { type Manufacturer} from '../interfaces/schemas';
 import { fetchData } from '@utils/CRUDUtils';
 
 export const Route = createFileRoute('/_auth/manager/admin/manufacturers')({

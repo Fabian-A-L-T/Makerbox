@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { fetchData } from '@utils/CRUDUtils';
-import { resourceQuerySchema, type Category, type Manufacturer, type Tool } from '@utils/schemas';
+import { resourceQuerySchema, type Category, type Manufacturer, type Tool } from '../interfaces/schemas';
 import ServerError from '@views/errors/ServerError';
 import Tools from '@views/Tools';
 import { AxiosError } from 'axios';

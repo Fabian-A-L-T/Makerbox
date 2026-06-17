@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { fetchData } from '@utils/CRUDUtils';
-import type { Tool } from '@utils/schemas';
+import type { Tool } from '../interfaces/schemas';
 import ToolInfo from '@views/ToolInfo';
 
 export const Route = createFileRoute('/_auth/manager/tools/$id')({

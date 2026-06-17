@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { fetchData } from '@utils/CRUDUtils';
-import type { Category } from '@utils/schemas';
+import type { Category } from '../interfaces/schemas';
 import ToolCategories from '@views/admin/ToolCategories';
 
 export const Route = createFileRoute('/_auth/manager/admin/categories/tools')({

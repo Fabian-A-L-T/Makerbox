@@ -1,6 +1,6 @@
 import { RiLoader4Line } from '@remixicon/react';
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { resourceQuerySchema } from '@utils/schemas';
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { resourceQuerySchema } from '../interfaces/schemas';
 import ServerError from '@views/errors/ServerError';
 
 export const Route = createFileRoute('/_auth/manager/admin')({
@@ -15,5 +15,4 @@ export const Route = createFileRoute('/_auth/manager/admin')({
 	beforeLoad: ({ context: {auth} }) => {
 		if (auth.user?.role !== 'admin') throw redirect({ to: '/manager'});
 	},
-	component: Outlet,
 })
