@@ -15,18 +15,24 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthManagerRouteImport } from './routes/_auth.manager'
 import { Route as AuthManagerIndexRouteImport } from './routes/_auth.manager.index'
 import { Route as AuthManagerToolsRouteImport } from './routes/_auth.manager.tools'
+import { Route as AuthManagerProjectsRouteImport } from './routes/_auth.manager.projects'
 import { Route as AuthManagerComponentsRouteImport } from './routes/_auth.manager.components'
 import { Route as AuthManagerAdminRouteImport } from './routes/_auth.manager.admin'
 import { Route as AuthManagerToolsIndexRouteImport } from './routes/_auth.manager.tools.index'
+import { Route as AuthManagerProjectsIndexRouteImport } from './routes/_auth.manager.projects.index'
 import { Route as AuthManagerComponentsIndexRouteImport } from './routes/_auth.manager.components.index'
 import { Route as AuthManagerAdminIndexRouteImport } from './routes/_auth.manager.admin.index'
 import { Route as AuthManagerToolsIdRouteImport } from './routes/_auth.manager.tools.$id'
+import { Route as AuthManagerProjectsIdRouteImport } from './routes/_auth.manager.projects.$id'
 import { Route as AuthManagerComponentsIdRouteImport } from './routes/_auth.manager.components.$id'
 import { Route as AuthManagerAdminUsersRouteImport } from './routes/_auth.manager.admin.users'
 import { Route as AuthManagerAdminToolsRouteImport } from './routes/_auth.manager.admin.tools'
+import { Route as AuthManagerAdminProjectsRouteImport } from './routes/_auth.manager.admin.projects'
+import { Route as AuthManagerAdminMovementsRouteImport } from './routes/_auth.manager.admin.movements'
 import { Route as AuthManagerAdminManufacturersRouteImport } from './routes/_auth.manager.admin.manufacturers'
 import { Route as AuthManagerAdminLocationsRouteImport } from './routes/_auth.manager.admin.locations'
 import { Route as AuthManagerAdminComponentsRouteImport } from './routes/_auth.manager.admin.components'
+import { Route as AuthManagerAdminCategoriesRouteImport } from './routes/_auth.manager.admin.categories'
 import { Route as AuthManagerAdminCategoriesToolsRouteImport } from './routes/_auth.manager.admin.categories.tools'
 import { Route as AuthManagerAdminCategoriesComponentsRouteImport } from './routes/_auth.manager.admin.categories.components'
 
@@ -59,6 +65,11 @@ const AuthManagerToolsRoute = AuthManagerToolsRouteImport.update({
   path: '/tools',
   getParentRoute: () => AuthManagerRoute,
 } as any)
+const AuthManagerProjectsRoute = AuthManagerProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AuthManagerRoute,
+} as any)
 const AuthManagerComponentsRoute = AuthManagerComponentsRouteImport.update({
   id: '/components',
   path: '/components',
@@ -74,6 +85,12 @@ const AuthManagerToolsIndexRoute = AuthManagerToolsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthManagerToolsRoute,
 } as any)
+const AuthManagerProjectsIndexRoute =
+  AuthManagerProjectsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthManagerProjectsRoute,
+  } as any)
 const AuthManagerComponentsIndexRoute =
   AuthManagerComponentsIndexRouteImport.update({
     id: '/',
@@ -90,6 +107,11 @@ const AuthManagerToolsIdRoute = AuthManagerToolsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthManagerToolsRoute,
 } as any)
+const AuthManagerProjectsIdRoute = AuthManagerProjectsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthManagerProjectsRoute,
+} as any)
 const AuthManagerComponentsIdRoute = AuthManagerComponentsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -105,6 +127,18 @@ const AuthManagerAdminToolsRoute = AuthManagerAdminToolsRouteImport.update({
   path: '/tools',
   getParentRoute: () => AuthManagerAdminRoute,
 } as any)
+const AuthManagerAdminProjectsRoute =
+  AuthManagerAdminProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
+    getParentRoute: () => AuthManagerAdminRoute,
+  } as any)
+const AuthManagerAdminMovementsRoute =
+  AuthManagerAdminMovementsRouteImport.update({
+    id: '/movements',
+    path: '/movements',
+    getParentRoute: () => AuthManagerAdminRoute,
+  } as any)
 const AuthManagerAdminManufacturersRoute =
   AuthManagerAdminManufacturersRouteImport.update({
     id: '/manufacturers',
@@ -123,17 +157,23 @@ const AuthManagerAdminComponentsRoute =
     path: '/components',
     getParentRoute: () => AuthManagerAdminRoute,
   } as any)
+const AuthManagerAdminCategoriesRoute =
+  AuthManagerAdminCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AuthManagerAdminRoute,
+  } as any)
 const AuthManagerAdminCategoriesToolsRoute =
   AuthManagerAdminCategoriesToolsRouteImport.update({
-    id: '/categories/tools',
-    path: '/categories/tools',
-    getParentRoute: () => AuthManagerAdminRoute,
+    id: '/tools',
+    path: '/tools',
+    getParentRoute: () => AuthManagerAdminCategoriesRoute,
   } as any)
 const AuthManagerAdminCategoriesComponentsRoute =
   AuthManagerAdminCategoriesComponentsRouteImport.update({
-    id: '/categories/components',
-    path: '/categories/components',
-    getParentRoute: () => AuthManagerAdminRoute,
+    id: '/components',
+    path: '/components',
+    getParentRoute: () => AuthManagerAdminCategoriesRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -142,17 +182,23 @@ export interface FileRoutesByFullPath {
   '/manager': typeof AuthManagerRouteWithChildren
   '/manager/admin': typeof AuthManagerAdminRouteWithChildren
   '/manager/components': typeof AuthManagerComponentsRouteWithChildren
+  '/manager/projects': typeof AuthManagerProjectsRouteWithChildren
   '/manager/tools': typeof AuthManagerToolsRouteWithChildren
   '/manager/': typeof AuthManagerIndexRoute
+  '/manager/admin/categories': typeof AuthManagerAdminCategoriesRouteWithChildren
   '/manager/admin/components': typeof AuthManagerAdminComponentsRoute
   '/manager/admin/locations': typeof AuthManagerAdminLocationsRoute
   '/manager/admin/manufacturers': typeof AuthManagerAdminManufacturersRoute
+  '/manager/admin/movements': typeof AuthManagerAdminMovementsRoute
+  '/manager/admin/projects': typeof AuthManagerAdminProjectsRoute
   '/manager/admin/tools': typeof AuthManagerAdminToolsRoute
   '/manager/admin/users': typeof AuthManagerAdminUsersRoute
   '/manager/components/$id': typeof AuthManagerComponentsIdRoute
+  '/manager/projects/$id': typeof AuthManagerProjectsIdRoute
   '/manager/tools/$id': typeof AuthManagerToolsIdRoute
   '/manager/admin/': typeof AuthManagerAdminIndexRoute
   '/manager/components/': typeof AuthManagerComponentsIndexRoute
+  '/manager/projects/': typeof AuthManagerProjectsIndexRoute
   '/manager/tools/': typeof AuthManagerToolsIndexRoute
   '/manager/admin/categories/components': typeof AuthManagerAdminCategoriesComponentsRoute
   '/manager/admin/categories/tools': typeof AuthManagerAdminCategoriesToolsRoute
@@ -161,15 +207,20 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/manager': typeof AuthManagerIndexRoute
+  '/manager/admin/categories': typeof AuthManagerAdminCategoriesRouteWithChildren
   '/manager/admin/components': typeof AuthManagerAdminComponentsRoute
   '/manager/admin/locations': typeof AuthManagerAdminLocationsRoute
   '/manager/admin/manufacturers': typeof AuthManagerAdminManufacturersRoute
+  '/manager/admin/movements': typeof AuthManagerAdminMovementsRoute
+  '/manager/admin/projects': typeof AuthManagerAdminProjectsRoute
   '/manager/admin/tools': typeof AuthManagerAdminToolsRoute
   '/manager/admin/users': typeof AuthManagerAdminUsersRoute
   '/manager/components/$id': typeof AuthManagerComponentsIdRoute
+  '/manager/projects/$id': typeof AuthManagerProjectsIdRoute
   '/manager/tools/$id': typeof AuthManagerToolsIdRoute
   '/manager/admin': typeof AuthManagerAdminIndexRoute
   '/manager/components': typeof AuthManagerComponentsIndexRoute
+  '/manager/projects': typeof AuthManagerProjectsIndexRoute
   '/manager/tools': typeof AuthManagerToolsIndexRoute
   '/manager/admin/categories/components': typeof AuthManagerAdminCategoriesComponentsRoute
   '/manager/admin/categories/tools': typeof AuthManagerAdminCategoriesToolsRoute
@@ -182,17 +233,23 @@ export interface FileRoutesById {
   '/_auth/manager': typeof AuthManagerRouteWithChildren
   '/_auth/manager/admin': typeof AuthManagerAdminRouteWithChildren
   '/_auth/manager/components': typeof AuthManagerComponentsRouteWithChildren
+  '/_auth/manager/projects': typeof AuthManagerProjectsRouteWithChildren
   '/_auth/manager/tools': typeof AuthManagerToolsRouteWithChildren
   '/_auth/manager/': typeof AuthManagerIndexRoute
+  '/_auth/manager/admin/categories': typeof AuthManagerAdminCategoriesRouteWithChildren
   '/_auth/manager/admin/components': typeof AuthManagerAdminComponentsRoute
   '/_auth/manager/admin/locations': typeof AuthManagerAdminLocationsRoute
   '/_auth/manager/admin/manufacturers': typeof AuthManagerAdminManufacturersRoute
+  '/_auth/manager/admin/movements': typeof AuthManagerAdminMovementsRoute
+  '/_auth/manager/admin/projects': typeof AuthManagerAdminProjectsRoute
   '/_auth/manager/admin/tools': typeof AuthManagerAdminToolsRoute
   '/_auth/manager/admin/users': typeof AuthManagerAdminUsersRoute
   '/_auth/manager/components/$id': typeof AuthManagerComponentsIdRoute
+  '/_auth/manager/projects/$id': typeof AuthManagerProjectsIdRoute
   '/_auth/manager/tools/$id': typeof AuthManagerToolsIdRoute
   '/_auth/manager/admin/': typeof AuthManagerAdminIndexRoute
   '/_auth/manager/components/': typeof AuthManagerComponentsIndexRoute
+  '/_auth/manager/projects/': typeof AuthManagerProjectsIndexRoute
   '/_auth/manager/tools/': typeof AuthManagerToolsIndexRoute
   '/_auth/manager/admin/categories/components': typeof AuthManagerAdminCategoriesComponentsRoute
   '/_auth/manager/admin/categories/tools': typeof AuthManagerAdminCategoriesToolsRoute
@@ -205,17 +262,23 @@ export interface FileRouteTypes {
     | '/manager'
     | '/manager/admin'
     | '/manager/components'
+    | '/manager/projects'
     | '/manager/tools'
     | '/manager/'
+    | '/manager/admin/categories'
     | '/manager/admin/components'
     | '/manager/admin/locations'
     | '/manager/admin/manufacturers'
+    | '/manager/admin/movements'
+    | '/manager/admin/projects'
     | '/manager/admin/tools'
     | '/manager/admin/users'
     | '/manager/components/$id'
+    | '/manager/projects/$id'
     | '/manager/tools/$id'
     | '/manager/admin/'
     | '/manager/components/'
+    | '/manager/projects/'
     | '/manager/tools/'
     | '/manager/admin/categories/components'
     | '/manager/admin/categories/tools'
@@ -224,15 +287,20 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/manager'
+    | '/manager/admin/categories'
     | '/manager/admin/components'
     | '/manager/admin/locations'
     | '/manager/admin/manufacturers'
+    | '/manager/admin/movements'
+    | '/manager/admin/projects'
     | '/manager/admin/tools'
     | '/manager/admin/users'
     | '/manager/components/$id'
+    | '/manager/projects/$id'
     | '/manager/tools/$id'
     | '/manager/admin'
     | '/manager/components'
+    | '/manager/projects'
     | '/manager/tools'
     | '/manager/admin/categories/components'
     | '/manager/admin/categories/tools'
@@ -244,17 +312,23 @@ export interface FileRouteTypes {
     | '/_auth/manager'
     | '/_auth/manager/admin'
     | '/_auth/manager/components'
+    | '/_auth/manager/projects'
     | '/_auth/manager/tools'
     | '/_auth/manager/'
+    | '/_auth/manager/admin/categories'
     | '/_auth/manager/admin/components'
     | '/_auth/manager/admin/locations'
     | '/_auth/manager/admin/manufacturers'
+    | '/_auth/manager/admin/movements'
+    | '/_auth/manager/admin/projects'
     | '/_auth/manager/admin/tools'
     | '/_auth/manager/admin/users'
     | '/_auth/manager/components/$id'
+    | '/_auth/manager/projects/$id'
     | '/_auth/manager/tools/$id'
     | '/_auth/manager/admin/'
     | '/_auth/manager/components/'
+    | '/_auth/manager/projects/'
     | '/_auth/manager/tools/'
     | '/_auth/manager/admin/categories/components'
     | '/_auth/manager/admin/categories/tools'
@@ -310,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthManagerToolsRouteImport
       parentRoute: typeof AuthManagerRoute
     }
+    '/_auth/manager/projects': {
+      id: '/_auth/manager/projects'
+      path: '/projects'
+      fullPath: '/manager/projects'
+      preLoaderRoute: typeof AuthManagerProjectsRouteImport
+      parentRoute: typeof AuthManagerRoute
+    }
     '/_auth/manager/components': {
       id: '/_auth/manager/components'
       path: '/components'
@@ -330,6 +411,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/manager/tools/'
       preLoaderRoute: typeof AuthManagerToolsIndexRouteImport
       parentRoute: typeof AuthManagerToolsRoute
+    }
+    '/_auth/manager/projects/': {
+      id: '/_auth/manager/projects/'
+      path: '/'
+      fullPath: '/manager/projects/'
+      preLoaderRoute: typeof AuthManagerProjectsIndexRouteImport
+      parentRoute: typeof AuthManagerProjectsRoute
     }
     '/_auth/manager/components/': {
       id: '/_auth/manager/components/'
@@ -352,6 +440,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthManagerToolsIdRouteImport
       parentRoute: typeof AuthManagerToolsRoute
     }
+    '/_auth/manager/projects/$id': {
+      id: '/_auth/manager/projects/$id'
+      path: '/$id'
+      fullPath: '/manager/projects/$id'
+      preLoaderRoute: typeof AuthManagerProjectsIdRouteImport
+      parentRoute: typeof AuthManagerProjectsRoute
+    }
     '/_auth/manager/components/$id': {
       id: '/_auth/manager/components/$id'
       path: '/$id'
@@ -371,6 +466,20 @@ declare module '@tanstack/react-router' {
       path: '/tools'
       fullPath: '/manager/admin/tools'
       preLoaderRoute: typeof AuthManagerAdminToolsRouteImport
+      parentRoute: typeof AuthManagerAdminRoute
+    }
+    '/_auth/manager/admin/projects': {
+      id: '/_auth/manager/admin/projects'
+      path: '/projects'
+      fullPath: '/manager/admin/projects'
+      preLoaderRoute: typeof AuthManagerAdminProjectsRouteImport
+      parentRoute: typeof AuthManagerAdminRoute
+    }
+    '/_auth/manager/admin/movements': {
+      id: '/_auth/manager/admin/movements'
+      path: '/movements'
+      fullPath: '/manager/admin/movements'
+      preLoaderRoute: typeof AuthManagerAdminMovementsRouteImport
       parentRoute: typeof AuthManagerAdminRoute
     }
     '/_auth/manager/admin/manufacturers': {
@@ -394,44 +503,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthManagerAdminComponentsRouteImport
       parentRoute: typeof AuthManagerAdminRoute
     }
+    '/_auth/manager/admin/categories': {
+      id: '/_auth/manager/admin/categories'
+      path: '/categories'
+      fullPath: '/manager/admin/categories'
+      preLoaderRoute: typeof AuthManagerAdminCategoriesRouteImport
+      parentRoute: typeof AuthManagerAdminRoute
+    }
     '/_auth/manager/admin/categories/tools': {
       id: '/_auth/manager/admin/categories/tools'
-      path: '/categories/tools'
+      path: '/tools'
       fullPath: '/manager/admin/categories/tools'
       preLoaderRoute: typeof AuthManagerAdminCategoriesToolsRouteImport
-      parentRoute: typeof AuthManagerAdminRoute
+      parentRoute: typeof AuthManagerAdminCategoriesRoute
     }
     '/_auth/manager/admin/categories/components': {
       id: '/_auth/manager/admin/categories/components'
-      path: '/categories/components'
+      path: '/components'
       fullPath: '/manager/admin/categories/components'
       preLoaderRoute: typeof AuthManagerAdminCategoriesComponentsRouteImport
-      parentRoute: typeof AuthManagerAdminRoute
+      parentRoute: typeof AuthManagerAdminCategoriesRoute
     }
   }
 }
 
-interface AuthManagerAdminRouteChildren {
-  AuthManagerAdminComponentsRoute: typeof AuthManagerAdminComponentsRoute
-  AuthManagerAdminLocationsRoute: typeof AuthManagerAdminLocationsRoute
-  AuthManagerAdminManufacturersRoute: typeof AuthManagerAdminManufacturersRoute
-  AuthManagerAdminToolsRoute: typeof AuthManagerAdminToolsRoute
-  AuthManagerAdminUsersRoute: typeof AuthManagerAdminUsersRoute
-  AuthManagerAdminIndexRoute: typeof AuthManagerAdminIndexRoute
+interface AuthManagerAdminCategoriesRouteChildren {
   AuthManagerAdminCategoriesComponentsRoute: typeof AuthManagerAdminCategoriesComponentsRoute
   AuthManagerAdminCategoriesToolsRoute: typeof AuthManagerAdminCategoriesToolsRoute
 }
 
+const AuthManagerAdminCategoriesRouteChildren: AuthManagerAdminCategoriesRouteChildren =
+  {
+    AuthManagerAdminCategoriesComponentsRoute:
+      AuthManagerAdminCategoriesComponentsRoute,
+    AuthManagerAdminCategoriesToolsRoute: AuthManagerAdminCategoriesToolsRoute,
+  }
+
+const AuthManagerAdminCategoriesRouteWithChildren =
+  AuthManagerAdminCategoriesRoute._addFileChildren(
+    AuthManagerAdminCategoriesRouteChildren,
+  )
+
+interface AuthManagerAdminRouteChildren {
+  AuthManagerAdminCategoriesRoute: typeof AuthManagerAdminCategoriesRouteWithChildren
+  AuthManagerAdminComponentsRoute: typeof AuthManagerAdminComponentsRoute
+  AuthManagerAdminLocationsRoute: typeof AuthManagerAdminLocationsRoute
+  AuthManagerAdminManufacturersRoute: typeof AuthManagerAdminManufacturersRoute
+  AuthManagerAdminMovementsRoute: typeof AuthManagerAdminMovementsRoute
+  AuthManagerAdminProjectsRoute: typeof AuthManagerAdminProjectsRoute
+  AuthManagerAdminToolsRoute: typeof AuthManagerAdminToolsRoute
+  AuthManagerAdminUsersRoute: typeof AuthManagerAdminUsersRoute
+  AuthManagerAdminIndexRoute: typeof AuthManagerAdminIndexRoute
+}
+
 const AuthManagerAdminRouteChildren: AuthManagerAdminRouteChildren = {
+  AuthManagerAdminCategoriesRoute: AuthManagerAdminCategoriesRouteWithChildren,
   AuthManagerAdminComponentsRoute: AuthManagerAdminComponentsRoute,
   AuthManagerAdminLocationsRoute: AuthManagerAdminLocationsRoute,
   AuthManagerAdminManufacturersRoute: AuthManagerAdminManufacturersRoute,
+  AuthManagerAdminMovementsRoute: AuthManagerAdminMovementsRoute,
+  AuthManagerAdminProjectsRoute: AuthManagerAdminProjectsRoute,
   AuthManagerAdminToolsRoute: AuthManagerAdminToolsRoute,
   AuthManagerAdminUsersRoute: AuthManagerAdminUsersRoute,
   AuthManagerAdminIndexRoute: AuthManagerAdminIndexRoute,
-  AuthManagerAdminCategoriesComponentsRoute:
-    AuthManagerAdminCategoriesComponentsRoute,
-  AuthManagerAdminCategoriesToolsRoute: AuthManagerAdminCategoriesToolsRoute,
 }
 
 const AuthManagerAdminRouteWithChildren =
@@ -452,6 +586,19 @@ const AuthManagerComponentsRouteWithChildren =
     AuthManagerComponentsRouteChildren,
   )
 
+interface AuthManagerProjectsRouteChildren {
+  AuthManagerProjectsIdRoute: typeof AuthManagerProjectsIdRoute
+  AuthManagerProjectsIndexRoute: typeof AuthManagerProjectsIndexRoute
+}
+
+const AuthManagerProjectsRouteChildren: AuthManagerProjectsRouteChildren = {
+  AuthManagerProjectsIdRoute: AuthManagerProjectsIdRoute,
+  AuthManagerProjectsIndexRoute: AuthManagerProjectsIndexRoute,
+}
+
+const AuthManagerProjectsRouteWithChildren =
+  AuthManagerProjectsRoute._addFileChildren(AuthManagerProjectsRouteChildren)
+
 interface AuthManagerToolsRouteChildren {
   AuthManagerToolsIdRoute: typeof AuthManagerToolsIdRoute
   AuthManagerToolsIndexRoute: typeof AuthManagerToolsIndexRoute
@@ -468,6 +615,7 @@ const AuthManagerToolsRouteWithChildren =
 interface AuthManagerRouteChildren {
   AuthManagerAdminRoute: typeof AuthManagerAdminRouteWithChildren
   AuthManagerComponentsRoute: typeof AuthManagerComponentsRouteWithChildren
+  AuthManagerProjectsRoute: typeof AuthManagerProjectsRouteWithChildren
   AuthManagerToolsRoute: typeof AuthManagerToolsRouteWithChildren
   AuthManagerIndexRoute: typeof AuthManagerIndexRoute
 }
@@ -475,6 +623,7 @@ interface AuthManagerRouteChildren {
 const AuthManagerRouteChildren: AuthManagerRouteChildren = {
   AuthManagerAdminRoute: AuthManagerAdminRouteWithChildren,
   AuthManagerComponentsRoute: AuthManagerComponentsRouteWithChildren,
+  AuthManagerProjectsRoute: AuthManagerProjectsRouteWithChildren,
   AuthManagerToolsRoute: AuthManagerToolsRouteWithChildren,
   AuthManagerIndexRoute: AuthManagerIndexRoute,
 }
