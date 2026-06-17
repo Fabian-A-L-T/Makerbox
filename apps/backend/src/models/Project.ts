@@ -2,19 +2,31 @@ import sql from "../config/database.js";
 import { safeParse, number } from "valibot";
 import { ValidationError, NotFoundError } from "../errors.js";
 import { ProjectCreate, type ProjectCreateData, ProjectStatusSchema, type ProjectToolCreateData, ProjectToolCreate, type ProjectComponentCreateData, ProjectComponentCreate } from "./schemas.js";
+import * as v from 'valibot';
+
+const projectQuerySchema = v.object({
+    id: v.optional(v.number()),
+    userId: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(0))),
+    search: v.optional(v.string()),
+    limit: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.maxValue(100))),
+    offset: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(0))),
+    orderBy: v.optional(v.picklist(['id', 'name', 'created_at', 'budget'])),
+    desc: v.optional(v.pipe(v.string(), v.transform(value => value === 'true'), v.boolean()))
+});
+export type ProjectQueryData = v.InferOutput<typeof projectQuerySchema>;
 
 class Project {
 
-    static async get({estado, id}: {estado?: string, id?: number}) {
+    static async get({id, userId, search, limit, offset, orderBy, desc}: ProjectQueryData) {
         try {
             if (id) {
                 const validatedId = safeParse(number(), id);
                 if (!validatedId.success) throw new ValidationError();
 
                 const project = await sql`
-                    SELECT p.*, u.name AS username
+                    SELECT p.*, u.name AS user_name
                     FROM projects p
-                    LEFT JOIN users u ON p.user_id = u.id
+                    LEFT JOIN users u ON p.responsible_id = u.id
                     WHERE p.id = ${validatedId.output}
                 `;
 
@@ -36,18 +48,18 @@ class Project {
                 return {...project[0], componentes: componentes, herramientas: herramientas};
             }
             else {
-                let estadoValue = null;
-                if (estado) {
-                    const validatedEstado = safeParse(ProjectStatusSchema, estado);
-                    if (!validatedEstado.success) throw new ValidationError();
-                    estadoValue = validatedEstado.output;
-                }
+                const data = {search, userId, limit, offset, orderBy, desc};
+                const validatedData = safeParse(projectQuerySchema, data);
+                if (validatedData.issues) {console.log(validatedData.issues); throw new ValidationError()};
+                
                 return await sql`
-                    SELECT p.*, u.name AS username
+                    SELECT p.*, u.name AS user_name
                     FROM projects p
-                    LEFT JOIN users u ON p.user_id = u.id
-                    ${estado ? sql`WHERE p.estado = ${estado}` : sql``}
-                    ORDER BY p.created_at DESC`;
+                    LEFT JOIN users u ON p.responsible_id = u.id
+                    WHERE p.name ILIKE ${'%' + (validatedData.output.search || '') + '%'} AND p.deleted_at IS NULL
+                    ${validatedData.output.userId ? sql`AND p.responsible_id = ${validatedData.output.userId}` : sql``}
+                    ORDER BY ${sql(validatedData.output.orderBy ? 'p.'+ validatedData.output.orderBy : 'p.id')} ${validatedData.output.desc ? sql`DESC` : sql`ASC`}
+                    LIMIT ${validatedData.output.limit || 50} OFFSET ${validatedData.output.offset || 0}`;
             }
             
         } catch (error) {
@@ -77,7 +89,7 @@ class Project {
             if (!validatedId.success) throw new ValidationError();
 
             const validatedData = safeParse(ProjectCreate, data);
-            if (!validatedData.success) throw new ValidationError();
+            if (!validatedData.success)  {console.log(validatedData.issues); throw new ValidationError();}
             
             const rows = await sql`
                 UPDATE projects SET ${sql(validatedData.output)} 

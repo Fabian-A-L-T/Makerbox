@@ -24,7 +24,7 @@ class Tool {
                 const validatedId = safeParse(number(), id);
                 if (!validatedId.success) throw new ValidationError();
                 const rows = await sql`
-                    SELECT t.*, m.name AS manufacturer, c.name AS category, l.name AS location FROM tools t
+                    SELECT t.*, m.name AS manufacturer, c.path AS category, l.path AS location FROM tools t
                     LEFT JOIN manufacturers m ON t.manufacturer_id = m.id
                     LEFT JOIN tool_categories c ON t.category_id = c.id
                     LEFT JOIN locations l ON t.location_id = l.id
@@ -37,7 +37,7 @@ class Tool {
                 const validatedData = safeParse(toolQuerySchema, data);
                 if (validatedData.issues) throw new ValidationError();
                 const rows = await sql`
-                    SELECT t.*, m.name AS manufacturer, c.name AS category, l.name AS location FROM tools t
+                    SELECT t.*, m.name AS manufacturer, c.path AS category, l.path AS location FROM tools t
                     LEFT JOIN manufacturers m ON t.manufacturer_id = m.id
                     LEFT JOIN tool_categories c ON t.category_id = c.id
                     LEFT JOIN locations l ON t.location_id = l.id

@@ -1,5 +1,5 @@
 import sql from '../config/database.js';
-import { safeParse, number, string } from 'valibot';
+import { safeParse, number } from 'valibot';
 import { componentShow, ComponentCreate, type ComponentCreateData } from './schemas.js';
 import { ValidationError, NotFoundError } from '../errors.js';
 import * as v from 'valibot';
@@ -26,7 +26,7 @@ class Component {
             if (!validatedId.success) throw new ValidationError();
 
             const rows = await sql`
-                SELECT comp.*, c.name AS category, m.name AS manufacturer FROM components comp
+                SELECT comp.*, c.path AS category, m.name AS manufacturer FROM components comp
                 JOIN component_categories c ON comp.category_id = c.id
                 JOIN manufacturers m ON comp.manufacturer_id = m.id
                 WHERE comp.id = ${validatedId.output} AND comp.deleted_at IS NULL`;
@@ -52,7 +52,7 @@ class Component {
             }
 
             const rows = await sql`
-                SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.metric, comp.datasheet_url, comp.image_url, comp.notes, c.name AS category, m.name AS manufacturer FROM components comp
+                SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.metric, comp.datasheet_url, comp.image_url, comp.notes, c.path AS category, m.name AS manufacturer FROM components comp
                 JOIN component_categories c ON comp.category_id = c.id
                 JOIN manufacturers m ON comp.manufacturer_id = m.id
                 WHERE comp.name ILIKE ${'%' + (validatedData.output.search || '') + '%'} AND comp.deleted_at IS NULL
@@ -65,8 +65,9 @@ class Component {
     }
 
     static async create(data: ComponentCreateData){
+        
         const validatedData = safeParse(ComponentCreate, data);
-        if(!validatedData.success) throw validatedData.issues;
+        if(!validatedData.success) throw new ValidationError();
         const rows = await sql`
             INSERT INTO components ${sql(validatedData.output)} 
             RETURNING ${sql(componentShow)}`;
@@ -117,15 +118,15 @@ class Component {
         return rows[0];
     }
 
-    static async getLocations(id: number){
-        const validatedId = safeParse(number(), id);
-        if(!validatedId.success) throw new ValidationError();
+    static async getLocations(component_id: number, location_id?: number) {
+        const validatedIds = safeParse(v.object({ component_id: v.number(), location_id: v.optional(v.number()) }), { component_id, location_id });
+        if(!validatedIds.success) throw new ValidationError();
 
         const rows = await sql`
-            SELECT cl.*, l.name AS location_name
+            SELECT cl.*, l.name AS location_name, l.path AS location_route
             FROM component_location cl
             JOIN locations l ON cl.location_id = l.id
-            WHERE cl.component_id = ${validatedId.output}`;
+            WHERE cl.component_id = ${validatedIds.output.component_id} ${validatedIds.output.location_id ? sql` AND cl.location_id = ${validatedIds.output.location_id}` : sql``}`;
 
         return rows;
     }

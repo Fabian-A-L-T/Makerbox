@@ -50,8 +50,8 @@ const ComponentSchema = v.object({
     description: v.optional(v.string()),
     category_id: v.pipe(v.string(), v.toNumber()),
     manufacturer_id: v.pipe(v.string(), v.toNumber()),
-    stock: v.pipe(v.string(), v.toNumber()),
-    stock_min: v.pipe(v.string(), v.toNumber()),
+    stock: v.optional(v.pipe(v.string(), v.toNumber())),
+    stock_min: v.optional(v.pipe(v.string(), v.toNumber())),
     metric: v.optional(v.string()),
     datasheet_url: v.optional(v.string()),
     image_url: v.optional(v.string()),
@@ -124,10 +124,13 @@ const ProjectSchema = v.object({
     name: v.string(),
     description: v.optional(v.string()),
     state: v.picklist(projectStatus),
-    start_date: v.date(),
-    end_date: v.optional(v.date()),
-    notes: v.optional(v.string()),
-    category_id: v.number(),
+    responsible_id: v.optional(v.pipe(v.string(), v.toNumber())),
+    start_date: v.string(),
+    end_date_estimated: v.optional(v.string()),
+    end_date_real: v.optional(v.string()),
+    budget: v.optional(v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(999999999999))),
+    image_url: v.optional(v.string()),
+    repository_url: v.optional(v.string()),
     created_at: v.optional(v.date()),
     updated_at: v.optional(v.date()),
     deleted_at: v.optional(v.date())
@@ -155,19 +158,19 @@ export const ProjectShow = ["id", "name", "description", "state", "start_date", 
 
 const MovementSchema = v.object({
     id: v.number(),
-    component_id: v.number(),
-    type: v.picklist(['entry', 'exit', 'transfer', 'adjustment', 'disposal']),
-    amount: v.number(),
-    origin_location_id: v.optional(v.number()),
-    destination_location_id: v.optional(v.number()),
-    project_id: v.optional(v.number()),
-    user_id: v.number(),
+    component_id: v.pipe(v.string(), v.toNumber()),
+    stock_type: v.picklist(['entry', 'reserve', 'return', 'transfer', 'disposal']),
+    amount: v.pipe(v.string(), v.toNumber()),
+    origin_location_id: v.optional(v.pipe(v.string(), v.toNumber())),
+    destination_location_id: v.optional(v.pipe(v.string(), v.toNumber())),
+    project_id: v.optional(v.pipe(v.string(), v.toNumber())),
+    user_id: v.pipe(v.string(), v.toNumber()),
     notes: v.optional(v.string()),
     created_at: v.optional(v.date())
 });
 export const MovementQuerySchema = v.object({
     component_id: v.optional(NumberSchema),
-    type: v.optional(v.picklist(['entry', 'exit', 'transfer', 'adjustment', 'disposal'])),
+    stock_type: v.optional(v.picklist(['entry', 'reserve', 'return', 'transfer', 'disposal'])),
     since: v.optional(v.string()),
     until: v.optional(v.string()),
     limit: v.optional(NumberSchema),
@@ -176,4 +179,4 @@ export const MovementQuerySchema = v.object({
 export type MovementQueryData = v.InferOutput<typeof MovementQuerySchema>;
 export const MovementCreate = v.omit(MovementSchema, ['id', 'created_at']);
 export type MovementCreateData = v.InferOutput<typeof MovementCreate>;
-export const MovementShow = ["id", "component_id", "type", "amount", "origin_location_id", "destination_location_id", "project_id", "user_id", "notes", "created_at"];
+export const MovementShow = ["id", "component_id", "stock_type", "amount", "origin_location_id", "destination_location_id", "project_id", "user_id", "notes", "created_at"];

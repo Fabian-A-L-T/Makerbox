@@ -48,7 +48,7 @@ class ToolCategory {
 
     static async create(data: CategoryCreateData){
         const validatedData = safeParse(CategoryCreate, data);
-        if(!validatedData.success) throw validatedData.issues;
+        if(!validatedData.success) throw new ValidationError();
 
         const rows = await sql`
             INSERT INTO tool_categories ${sql(validatedData.output)} 
