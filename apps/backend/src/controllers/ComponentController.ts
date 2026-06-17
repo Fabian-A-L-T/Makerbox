@@ -80,10 +80,23 @@ class ComponentController {
         }
     }
 
-    static async getLocations(req: Request, res: Response) {
+    static async getLocation(req: Request, res: Response) {
         try {
-            const { id } = req.params;
-            const rows = await Component.getLocations(parseInt(id));
+            const { component_id, location_id } = req.params;
+            const rows = await Component.getLocations(parseInt(component_id), parseInt(location_id));
+            res.json(rows);
+
+        } catch (err: any) {
+            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
+            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
+            else res.status(500).json({ message: 'Error al obtener stock por ubicación', error: err.message });
+        }
+    }
+
+    static async getAllLocations(req: Request, res: Response) {
+        try {
+            const { component_id } = req.params;
+            const rows = await Component.getLocations(parseInt(component_id));
             res.json(rows);
 
         } catch (err: any) {
