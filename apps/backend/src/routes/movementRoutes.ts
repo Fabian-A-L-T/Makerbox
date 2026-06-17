@@ -4,7 +4,7 @@ import checkAdmin from '../middlewares/checkAdmin.js';
 
 const router: Router = express.Router();
 
-router.get('/', MovementController.getAllPaginated);
+router.get('/', MovementController.getAll);
 router.get('/:id', MovementController.getByID);
 router.post('/', checkAdmin, MovementController.create);
 
