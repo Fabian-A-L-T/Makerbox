@@ -20,7 +20,7 @@ export function NumberField(
 ) {
   return (
     <AriaNumberField {...props} className='group flex flex-col gap-1 font-sans'>
-      <Label>{label}</Label>
+      <Label className="text-base font-semibold">{label}</Label>
       <FieldGroup className={'bg-[var(--color-form-text-bg)] outline-[var(--color-border)] outline-2 rounded-[var(--border-radius-ui)] data-[focus-within]:outline-[var(--color-primary)] transition-colors duration-300'}>
         <>
           <Input className="outline-none" placeholder={placeholder} />

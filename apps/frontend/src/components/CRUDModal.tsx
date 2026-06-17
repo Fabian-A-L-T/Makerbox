@@ -30,7 +30,7 @@ export default function CRUDModal({children, title, description, submitText, pro
                         e.preventDefault();
                         await action(new FormData(e.currentTarget));
                     }}
-                    className='flex flex-col gap-4'
+                    className='flex flex-col gap-8'
                 >
                     {isPending ?
                         (

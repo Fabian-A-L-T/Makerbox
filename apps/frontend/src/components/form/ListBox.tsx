@@ -38,8 +38,4 @@ export function ListBoxItem(props: ListBoxItemProps) {
   );
 }
 
-export function DropdownListBox<T extends object>(props: ListBoxProps<T>) {
-  return <AriaListBox {...props} />
-}
-
 export {Text, Header};

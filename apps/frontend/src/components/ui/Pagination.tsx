@@ -14,7 +14,6 @@ export default function Pagination({maxPages, totalPages, currentPage, cursor, f
     const nPages = totalPages >= maxPages 
         ? maxPages 
         : totalPages;
-    const activeStyle = '!bg-[var(--color-primary)] text-white font-bold !border-none'
     const linkStyle = 'p-2 h-10 inline-flex justify-center items-center bg-[var(--color-card)] text-[var(--color-text)] text-semibold hover:bg-[var(--color-secondary)]/25 rounded-[var(--border-radius-ui)] border border-[var(--color-border)]'
     
     return (

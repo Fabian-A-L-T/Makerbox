@@ -1,5 +1,10 @@
 .card {
+    padding: 1rem;
     transition: all 0.2s ease-in-out;
+    background-color: var(--color-card-bg);
+    color: var(--color-text);
+    border: var(--border-card);
+    border-radius: var(--border-radius-ui);
 }
 
 .card:hover {

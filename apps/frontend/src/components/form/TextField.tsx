@@ -23,13 +23,15 @@ export function TextArea(props: TextAreaProps) {
 export default function TextField({ label, description, errorMessage, placeholder, icon, ...props }: TextFieldProps) {
   return (
     <AriaTextField {...props} className={`flex flex-col gap-2 ${props.className || ''}`}>
-      <Label className="text-sm font-semibold">{label} {props.isRequired && <span className="text-[var(--color-danger)]">*</span>}</Label>
+      <Label className="text-base font-semibold">{label} {props.isRequired && <span className="text-[var(--color-danger)]">*</span>}</Label>
       <FieldGroup className={'bg-[var(--color-form-text-bg)] outline-[var(--color-border)] outline-2 rounded-[var(--border-radius-ui)] data-[focus-within]:outline-[var(--color-primary)] transition-colors duration-300'}>
         {props.type === 'textarea' 
-          ? <TextArea className="outline-none" placeholder={placeholder} /> 
-          : <Input className="outline-none" placeholder={placeholder}  />
+          ? <TextArea className="outline-none w-full p-2" placeholder={placeholder} /> 
+          : <>
+              <Input className="outline-none" placeholder={placeholder}  />
+              {icon}
+            </>
         }
-        {icon}
       </FieldGroup>
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>

@@ -21,7 +21,7 @@ export function FieldError(props: FieldErrorProps) {
 }
 
 export function Description(props: TextProps) {
-  return <Text slot="description" {...props} />
+  return <Text slot="description" {...props} className={`${props.className || ''} text-[var(--color-text-muted)] text-xs`} />
 }
 
 export function FieldButton(props: ButtonProps) {

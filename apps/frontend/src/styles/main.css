@@ -10,6 +10,19 @@
     font-family: "Roboto", sans-serif;
 }
 
+.makerbox-box {
+    padding: 1rem;
+    background-color: var(--color-card-bg);
+    color: var(--color-text);
+    border: var(--border-card);
+    border-radius: var(--border-radius-ui);
+}
+
+.makerbox-box-title {
+    font-size: large;
+    font-weight: 500;
+}
+
 @layer base {
   input[type='number']::-webkit-inner-spin-button,
   input[type='number']::-webkit-outer-spin-button {
@@ -28,7 +41,7 @@
     --color-surface: #1a1f2e;
     --color-border: #2d3343;
 
-    --color-primary: #3a56d6;
+    --color-primary: #0C76FF;
     --color-primary-dark: #5a67d8;
     --color-secondary: #9a9a9a;
     --color-secondary-dark: #565656;
@@ -65,21 +78,24 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --color-background: #242424;
+        --color-background: #202020;
         --color-surface: #161616;
         --color-border: #2e2e2e;
 
-        --color-text: #ffffff;
+        --color-text: #F9F9F9;
         --color-text-light: #111827;
         --color-text-dark: #111827;
         --color-text-muted: #d0d0d0;
 
+        --color-card-bg: #292929;
         --color-card: #333333;
-        --color-border: #555;
+        --color-border: #737373;
 
         --color-form-text-bg: #292929;
         --color-form-select-bg: #444;
 
+        --border-card: 1px solid var(--color-border);
+        --color-card-bg: #292929;
         --color-card-title: #ffffff;
         --color-card-description: #e5e7eb;
         --color-card-footer-text: #e5e7eb;
