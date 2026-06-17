@@ -1,4 +1,4 @@
-import type { Manufacturer } from "@utils/schemas";
+import type { Manufacturer } from "../../../interfaces/schemas";
 import TextField from "@components/form/TextField";
 import * as v from 'valibot';
 

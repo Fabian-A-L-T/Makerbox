@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Component, Category, Manufacturer } from "@utils/schemas";
+import type { Component, Category, Manufacturer } from "../../../interfaces/schemas";
 import TextField from "@components/form/TextField";
 import { Select, SelectItem } from "@components/form/Select";
 import { DropZone, Text, type DropEvent } from "@components/ReactAria/DropZone";
@@ -7,6 +7,7 @@ import * as v from 'valibot';
 import { RiImageLine, RiFileTextLine, RiFileWord2Line } from "@remixicon/react";
 import { NumberField } from "@components/form/NumberField";
 import { last, split } from "lodash";
+import { validateImgSize } from "@utils/CRUDUtils";
 
 const componentSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
@@ -33,26 +34,6 @@ interface ComponentFormProps {
     allManufacturers: Manufacturer[];
     setImage: (image: File | null) => void;
     setFile: (file: File | null) => void;
-}
-
-function validateImgSize(image: File){
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = URL.createObjectURL(image);
-        
-        img.onload = () => {
-            URL.revokeObjectURL(img.src);
-
-            if (img.width  > 1600 || img.height > 1600) {
-                reject('Las dimensiones no deben ser mayores a 1600x1600px');
-            } 
-            else {
-                resolve(image);
-            }
-        };
-        
-        img.onerror = () => reject('Formato invalido');
-    });
 }
 
 export default function ComponentForm({ target, allCategories, allManufacturers, setImage, setFile }: ComponentFormProps) {
@@ -106,9 +87,9 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
 
     return (
         <>
-            <div className='grid grid-cols-5 gap-4 '>
+            <div className='grid grid-cols-5 gap-8 '>
                 <div className='flex flex-col gap-2 w-2xs aspect-square col-span-2'>
-                    <span className="text-sm font-semibold" >Imagen</span>
+                    <span className="text-base font-semibold" >Imagen</span>
                     <DropZone
                         className='h-full'
                         getDropOperation={types => (
@@ -131,7 +112,7 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
                     </DropZone>
                     {errorMessage && <span className="text-[var(--color-danger)] text-xs">{errorMessage}</span>}
                 </div>
-                <div className="flex flex-col gap-4 col-span-3">
+                <div className="flex flex-col gap-8 col-span-3">
                     <TextField
                         autoFocus
                         label="Nombre"
@@ -182,20 +163,14 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
                 </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-                <NumberField
-                    label="Stock actual"
-                    name="stock"
-                    validate={(value) => validate(value, 'stock')}
-                    {...(target ? {defaultValue: target.stock}: {defaultValue: 0})}
-                />
-                <NumberField
-                    label="Stock mínimo"
-                    name="stock_min"
-                    validate={(value) => validate(value, 'stock_min')}
-                    {...(target ? {defaultValue: target.stock_min}: {defaultValue: 0})}
-                />
-            </div>
+            <NumberField
+                label="Stock mínimo"
+                name="stock_min"
+                minValue={0}
+                maxValue={9999}
+                validate={(value) => validate(value, 'stock_min')}
+                {...(target ? {defaultValue: target.stock_min}: {defaultValue: 0})}
+            />
             <TextField
                 label="Unidad de medida"
                 type="text"
@@ -213,7 +188,7 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
                 {...(target ? {defaultValue: target.description}: {})}
             />
             <div className='flex flex-col gap-2'>
-                <span className="text-sm font-semibold" >Datasheet</span>
+                <span className="text-base font-semibold" >Datasheet</span>
                 <DropZone
                     className='h-full'
                     getDropOperation={types => (

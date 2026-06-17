@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Tool, Category, Manufacturer, Location } from "@utils/schemas";
+import type { Tool, Category, Manufacturer, Location } from "../../../interfaces/schemas";
 import TextField from "@components/form/TextField";
 import { Select, SelectItem } from "@components/form/Select";
 import { DropZone, Text, type DropEvent } from "@components/ReactAria/DropZone";
@@ -8,6 +8,7 @@ import { RiImageLine, RiFileTextLine, RiFileWord2Line } from "@remixicon/react";
 import { last, split } from "lodash";
 import { DateField } from "@components/form/DateField";
 import { parseDate } from '@internationalized/date';
+import { validateImgSize } from "@utils/CRUDUtils";
 
 const toolSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
@@ -38,26 +39,6 @@ interface ToolFormProps {
     allLocation: Location[];
     setImage: (image: File | null) => void;
     setFile: (file: File | null) => void;
-}
-
-function validateImgSize(image: File){
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = URL.createObjectURL(image);
-        
-        img.onload = () => {
-            URL.revokeObjectURL(img.src);
-
-            if (img.width  > 1600 || img.height > 1600) {
-                reject('Las dimensiones no deben ser mayores a 1600x1600px');
-            } 
-            else {
-                resolve(image);
-            }
-        };
-        
-        img.onerror = () => reject('Formato invalido');
-    });
 }
 
 export default function ToolForm({ target, allCategories, allManufacturers, allLocation, setImage, setFile }: ToolFormProps) {
