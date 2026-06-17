@@ -29,10 +29,11 @@ export interface Location {
 }
 
 export interface ComponentLocation {
-    location_name: string;
-    component_id: number;
-    location_id: number;
-    amount: number;
+    location_name: string,
+    location_route: string,
+    component_id: number,
+    location_id: number,
+    amount: number
 }
 
 export interface Component {
@@ -51,6 +52,25 @@ export interface Component {
     image_url: string;
     notes: string;
     created_at: string
+}
+
+export interface Movement {
+    id: number;
+    component_id: number;
+    component_name: string;
+    component_sku: string;
+    stock_type: 'entry' | 'reserve' | 'return' | 'transfer' | 'disposal';
+    amount: number;
+    origin_location_id: number | null;
+    origin_location_name: string | null;
+    destination_location_id: number | null;
+    destination_location_name: string | null;
+    project_id: number | null;
+    project_name: string | null;
+    user_id: number;
+    user_name: string;
+    notes: string | null;
+    created_at: string;
 }
 
 export interface Manufacturer {
@@ -79,4 +99,30 @@ export interface Tool {
     next_calibration_date: string
     notes: string
     created_at: string
+}
+
+export interface Project {
+    id: number;
+    name: string;
+    description: string;
+    state: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled';
+    start_date: string;
+    end_date_estimated?: string;
+    end_date_real?: string;
+    responsible_id: number;
+    user_name: string;
+    budget?: number;
+    image_url?: string;
+    repository_url?: string;
+    created_at: string;
+}
+
+export interface ProjectComponent {
+    project_id: number,
+    project_name: string,
+    component_id: number,
+    component_name: string,
+    planned_quantity: number,
+    used_quantity: number,
+    notes?: string
 }
