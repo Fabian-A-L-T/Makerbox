@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { type AxiosResponse } from 'axios';
 import { type ColumnDef } from '@components/ui/Table';
-import type { Category } from '@utils/schemas';
+import type { Category } from '../../interfaces/schemas';
 import { getRouteApi } from '@tanstack/react-router';
-import { useCRUD } from '@utils/useCRUD';
+import { useCRUD } from '../../hooks/useCRUD';
 import axios from 'axios';
-import CategoryForm from '@views/forms/CategoryForms';
-import CRUDView from '@components/CRUDView';
+import CategoryForm from '@views/admin/forms/CategoryForms';
+import CRUDLayout from '@components/layouts/CRUDLayout';
 import CRUDTableActions from '@components/CRUDTableActions';
-import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 
 export default function ToolCategories() {
     
@@ -35,11 +34,13 @@ export default function ToolCategories() {
         { key: 'id',       label: 'ID',     allowsSorting: true },
         { key: 'name',     label: 'Nombre', allowsSorting: true },
         { key: 'path',     label: 'Ruta',   allowsSorting: true,
-            render: (item) => (
-                <code className="text-xs bg-[var(--color-text-muted)]/20 rounded-full px-2.5 py-1.5 font-mono text-[var(--color-text-muted)]">
-                    {item.path}
-                </code>
-            ),
+            render: (item) => {
+                const route = item.path.replaceAll('_', ' ').replaceAll('.', ' > ');
+                return (
+                    <span className="text-sm text-[var(--color-text-muted)]">
+                        {route}
+                    </span>
+                )},
         },
         { key: 'actions',  label: 'Acciones',
             render: (item) => (
@@ -57,8 +58,11 @@ export default function ToolCategories() {
         try {
             if (formData && crud.modalMode !== 'delete') {
                 const parentPath = formData.get('parent') as string | null;
-                const path       = formData.get('path')   as string;
-                if (parentPath) formData.set('path', `${parentPath}.${path}`);
+                const path       = formData.get('name') as string;
+                const SpacelessPath = path.replaceAll(' ', '_');
+                
+                if (parentPath) formData.set('path', `${parentPath}.${SpacelessPath}`);
+                else formData.set('path', `${SpacelessPath}`);
                 formData.delete('parent');
             }
             await crud.handleSubmit(formData);
@@ -69,14 +73,9 @@ export default function ToolCategories() {
     }
 
     return (
-        <>
-        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Categorias de herramientas</Breadcrumb>
-        </Breadcrumbs>
-        <CRUDView<Category>
-            title="Categorías de herramientas" 
-            subtitle="Gestión de categorías de herramientas"
+        <CRUDLayout<Category>
+            title="" 
+            subtitle=""
             checkAuth={checkAuth}
             columns={columns}
             data={data}
@@ -85,6 +84,5 @@ export default function ToolCategories() {
             createForm={<CategoryForm allCategories={allCategories}/>}
             editForm={<CategoryForm allCategories={allCategories} target={crud.targetData}/>}
         />
-        </>
     )
 }

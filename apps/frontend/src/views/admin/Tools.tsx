@@ -1,9 +1,9 @@
-import CRUDView from "@components/CRUDView";
+import CRUDLayout from "@components/layouts/CRUDLayout";
 import CRUDTableActions from "@components/CRUDTableActions";
 import type { ColumnDef } from "@components/ui/Table";
-import { useCRUD } from "@utils/useCRUD";
-import ToolForm from "@views/forms/ToolForms";
-import type { Tool, Category, Manufacturer, Location } from "@utils/schemas";
+import { useCRUD } from "../../hooks/useCRUD";
+import ToolForm from "@views/admin/forms/ToolForms";
+import type { Tool, Category, Manufacturer, Location } from "../../interfaces/schemas";
 import { useState } from "react";
 import axios, { type AxiosResponse } from "axios";
 import {getRouteApi} from '@tanstack/react-router';
@@ -49,6 +49,27 @@ export default function Tools() {
             )   
         },
         { key: 'sku',      label: 'SKU',    allowsSorting: true },
+        { key: 'manufacturer',      label: 'Fabricante',    allowsSorting: true },
+        { key: 'category',      label: 'Categoría',    allowsSorting: true,
+            render: (item) => {
+                const categoryRoute = item.category.replaceAll('_', ' ');
+                return (
+                    <div className="flex flex-col">
+                        <span>{categoryRoute.split('.').at(-1)}</span>
+                        <span className='text-xs text-[var(--color-text-muted)]'>{categoryRoute.replaceAll('.', ' > ')}</span>
+                    </div>
+            )}
+        },
+        { key: 'location',      label: 'Ubicación',    allowsSorting: true,
+            render: (item) => {
+                const locationRoute = item.location.replaceAll('_', ' ');
+                return (
+                    <div className="flex flex-col">
+                        <span>{locationRoute.split('.').at(-1)}</span>
+                        <span className='text-xs text-[var(--color-text-muted)]'>{locationRoute.replaceAll('.', ' > ')}</span>
+                    </div>
+            )}
+        },
         { key: 'actions',   label: 'Acciones',
             render: (item) => (
                 <CRUDTableActions 
@@ -134,11 +155,11 @@ export default function Tools() {
 
     return (
         <>
-        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Herramientas</Breadcrumb>
         </Breadcrumbs>
-        <CRUDView<Tool>
+        <CRUDLayout<Tool>
             title="Herramientas"
             columns={columns}
             data={data}

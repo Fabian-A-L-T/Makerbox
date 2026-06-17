@@ -1,9 +1,9 @@
-import CRUDView from "@components/CRUDView";
+import CRUDLayout from "@components/layouts/CRUDLayout";
 import CRUDTableActions from "@components/CRUDTableActions";
 import type { ColumnDef } from "@components/ui/Table";
-import { useCRUD } from "@utils/useCRUD";
-import ComponentForm from "@views/forms/ComponentForms";
-import type { Component, Category, Manufacturer } from "@utils/schemas";
+import { useCRUD } from "../../hooks/useCRUD";
+import ComponentForm from "@views/admin/forms/ComponentForms";
+import type { Component, Category, Manufacturer } from "../../interfaces/schemas";
 import { useState } from "react";
 import axios, { type AxiosResponse } from "axios";
 import {getRouteApi} from '@tanstack/react-router';
@@ -44,9 +44,19 @@ export default function Components() {
                     <span>{item.name}</span>
                 </div>
             )   
-         },
+        },
         { key: 'sku',      label: 'SKU',    allowsSorting: true },
-        { key: 'stock',     label: 'Stock',    allowsSorting: true },
+        { key: 'manufacturer',      label: 'Fabricante',    allowsSorting: true },
+        { key: 'category',      label: 'Categoría',    allowsSorting: true,
+            render: (item) => {
+                const categoryRoute = item.category.replaceAll('_', ' ');
+                return (
+                    <div className="flex flex-col">
+                        <span>{categoryRoute.split('.').at(-1)}</span>
+                        <span className='text-xs text-[var(--color-text-muted)]'>{categoryRoute.replaceAll('.', ' > ')}</span>
+                    </div>
+            )}
+        },
         { key: 'actions',   label: 'Acciones',
             render: (item) => (
                 <CRUDTableActions 
@@ -132,11 +142,11 @@ export default function Components() {
 
     return (
         <>
-        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Componentes</Breadcrumb>
         </Breadcrumbs>
-        <CRUDView<Component>
+        <CRUDLayout<Component>
             title="Componentes"
             columns={columns}
             data={data}

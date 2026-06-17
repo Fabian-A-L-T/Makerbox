@@ -1,8 +1,8 @@
 import { type ColumnDef } from '@components/ui/Table';
-import CRUDView from '@components/CRUDView';
-import { useCRUD } from '@utils/useCRUD';
-import { UserCreateForm, UserEditForm } from '../forms/UserForms';
-import type { User } from '@utils/schemas';
+import CRUDLayout from '@components/layouts/CRUDLayout';
+import { useCRUD } from '../../hooks/useCRUD';
+import { UserCreateForm, UserEditForm } from './forms/UserForms';
+import type { User } from '../../interfaces/schemas';
 import {getRouteApi} from '@tanstack/react-router';
 import CRUDTableActions from '@components/CRUDTableActions';
 import type { AxiosResponse } from 'axios';
@@ -47,11 +47,11 @@ export default function Users(){
 
     return(
         <>
-        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Usuarios</Breadcrumb>
         </Breadcrumbs>
-        <CRUDView<User>
+        <CRUDLayout<User>
             title="Usuarios"
             subtitle="Aquí puedes gestionar los usuarios del sistema"
             columns={columns}

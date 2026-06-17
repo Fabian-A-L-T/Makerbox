@@ -1,9 +1,9 @@
 import { type ColumnDef } from '@components/ui/Table';
 import CRUDTableActions from '@components/CRUDTableActions';
-import CRUDView from '@components/CRUDView';
-import { useCRUD } from '@utils/useCRUD';
-import type { Manufacturer } from '@utils/schemas';
-import ManufacturerForm from '@views/forms/ManufacturerForms';
+import CRUDLayout from '@components/layouts/CRUDLayout';
+import { useCRUD } from '../../hooks/useCRUD';
+import type { Manufacturer } from '../../interfaces/schemas';
+import ManufacturerForm from '@views/admin/forms/ManufacturerForms';
 import {getRouteApi} from '@tanstack/react-router';
 import type { AxiosResponse } from 'axios';
 import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
@@ -33,11 +33,11 @@ export default function Manufacturers(){
     
     return(
         <>
-        <Breadcrumbs className={'text-[var(--color-text)] mb-4'}>
+        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Fabricantes</Breadcrumb>
         </Breadcrumbs>
-        <CRUDView<Manufacturer>
+        <CRUDLayout<Manufacturer>
             title="Fabricantes"
             subtitle="Aquí puedes gestionar los fabricantes de componentes electrónicos y herramientas."
             columns={columns}
