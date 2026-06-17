@@ -4,9 +4,10 @@ import { ValidationError, NotFoundError } from "../errors.js";
 
 class MovementController {
 
-    static async getAllPaginated(req: Request, res: Response) {
+    static async getAll(req: Request, res: Response) {
         try {
-            const movimientos = await Movement.get({query: req.query});
+            const { limit, offset, orderBy, desc} = req.query;
+            const movimientos = await Movement.get({ limit: parseInt(limit as string), offset: parseInt(offset as string), orderBy: orderBy as string, desc: desc === 'true' });
             res.json(movimientos);
 
         } catch (err: any) {

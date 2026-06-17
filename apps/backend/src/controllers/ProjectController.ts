@@ -1,13 +1,13 @@
 import { type Request, type Response } from "express";
-import Project from "../models/Project.js";
+import Project, { ProjectQueryData } from "../models/Project.js";
 import { ValidationError, NotFoundError } from "../errors.js";
 
 class ProjectController {
 
     static async getAll(req: Request, res: Response) {
         try {
-            const { estado } = req.query;
-            const projects = await Project.get({estado: estado as string});
+            const { id, userId, search, limit, offset, orderBy, desc } = req.query as ProjectQueryData;
+            const projects = await Project.get({ id, userId, search, limit, offset, orderBy, desc });
             res.json(projects);
 
         } catch (err: any) {
