@@ -17,9 +17,9 @@ import fileRoutes from './routes/fileRoutes.js';
 import toolCategoryRoutes from './routes/toolCategoryRoutes.js'
 
 import tokenVerification from './middlewares/tokenVerification.js';
+import { backPort, backUrl, frontUrl } from './config/app.js';
 
 const app = express();
-const PORT = process.env.PORT ?? 3000;
 
 const speedLimiter = slowDown({
   windowMs: 60 * 1000,
@@ -32,7 +32,7 @@ const speedLimiter = slowDown({
 app.use(helmet())
 app.use(express.json());
 app.use(cors({ 
-  origin: 'http://localhost:5173',
+  origin: frontUrl,
   credentials: true
 }));
 app.use(cookieParser());
@@ -66,6 +66,6 @@ app.get('/api/health', (_req, res) => {
 });
 
 // --- Start ---
-app.listen(PORT, () => {
-  console.log(`🚀 Backend running at http://localhost:${PORT}`);
+app.listen(backPort, () => {
+  console.log(`🚀 Backend running at ${backUrl}`);
 });
