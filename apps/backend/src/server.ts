@@ -14,7 +14,8 @@ import projectRoutes from './routes/projectRoutes.js';
 import movementRoutes from './routes/movementRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import fileRoutes from './routes/fileRoutes.js';
-import toolCategoryRoutes from './routes/toolCategoryRoutes.js'
+import toolCategoryRoutes from './routes/toolCategoryRoutes.js';
+import statRoutes from './routes/statRoutes.js';
 
 import tokenVerification from './middlewares/tokenVerification.js';
 import { backPort, backUrl, frontUrl } from './config/app.js';
@@ -60,6 +61,7 @@ app.use('/api/projects', tokenVerification,  projectRoutes);
 app.use('/api/movements', tokenVerification,  movementRoutes);
 app.use('/api/files', tokenVerification,  fileRoutes);
 app.use('/api/tool-categories', tokenVerification,  toolCategoryRoutes);
+app.use('/api/stats', tokenVerification, statRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
