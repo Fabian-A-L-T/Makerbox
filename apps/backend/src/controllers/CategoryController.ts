@@ -1,17 +1,32 @@
 import { type Request, type Response } from "express";
 import Category from "../models/Category.js";
-import { ValidationError, NotFoundError } from "../errors.js";
-import {type CategoryQueryData } from "../models/Category.js";
+import { ValidationError, NotFoundError } from "../utils/errors.js";
+import { generatePagination } from "../utils/utils.js";
+import { safeParse, number, string, optional } from 'valibot';
+import { categorySchema, categoryFilterSchema, paginationSchema } from "../utils/schemas.js";
 
-class CategoryController {
-
+export default class CategoryController {
     static async getAll(req: Request, res: Response) {
         try {
-            const {search, limit, offset, orderBy, desc } = req.query as CategoryQueryData;
-            const categories = await Category.get({ search, limit, offset, orderBy, desc });
-            res.json(categories);
+            const {search, limit, offset, orderBy, desc, exclude } = req.query;
 
-        } catch (err: any) {
+            const validatedPagination = safeParse(paginationSchema, {limit, offset});
+            if(!validatedPagination.success) throw new ValidationError();
+
+            const validatedFilters = safeParse(categoryFilterSchema, {search, orderBy, desc, exclude});
+            if(!validatedFilters.success) throw new ValidationError();
+
+            const categories = await Category.get({...validatedPagination.output, ...validatedFilters.output});
+            res.json(await generatePagination({
+                content: categories,
+                tableName: 'component_categories',
+                hasSoftDelete: true,
+                resourceRoute: 'component-categories',
+                ...(validatedPagination.output),
+                otherParams: validatedFilters.output
+            }));
+        } 
+        catch (err: any) {
             if(err instanceof ValidationError) res.status(400).json({ message: 'Error al obtener las categorías', error: err.message });
             else res.status(500).json({ message: 'Error al obtener las categorías', error: err.message });
         }
@@ -20,10 +35,14 @@ class CategoryController {
     static async getByID(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const category = await Category.get({ id: parseInt(id) });
-            res.json(category);
 
-        } catch (err: any) {
+            const validatedId = safeParse(number(), parseInt(id));
+            if(!validatedId.success) throw new ValidationError();
+            
+            const category = await Category.getById(validatedId.output);
+            res.json({content: category});
+        } 
+        catch (err: any) {
             if(err instanceof ValidationError) res.status(400).json({ message: 'Error al obtener la categoría', error: err.message });
             else if(err instanceof NotFoundError) res.status(404).json({ message: 'Categoría no encontrada' });
             else res.status(500).json({ message: 'Error al obtener la categoría', error: err.message });
@@ -32,10 +51,13 @@ class CategoryController {
 
     static async create(req: Request, res: Response) {
         try {
-            const category = await Category.create(req.body);
-            res.status(201).json({ message: 'Categoría creada exitosamente', data: category });
+            const validatedData = safeParse(categorySchema, req.body);
+            if(!validatedData.success) throw validatedData.issues;
 
-        } catch (err: any) {
+            const category = await Category.create(validatedData.output);
+            res.status(201).json({ message: 'Categoría creada exitosamente', data: category });
+        } 
+        catch (err: any) {
             if(err instanceof ValidationError) res.status(400).json({ message: 'Error al crear la categoría', error: err.message });
             else res.status(500).json({ message: 'Error al crear la categoría', error: err.message });
         }
@@ -44,10 +66,17 @@ class CategoryController {
     static async update(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const category = await Category.update(parseInt(id), req.body);
-            res.json({ message: 'Categoría actualizada exitosamente', data: category });
 
-        } catch (err: any) {
+            const validatedId = safeParse(number(), parseInt(id));
+            if(!validatedId.success) throw new ValidationError();
+
+            const validatedData = safeParse(categorySchema, req.body);
+            if(!validatedData.success) throw validatedData.issues;
+
+            const category = await Category.update(validatedId.output, validatedData.output);
+            res.json({ message: 'Categoría actualizada exitosamente', data: category });
+        } 
+        catch (err: any) {
             if(err instanceof ValidationError) res.status(400).json({ message: 'Error al actualizar la categoría', error: err.message });
             else if(err instanceof NotFoundError) res.status(404).json({ message: 'Categoría no encontrada' });
             else res.status(500).json({ message: 'Error al actualizar la categoría', error: err.message });
@@ -57,10 +86,14 @@ class CategoryController {
     static async delete(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const category = await Category.delete(parseInt(id));
+
+            const validatedId = safeParse(number(), parseInt(id));
+            if(!validatedId.success) throw new ValidationError();
+
+            const category = await Category.delete(validatedId.output);
             res.json({ message: 'Categoría eliminada exitosamente', data: category });
-            
-        } catch (err: any) {
+        } 
+        catch (err: any) {
             if(err instanceof ValidationError) res.status(400).json({ message: 'Error al eliminar la categoría', error: err.message });
             else if(err instanceof NotFoundError) res.status(404).json({ message: 'Categoría no encontrada' });
             else res.status(500).json({ message: 'Error al eliminar la categoría', error: err.message });
@@ -69,15 +102,17 @@ class CategoryController {
 
     static async getChildren(req: Request, res: Response) {
         try {
-            const path = req.query.path as string | undefined;
-            const categories = await Category.getChildren(path);
+            const { path } = req.query;
+
+            const validatedPath = safeParse(optional(string()), path);
+            if(!validatedPath.success) throw new ValidationError();
+
+            const categories = await Category.getChildren(validatedPath.output);
             res.json(categories);
-            
-        } catch (err: any) {
+        } 
+        catch (err: any) {
             if(err instanceof ValidationError) res.status(400).json({ message: 'Error al obtener las categorías', error: err.message });
             else res.status(500).json({ message: 'Error al obtener las categorías', error: err.message });
         }
     }
 }
-
-export default CategoryController;

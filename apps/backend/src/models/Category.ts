@@ -1,91 +1,55 @@
 import sql from '../config/database.js';
-import { safeParse, number, string } from 'valibot';
-import { CategoryCreate, type CategoryCreateData } from './schemas.js';
-import { ValidationError, NotFoundError } from '../errors.js';
-import * as v from 'valibot';
+import type { CategoryFilterData, PaginationData, CategoryData } from '../utils/schemas.js';
+import { NotFoundError } from '../utils/errors.js';
 
-const sortableColumns = ['id', 'name'];
+export default class Category {
 
-const categoryQuerySchema = v.object({
-    id: v.optional(v.number()),
-    search: v.optional(v.string()),
-    limit: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.maxValue(100))),
-    offset: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(0))),
-    orderBy: v.optional(v.picklist(sortableColumns)),
-    desc: v.optional(v.pipe(v.string(), v.toBoolean()))
-});
-export type CategoryQueryData = v.InferOutput<typeof categoryQuerySchema>;
-
-class Category {
-
-    static async get({ id, search, limit, offset, orderBy, desc}: CategoryQueryData){
-        if(id){
-            const validatedId = safeParse(number(), id);
-            if(!validatedId.success) throw new ValidationError();
-
-            const rows = await sql`
-                SELECT * FROM component_categories 
-                WHERE id = ${validatedId.output} AND deleted_at IS NULL`;
-            
-            if(!rows.length) throw new NotFoundError();
-            return rows[0];
-        }
-        else {
-            const data: CategoryQueryData = {search, limit, offset, orderBy, desc};
-            const validatedData = safeParse(categoryQuerySchema, data);
-            if(!validatedData.success) throw new ValidationError();
-
-            const rows = await sql`
-                SELECT * FROM component_categories
-                WHERE name ILIKE ${'%' + (validatedData.output.search ?? '') + '%'} AND deleted_at IS NULL
-                ORDER BY ${sql(validatedData.output.orderBy || 'id')} ${validatedData.output.desc ? sql`DESC` : sql`ASC`}
-                LIMIT ${validatedData.output.limit || 50} OFFSET ${validatedData.output.offset || 0}`;
-            return rows;
-        }
+    static async get({ limit, offset, search, orderBy, desc, exclude }: PaginationData & CategoryFilterData){
+        return await sql`
+            SELECT * FROM component_categories
+            WHERE name ILIKE ${'%' + (search ?? '') + '%'} AND deleted_at IS NULL
+            ${exclude ? sql`AND id != ${exclude}` : sql``}
+            ORDER BY ${sql(orderBy || 'path')} ${desc === 'true' ? sql`DESC` : sql`ASC`}
+            LIMIT ${limit || 50} OFFSET ${offset || 0}`;
     }
 
-    static async create(data: CategoryCreateData){
-        const validatedData = safeParse(CategoryCreate, data);
-        if(!validatedData.success) throw validatedData.issues;
-
+    static async getById(id: number){
         const rows = await sql`
-            INSERT INTO component_categories ${sql(validatedData.output)} 
-            RETURNING *`;
+            SELECT * FROM component_categories 
+            WHERE id = ${id} AND deleted_at IS NULL`;
         
-        return rows[0];
+        if(!rows.length) throw new NotFoundError();
+        return rows;
+    }
+
+    static async create(data: CategoryData){
+        const rows = await sql`
+            INSERT INTO component_categories ${sql(data)} 
+            RETURNING *`;
+        return rows;
     }
     
-    static async update(id: number, data: CategoryCreateData){
-        const validatedId = safeParse(number(), id);
-        if(!validatedId.success) throw new ValidationError();
-
-        const validatedData = safeParse(CategoryCreate, data);
-        if(!validatedData.success) throw validatedData.issues;
-
+    static async update(id: number, data: CategoryData){
         const rows = await sql`
-            UPDATE component_categories SET ${sql(validatedData.output)}, updated_at = now()
-            WHERE id = ${validatedId.output}
+            UPDATE component_categories SET ${sql(data)}, updated_at = now()
+            WHERE id = ${id}
             RETURNING OLD.path as old_path, *`;
 
-        if(rows && validatedData.output.path) {
+        if(rows && data.path) {
             await sql`
                 UPDATE component_categories
-                SET path = ${validatedData.output.path} || subpath(path,nlevel(${validatedData.output.path})), updated_at = now() 
-                where path ~ ${`${rows[0].old_path}.*{1,}`}
-            `;
+                SET path = ${data.path} || subpath(path,nlevel(${rows[0].old_path})), updated_at = now() 
+                where path ~ ${`${rows[0].old_path}.*{1,}`}`;
         }
 
         if(!rows.length) throw new NotFoundError();
-        return rows[0];
+        return rows;
     }
 
     static async delete(id: number){
-        const validatedId = safeParse(number(), id);
-        if(!validatedId.success) throw new ValidationError();
-
         const rows = await sql`
             UPDATE component_categories SET deleted_at = now(), updated_at = now()
-            WHERE id = ${validatedId.output}  AND deleted_at IS NULL
+            WHERE id = ${id} AND deleted_at IS NULL
             RETURNING *`;
 
         if(rows) {
@@ -96,7 +60,7 @@ class Category {
             `;
         }
         if(!rows.length) throw new NotFoundError();
-        return rows[0];
+        return rows;
     }
 
     static async getChildren(path?: string){
@@ -106,15 +70,10 @@ class Category {
                 WHERE nlevel(path) = 1`;
             return rows;
         }
-        const validatedPath = safeParse(string(), path);
-        if(!validatedPath.success) throw new ValidationError();
-
-        const queryPath = '*.' + validatedPath.output + '.*';
-
+        const queryPath = '*.' + path + '.*';
         const rows = await sql`
             SELECT * FROM component_categories 
             WHERE path ~ ${queryPath}`;
         return rows;
     }
 }
-export default Category;

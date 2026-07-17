@@ -1,133 +1,84 @@
 import sql from "../config/database.js";
-import { safeParse, number } from "valibot";
-import { UserCreate, type UserCreateData, UserUpdate, type UserUpdateData, userShow, UserEmail, type UserEmailData, UserPassword, type UserPasswordData } from "./schemas.js";
-import { ValidationError, NotFoundError } from "../errors.js";
+import { userShow, type PaginationData, type FilterData, type UserData } from "../utils/schemas.js";
+import { NotFoundError } from "../utils/errors.js";
+import bcrypt from "bcrypt";
 
-class User {
+export default class User {
+    static async get({ search, limit, offset, orderBy, desc }: PaginationData & FilterData){
+        return await sql`
+            SELECT ${sql(userShow)} FROM users
+            WHERE name ILIKE ${'%' + (search ?? '') + '%'} AND deleted_at IS NULL
+            ORDER BY ${sql(orderBy || 'id')} ${desc === 'true' ? sql`DESC` : sql`ASC`}
+            LIMIT ${limit || 50} OFFSET ${offset || 0}`;
+    }
 
-    static async get(id?: number){
-        if(id){
-            const validatedId = safeParse(number(), id);
-            if(!validatedId.success) throw new ValidationError();
-
-            const rows = await sql`
-                SELECT ${sql(userShow)}
-                FROM users
-                WHERE id = ${validatedId.output} AND deleted_at IS NULL`;
-
-            if(!rows.length) throw new NotFoundError();
-            return rows[0];
-        }
-        else{
-            const rows = await sql`
-                SELECT ${sql(userShow)}
-                FROM users
-                WHERE deleted_at IS NULL`;
-            return rows;
-        }
+    static async getById(id: number){
+        const rows = await sql`
+            SELECT ${sql(userShow)}
+            FROM users
+            WHERE id = ${id} AND deleted_at IS NULL`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
     }
     
-    static async create(data: UserCreateData) {
-        try {
-            const validatedData = safeParse(UserCreate, data);
-            if(!validatedData.success) throw new ValidationError();
-
-            const rows = await sql`
-                INSERT INTO users ${sql(validatedData.output)}
-                RETURNING ${sql(userShow)}`;
-
-            return rows[0];
-        } catch (error) {
-            throw error;
-        }
+    static async create(data: UserData) {
+        return await sql`
+            INSERT INTO users ${sql(data)}
+            RETURNING ${sql(userShow)}`;
     }
 
-    static async update(id: number, data: UserUpdateData) {
-        try {
-            const validatedId = safeParse(number(), id);
-            if(!validatedId.success) throw new ValidationError();
-            
-            const validatedData = safeParse(UserUpdate, data);
-            if(!validatedData.success) throw new ValidationError();
-            
-            const rows = await sql`
-                UPDATE users SET ${sql(validatedData.output)}
-                WHERE id = ${validatedId.output} AND deleted_at IS NULL
-                RETURNING ${sql(userShow)}`;
-            
-            if(!rows.length) throw new NotFoundError();
-            return rows[0];
-        } catch (error) {
-            throw error;
-        }
+    static async update(id: number, data: UserData) {
+        const rows = await sql`
+            UPDATE users SET ${sql(data)}
+            WHERE id = ${id} AND deleted_at IS NULL
+            RETURNING ${sql(userShow)}`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
     }
 
     static async restore(id: number) {
-        try {
-            const validatedId = safeParse(number(), id);
-            if(!validatedId.success) throw new ValidationError();
-            
-            const rows = await sql`
-                UPDATE users SET deleted_at = null, updated_at = now() 
-                WHERE id = ${validatedId.output} AND deleted_at IS NOT NULL
-                RETURNING ${sql(userShow)}`;
-
-            if(!rows.length) throw new NotFoundError();
-            return rows[0];
-        } catch (error) {
-            throw error;
-        }
+        const rows = await sql`
+            UPDATE users SET deleted_at = null, updated_at = now() 
+            WHERE id = ${id} AND deleted_at IS NOT NULL
+            RETURNING ${sql(userShow)}`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
     }
 
     static async delete(id: number) {
-        try {
-            const validatedId = safeParse(number(), id);
-            if(!validatedId.success) throw new ValidationError();
-            
-            const rows = await sql`
-                UPDATE users SET deleted_at = now(), updated_at = now() 
-                WHERE id = ${validatedId.output} deleted_at IS NULL
-                RETURNING ${sql(userShow)}`;
-            
-            if(!rows.length) throw new NotFoundError();
-            return rows[0];
-        } catch (error) {
-            throw error;
-        }
+        const rows = await sql`
+            UPDATE users SET deleted_at = now(), updated_at = now() 
+            WHERE id = ${id} deleted_at IS NULL
+            RETURNING ${sql(userShow)}`;
+        
+        if(!rows.length) throw new NotFoundError();
+        return rows;
     }
 
-    static async login(email: UserEmailData) {
-        try {
-            const validatedEmail = safeParse(UserEmail, email);
-            if(!validatedEmail.success) throw new ValidationError();
-            
-            const rows = await sql`
-                SELECT id, name, email, role, passwd
-                FROM users
-                WHERE email = ${validatedEmail.output} AND deleted_at IS NULL`;
-
-            if(!rows.length) throw new NotFoundError();
-            return rows[0];
-        } catch (error) {
-            throw error;
-        }
+    static async login(email: string) {
+        const rows = await sql`
+            SELECT id, name, email, role, passwd
+            FROM users
+            WHERE email = ${email} AND deleted_at IS NULL`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
     }
 
-    static async exists(email: UserEmailData) {
-        try {
-            const validatedEmail = safeParse(UserEmail, email);
-            if(!validatedEmail.success) throw new ValidationError();
+    static async exists(email: string) {
+        const rows = await sql`
+            SELECT id, passwd
+            FROM users
+            WHERE email = ${email} AND deleted_at IS NULL`;
+        if(!rows.length) return false;
+        return true;
+    }
 
-            const rows = await sql`
-                SELECT id
-                FROM users
-                WHERE email = ${validatedEmail.output} AND deleted_at IS NULL`;
-
-            if(!rows.length) return false;
-            return true;
-        } catch (error) {
-            throw error;
-        }
+    static async hasEqualPasswd(id: number, passwd: string) {
+        const rows = await sql`
+            SELECT id, passwd
+            FROM users
+            WHERE id = ${id} AND deleted_at IS NULL`;
+        if(!rows.length || !bcrypt.compare(passwd, rows[0].passwd)) return false;
+        return true;
     }
 }
-export default User;

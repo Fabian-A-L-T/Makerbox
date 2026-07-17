@@ -1,65 +1,48 @@
 import sql from "../config/database.js";
-import { safeParse, number } from "valibot";
-import { ManufacturerCreate, type ManufacturerCreateData } from "../models/schemas.js";
-import { ValidationError, NotFoundError } from "../errors.js";
+import type { ManufacturerData, ManufacturerFilterData, PaginationData } from "../utils/schemas.js";
+import { NotFoundError } from "../utils/errors.js";
 
-class Manufacturer {
+export default class Manufacturer {
     
-    static async get(id?: number){
-        if (id) {
-            const validatedId = safeParse(number(), id);
-            if (!validatedId.success) throw new ValidationError();
-
-            const row = await sql`
-                SELECT * FROM manufacturers 
-                WHERE id = ${validatedId.output}`;
-            if (!row.length) throw new NotFoundError();
-            return row[0];
-        }
+    static async get({ limit, offset, search, orderBy, desc, exclude }: PaginationData & ManufacturerFilterData){
         return await sql`
             SELECT * FROM manufacturers
-            ORDER BY id`;
+            WHERE name ILIKE ${'%' + (search ?? '') + '%'} AND deleted_at IS NULL
+            ${exclude ? sql`AND id != ${exclude}` : sql``}
+            ORDER BY ${sql(orderBy || 'id')} ${desc === 'true' ? sql`DESC` : sql`ASC`}
+            LIMIT ${limit || 50} OFFSET ${offset || 0}`;
     }
 
-    static async create(data: ManufacturerCreateData){
-        const validatedData = safeParse(ManufacturerCreate, data);
-        if (!validatedData.success) throw new ValidationError();
-
+    static async getById(id: number){
         const rows = await sql`
-            INSERT INTO manufacturers ${sql(validatedData.output)} 
+            SELECT * FROM manufacturers 
+            WHERE id = ${id} AND deleted_at IS NULL`;
+        if (!rows.length) throw new NotFoundError();
+        return rows;
+    }
+
+    static async create(data: ManufacturerData){
+        return await sql`
+            INSERT INTO manufacturers ${sql(data)} 
             RETURNING *`;
-
-        return rows[0];
     }
 
-    static async update(id: number, data: ManufacturerCreateData){
-        const validatedId = safeParse(number(), id);
-        if (!validatedId.success) throw new ValidationError();
-
-        const validatedData = safeParse(ManufacturerCreate, data);
-        if (!validatedData.success) throw new ValidationError();
-
+    static async update(id: number, data: ManufacturerData){
         const rows = await sql`
-            UPDATE manufacturers SET ${sql(validatedData.output)}, updated_at = now() 
-            WHERE id = ${validatedId.output}
+            UPDATE manufacturers SET ${sql(data)}, updated_at = now() 
+            WHERE id = ${id}
             RETURNING *`;
 
         if (!rows.length) throw new NotFoundError();
-        return rows[0];
+        return rows;
     }
 
     static async delete(id: number){
-        const validatedId = safeParse(number(), id);
-        if (!validatedId.success) throw new ValidationError();
-
         const rows = await sql`
             DELETE FROM manufacturers  
-            WHERE id = ${validatedId.output}
+            WHERE id = ${id}
             RETURNING *`;
-        
         if (!rows.length) throw new NotFoundError();
-        return rows[0];
+        return rows;
     }
 }
-
-export default Manufacturer;

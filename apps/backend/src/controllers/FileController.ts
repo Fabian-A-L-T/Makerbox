@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import fs from "fs";
 
-export class FileController {
+export default class FileController {
     static async deleteFile(req: Request, res: Response) {
         const { fileUrl } = req.body;
         if (fileUrl && fileUrl.startsWith('uploads')) {
