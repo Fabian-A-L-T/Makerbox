@@ -15,7 +15,7 @@ interface CardContainerProps {
 export default function CardContainer({children, title, subtitle, link}: CardContainerProps){
     return (
         <div className="my-8 border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)]">
-            <div className="py-4 px-6 flex items-center justify-between text-[var(--color-text)] bg-[var(--color-border)] rounded-t-[var(--border-radius-ui)]">
+            <div className="py-4 px-6 flex items-center justify-between bg-[var(--color-border)] rounded-t-[var(--border-radius-ui)]">
                 <div className="">
                     <h1 className="text-2xl">{title}</h1>
                     <span className="text-sm">{subtitle}</span>
