@@ -1,10 +1,10 @@
-import { object, optional, fallback, pipe, number, minValue, string, maxLength, boolean } from "valibot";
+import { object, optional, fallback, pipe, number, minValue, string, maxLength } from "valibot";
 
 export const resourceQuerySchema = object({
     page: optional(fallback(pipe(number(), minValue(1)),1),1),
 	search: optional(pipe(string(), maxLength(200, 'Texto de búsqueda muy largo'))),
 	orderBy: optional(string()),
-	desc: optional(fallback(boolean(), false))
+	desc: optional(fallback(string(), 'false'))
 })
 
 export interface ApiResponse<T> {
@@ -60,7 +60,6 @@ export interface Component {
     manufacturer: string;
     stock: number;
     stock_min: number;
-    metric: string;
     datasheet_url: string;
     image_url: string;
     notes: string;
@@ -135,7 +134,32 @@ export interface ProjectComponent {
     project_name: string,
     component_id: number,
     component_name: string,
-    planned_quantity: number,
-    used_quantity: number,
+    planned_amount: number,
+    used_amount: number,
     notes?: string
+}
+
+export interface ComponentStats {
+    category_id: number,
+    category_name: string,
+    category_path: string,
+    category_cost: string,
+    category_stock: string,
+    avg_unit_cost: string
+}
+
+export interface ToolStats {
+    category_id: number,
+    category_name: string,
+    category_path: string,
+    category_cost: string,
+    category_stock: string,
+    avg_cost: string
+}
+
+export interface ProjectStats {
+    state: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled',
+    project_count: string,
+    total_budget: string,
+    avg_budget: string
 }
