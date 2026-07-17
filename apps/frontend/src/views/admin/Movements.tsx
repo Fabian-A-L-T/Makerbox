@@ -33,33 +33,24 @@ export default function Movements() {
             }},
     ];
 
-    async function handleMovementSubmit(formData?: FormData){
-        try {
-            crud.setIsSubmitting(true);
-            formData?.append('user_id', user.id);
-            await crud.handleSubmit(formData);
-
-        } catch (error: any) {
-            crud.setIsSubmitting(false);
-            throw new Error(error.response?.data?.error ?? error.message);
-        }
+    function formDataTransform(formData?: FormData){
+        formData?.append('user_id', user!.id);
     }
 
     return (
         <>
-        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+        <Breadcrumbs className='m-5'>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Movimientos</Breadcrumb>
         </Breadcrumbs>
         <CRUDLayout<Movement>
             title="Movimientos" 
             subtitle="Gestión de movimientos de inventario"
-            checkAuth={checkAuth}
             columns={columns}
-            data={movements}
-            paginationData={{currentPage, limit, maxPages}}
-            crud={{...crud, handleSubmit: handleMovementSubmit}}
-            createForm={<MovementForm components={components} locations={locations} projects={projects} />}
+            currentPage={currentPage}
+            crud={crud}
+            formDataTransform={formDataTransform}
+            createForm={<MovementForm />}
             editForm={<></>}
         />
         </>

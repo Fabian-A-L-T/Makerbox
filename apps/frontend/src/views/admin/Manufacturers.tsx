@@ -30,7 +30,7 @@ export default function Manufacturers(){
     
     return(
         <>
-        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+        <Breadcrumbs className='m-5'>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Fabricantes</Breadcrumb>
         </Breadcrumbs>
@@ -38,10 +38,8 @@ export default function Manufacturers(){
             title="Fabricantes"
             subtitle="Aquí puedes gestionar los fabricantes de componentes electrónicos y herramientas."
             columns={columns}
-            data={data}
             crud={crud}
-            checkAuth={checkAuth}
-            paginationData={{currentPage, limit, maxPages}}
+            currentPage={currentPage}
             createForm={<ManufacturerForm/>}
             editForm={<ManufacturerForm target={crud.targetData}/>}
         />

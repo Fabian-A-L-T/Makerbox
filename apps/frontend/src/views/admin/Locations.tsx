@@ -37,28 +37,21 @@ export default function Locations() {
     ];
     
     // Build the path including optional parent prefix before submit
-    async function handleLocationSubmit(formData?: FormData) {
+    function formDataTransform(formData?: FormData) {
+        if (formData && crud.modalMode !== 'delete') {
+            const parentPath = formData.get('parent') as string | null;
+            const path       = formData.get('name') as string;
+            const SpacelessPath = path.replaceAll(' ', '_');
 
-        try {
-            if (formData && crud.modalMode !== 'delete') {
-                const parentPath = formData.get('parent') as string | null;
-                const path       = formData.get('name') as string;
-                const SpacelessPath = path.replaceAll(' ', '_');
-
-                if (parentPath) formData.set('path', `${parentPath}.${SpacelessPath}`);
-                else formData.set('path', `${SpacelessPath}`);
-                formData.delete('parent');
-            }
-            await crud.handleSubmit(formData);
-        }
-        catch (error: any) {
-            throw new Error(error.response?.data?.error ?? error.message);
+            if (parentPath) formData.set('path', `${parentPath}.${SpacelessPath}`);
+            else formData.set('path', `${SpacelessPath}`);
+            formData.delete('parent');
         }
     }
 
     return (
         <>
-        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+        <Breadcrumbs className='m-5'>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Ubicaciones</Breadcrumb>
         </Breadcrumbs>
@@ -66,12 +59,11 @@ export default function Locations() {
             title="Ubicaciones"
             subtitle="Gestión de ubicaciones de componentes y herramientas"
             columns={columns}
-            data={data}
-            checkAuth={checkAuth}
-            paginationData={{currentPage, limit, maxPages}}
-            crud={{ ...crud, handleSubmit: handleLocationSubmit }}
-            createForm={<LocationForm allLocations={allLocations} />}
-            editForm={<LocationForm target={crud.targetData} allLocations={allLocations} />}
+            currentPage={currentPage}
+            crud={crud}
+            formDataTransform={formDataTransform}
+            createForm={<LocationForm />}
+            editForm={<LocationForm target={crud.targetData} />}
         />
         </>
     );

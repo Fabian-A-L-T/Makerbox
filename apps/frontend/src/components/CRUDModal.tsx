@@ -22,19 +22,19 @@ export default function CRUDModal({children, title, description, submitText, pro
             <Dialog>
                 <>
                 <div className='flex flex-col gap-2 mb-8'>
-                    <Heading className='text-2xl font-bold text-[var(--color-text)]' slot="title">{title}</Heading>
+                    <Heading className='text-2xl font-bold' slot="title">{title}</Heading>
                     {description && <p className='text-md text-[var(--color-text-muted)]'>{description}</p>}
                 </div>
                 <Form
-                    onSubmit={async (e) => {
+                    onSubmit={(e) => {
                         e.preventDefault();
-                        await action(new FormData(e.currentTarget));
+                        action(new FormData(e.currentTarget));
                     }}
                     className='flex flex-col gap-8'
                 >
                     {isPending ?
                         (
-                            <div className='flex flex-col w-full my-20 items-center justify-center gap-2 bg-[var(--color-card)]'>
+                            <div className='flex flex-col w-full my-20 items-center justify-center gap-2 bg-[var(--color-card-bg)]'>
                                 <LoadingCircle message="Cargando..."/>
                             </div>
                         ):

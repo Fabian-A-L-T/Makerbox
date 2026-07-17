@@ -44,7 +44,7 @@ export default function Users(){
 
     return(
         <>
-        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+        <Breadcrumbs className='m-5'>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Usuarios</Breadcrumb>
         </Breadcrumbs>
@@ -52,10 +52,8 @@ export default function Users(){
             title="Usuarios"
             subtitle="Aquí puedes gestionar los usuarios del sistema"
             columns={columns}
-            data={data}
             crud={crud}
-            checkAuth={checkAuth}
-            paginationData={{currentPage, limit, maxPages}}
+            currentPage={currentPage}
             createForm={<UserCreateForm />}
             editForm={<UserEditForm user={crud.targetData} />}
         />

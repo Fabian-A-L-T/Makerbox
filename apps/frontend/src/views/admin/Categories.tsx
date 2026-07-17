@@ -36,22 +36,16 @@ export default function Categories() {
         },
     ];
 
-    async function handleCategorySubmit(formData?: FormData) {
-
-        try {
-            if (formData && crud.modalMode !== 'delete') {
-                const parentPath = formData.get('parent') as string | null;
-                const path       = formData.get('name') as string;
-                const SpacelessPath = path.replaceAll(' ', '_');
-                
-                if (parentPath) formData.set('path', `${parentPath}.${SpacelessPath}`);
-                else formData.set('path', `${SpacelessPath}`);
-                formData.delete('parent');
-            }
-            await crud.handleSubmit(formData);
-        }
-        catch (error: any) {
-            throw new Error(error.response?.data?.error ?? error.message);
+    function formDataTransform(formData?: FormData) {
+        if (formData && crud.modalMode !== 'delete') {
+            const parentPath = formData.get('parent') as string | null;
+            const path       = formData.get('name') as string;
+            const SpacelessPath = path.replaceAll(' ', '_');
+            console.log('parent', parentPath);
+            if (parentPath && parentPath !== ' ') formData.set('path', `${parentPath}.${SpacelessPath}`);
+            else formData.set('path', `${SpacelessPath}`);
+            console.log('Final path', formData.get('path'));
+            formData.delete('parent');
         }
     }
 
@@ -59,13 +53,12 @@ export default function Categories() {
         <CRUDLayout<Category>
             title=''
             subtitle=''
-            checkAuth={checkAuth}
             columns={columns}
-            data={data}
-            paginationData={{currentPage, limit, maxPages}}
-            crud={{...crud, handleSubmit: handleCategorySubmit}}
-            createForm={<CategoryForm allCategories={allCategories}/>}
-            editForm={<CategoryForm allCategories={allCategories} target={crud.targetData}/>}
+            currentPage={currentPage}
+            crud={crud}
+            formDataTransform={formDataTransform}
+            createForm={<CategoryForm type='component'/>}
+            editForm={<CategoryForm type='component' target={crud.targetData}/>}
         />
     )
 }

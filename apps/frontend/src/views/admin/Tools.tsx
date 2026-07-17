@@ -14,7 +14,7 @@ export default function Tools() {
 
     const route = getRouteApi('/_auth/manager/admin/tools');
     const { page: currentPage } = route.useSearch();
-    
+
     const [image, setImage] = useState<File | null>(null);
     const [file, setFile] = useState<File | null>(null);
     
@@ -62,7 +62,7 @@ export default function Tools() {
             ),
         },
     ];
-    
+
     /**
      * Handles the submission of component data
      * 
@@ -72,12 +72,11 @@ export default function Tools() {
      * @param {FormData} formData Data to be submitted
      * @throws {Error} Throws an error if the submission fails
      */
-    async function handleComponentSubmit(formData?: FormData){
-
+    async function formDataTransform(formData?: FormData){
         let newImageRoute: string | undefined;
         let newFileRoute: string | undefined;
+
         try {
-            crud.setIsSubmitting(true);
             if (formData && crud.modalMode !== 'delete') {
                 if(image){
                     newImageRoute = await handleUpload(image, 'image');
@@ -96,31 +95,28 @@ export default function Tools() {
                     setFile(null);
                 }
             }
-            await crud.handleSubmit(formData);
         }
         catch (error: any) {
             if (newImageRoute) await handleDelete(newImageRoute);
             if (newFileRoute) await handleDelete(newFileRoute);
-            crud.setIsSubmitting(false);
             throw new Error(error.response?.data?.error ?? error.message);
         }
     }
 
     return (
         <>
-        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+        <Breadcrumbs className='m-5'>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Herramientas</Breadcrumb>
         </Breadcrumbs>
         <CRUDLayout<Tool>
             title="Herramientas"
             columns={columns}
-            data={data}
-            checkAuth={checkAuth}
-            paginationData={{currentPage, limit, maxPages}}
-            crud={{...crud, handleSubmit: handleComponentSubmit}}
-            createForm={<ToolForm allCategories={categories} allManufacturers={manufacturers} allLocation={locations} setImage={setImage} setFile={setFile} />}
-            editForm={<ToolForm target={crud.targetData} allCategories={categories} allManufacturers={manufacturers} allLocation={locations} setImage={setImage} setFile={setFile}/>}
+            currentPage={currentPage}
+            crud={crud}
+            formDataTransform={formDataTransform}
+            createForm={<ToolForm setImage={setImage} setFile={setFile} />}
+            editForm={<ToolForm target={crud.targetData} setImage={setImage} setFile={setFile}/>}
         />
         </>
     );

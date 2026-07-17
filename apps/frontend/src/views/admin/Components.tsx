@@ -52,7 +52,7 @@ export default function Components() {
             ),
         },
     ];
-    
+
     /**
      * Handles the submission of component data
      * 
@@ -60,57 +60,45 @@ export default function Components() {
      * if the submission fails, it deletes the uploaded image
      * 
      * @param {FormData} formData Data to be submitted
-     * @throws {Error} Throws an error if the submission fails
      */
-    async function handleComponentSubmit(formData?: FormData){
-
+    async function formDataTransform(formData?: FormData){
         let newImageRoute: string | undefined;
         let newFileRoute: string | undefined;
-        try {
-            crud.setIsSubmitting(true);
-            if (formData && crud.modalMode !== 'delete') {
-                if(image){
-                    newImageRoute = await handleUpload(image, 'image');
-                    if (crud.targetData?.image_url) {
-                        await handleDelete(crud.targetData.image_url);
-                    }
-                    formData?.append('image_url', newImageRoute!);
-                    setImage(null);
+
+        if (formData && crud.modalMode !== 'delete') {
+            if(image){
+                newImageRoute = await handleUpload(image, 'image');
+                if (crud.targetData?.image_url) {
+                    await handleDelete(crud.targetData.image_url);
                 }
-                if(file){
-                    newFileRoute = await handleUpload(file, 'document');
-                    if (crud.targetData?.datasheet_url) {
-                        await handleDelete(crud.targetData.datasheet_url);
-                    }
-                    formData?.append('datasheet_url', newFileRoute!);
-                    setFile(null);
-                }
+                formData?.append('image_url', newImageRoute!);
+                setImage(null);
             }
-            await crud.handleSubmit(formData);
-        }
-        catch (error: any) {
-            if (newImageRoute) await handleDelete(newImageRoute);
-            if (newFileRoute) await handleDelete(newFileRoute);
-            crud.setIsSubmitting(false);
-            throw new Error(error.response?.data?.error ?? error.message);
+            if(file){
+                newFileRoute = await handleUpload(file, 'document');
+                if (crud.targetData?.datasheet_url) {
+                    await handleDelete(crud.targetData.datasheet_url);
+                }
+                formData?.append('datasheet_url', newFileRoute!);
+                setFile(null);
+            }
         }
     }
 
     return (
         <>
-        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+        <Breadcrumbs className='m-5'>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Componentes</Breadcrumb>
         </Breadcrumbs>
         <CRUDLayout<Component>
             title="Componentes"
             columns={columns}
-            data={data}
-            checkAuth={checkAuth}
-            paginationData={{currentPage, limit, maxPages}}
-            crud={{...crud, handleSubmit: handleComponentSubmit}}
-            createForm={<ComponentForm allCategories={categories} allManufacturers={manufacturers} setImage={setImage} setFile={setFile} />}
-            editForm={<ComponentForm target={crud.targetData} allCategories={categories} allManufacturers={manufacturers} setImage={setImage} setFile={setFile}/>}
+            currentPage={currentPage}
+            crud={crud}
+            formDataTransform={formDataTransform}
+            createForm={<ComponentForm setImage={setImage} setFile={setFile} />}
+            editForm={<ComponentForm target={crud.targetData} setImage={setImage} setFile={setFile}/>}
         />
         </>
     );

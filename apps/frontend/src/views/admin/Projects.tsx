@@ -40,7 +40,7 @@ export default function Projects(){
             ),
         },
     ];
-    
+
     /**
      * Handles the submission of component data
      * 
@@ -48,46 +48,35 @@ export default function Projects(){
      * if the submission fails, it deletes the uploaded image
      * 
      * @param {FormData} formData Data to be submitted
-     * @throws {Error} Throws an error if the submission fails
      */
-    async function handleProjectSubmit(formData?: FormData){
-
+    async function formDataTransform(formData?: FormData){
         let newImageRoute: string | undefined;
-        try {
-            crud.setIsSubmitting(true);
-            if (formData && crud.modalMode !== 'delete') {
-                if(image){
-                    newImageRoute = await handleUpload(image, 'image');
-                    if (crud.targetData?.image_url) {
-                        await handleDelete(crud.targetData.image_url);
-                    }
-                    formData?.append('image_url', newImageRoute!);
-                    setImage(null);
+
+        if (formData && crud.modalMode !== 'delete') {
+            if(image){
+                newImageRoute = await handleUpload(image, 'image');
+                if (crud.targetData?.image_url) {
+                    await handleDelete(crud.targetData.image_url);
                 }
+                formData?.append('image_url', newImageRoute!);
+                setImage(null);
             }
-            if (crud.modalMode === 'post') formData?.append('responsible_id', user.id);
-            await crud.handleSubmit(formData);
         }
-        catch (error: any) {
-            if (newImageRoute) await handleDelete(newImageRoute);
-            crud.setIsSubmitting(false);
-            throw new Error(error.response?.data?.error ?? error.message);
-        }
+        if (crud.modalMode === 'post') formData?.append('responsible_id', user!.id);
     }
 
     return (
         <>
-        <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+        <Breadcrumbs className='m-5'>
             <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
             <Breadcrumb>Proyectos</Breadcrumb>
         </Breadcrumbs>
         <CRUDLayout<Project>
             title="Proyectos"
             columns={columns}
-            data={data}
-            checkAuth={checkAuth}
-            paginationData={{currentPage, limit, maxPages}}
-            crud={{...crud, handleSubmit: handleProjectSubmit}}
+            currentPage={currentPage}
+            crud={crud}
+            formDataTransform={formDataTransform}
             createForm={<ProjectForm setImage={setImage}/>}
             editForm={<ProjectForm target={crud.targetData} setImage={setImage}/>}
         />
