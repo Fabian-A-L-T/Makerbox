@@ -12,3 +12,5 @@ export const frontPort = process.env.FRONT_APP_PORT ?? 5173;
 
 /**Frontend app complete url (`domain:port`)*/
 export const frontUrl = `${frontDomain}:${frontPort}`
+
+export const jwtSecret = process.env.JWT_SECRET;
