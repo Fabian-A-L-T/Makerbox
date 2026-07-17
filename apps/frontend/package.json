@@ -26,6 +26,8 @@
     "clsx": "^2.1.1",
     "lodash": "^4.18.1",
     "parse-link-header": "^2.0.0",
+    "quill": "^2.0.3",
+    "quill-delta-to-html": "^0.12.1",
     "react": "^19.2.5",
     "react-aria-components": "^1.17.0",
     "react-dom": "^19.2.5",
