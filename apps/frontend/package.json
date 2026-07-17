@@ -11,6 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@bprogress/core": "^1.3.4",
+    "@bprogress/react": "^1.2.7",
     "@internationalized/date": "^3.12.1",
     "@remixicon/react": "^4.9.0",
     "@tailwindcss/vite": "^4.2.4",

@@ -1,20 +1,15 @@
-import '@styles/main.css'
-import ReactDOM from 'react-dom/client'
-import { useEffect } from 'react'
-import { RouterProvider } from '@tanstack/react-router'
-import { useAuth, AuthProvider } from './auth'
-import { createRouter } from '@tanstack/react-router';
-import { routeTree } from './routeTree.gen';
+import ReactDOM from 'react-dom/client';
+import { useEffect, StrictMode } from 'react';
+import { RouterProvider } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useAuth, AuthProvider } from './auth';
+import '@styles/main.css';
+import { router } from '@utils/router';
+import { ProgressProvider } from '@bprogress/react';
 
 const rootElement = document.getElementById('root')!
-const router = createRouter({
-	routeTree,
-	context: {
-		auth: undefined!,
-	},
-	defaultPreload: false,
-	scrollRestoration: true,
-});
+const queryClient = new QueryClient();
 
 function InnerApp() {
 	const auth = useAuth();
@@ -29,8 +24,15 @@ function InnerApp() {
 if (!rootElement.innerHTML) {
 	const root = ReactDOM.createRoot(rootElement);
 	root.render(
-		<AuthProvider>
-			<InnerApp />
-		</AuthProvider>
+		<StrictMode>
+			<AuthProvider>
+				<QueryClientProvider client={queryClient}>
+					<ProgressProvider>
+						<InnerApp />
+						<ReactQueryDevtools initialIsOpen={false} />
+					</ProgressProvider>
+				</QueryClientProvider>
+			</AuthProvider>
+		</StrictMode>
 	)
 }
