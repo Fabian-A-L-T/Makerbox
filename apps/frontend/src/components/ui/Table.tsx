@@ -5,11 +5,10 @@ import {
     Column,
     Row,
     Cell,
-    type SortDescriptor,
 } from 'react-aria-components';
-import { useState } from 'react';
 import { RiArrowUpSLine, RiArrowDownSLine, RiArrowUpDownLine } from '@remixicon/react';
 import "@styles/table.css";
+import { elementsPerPage } from '@utils/Utils';
 
 export interface ColumnDef<T> {
     key: string;
@@ -21,7 +20,9 @@ export interface ColumnDef<T> {
 interface TableProps<T extends { id: number | string }> {
     columns: ColumnDef<T>[];
     rows: T[];
-    /** Optional label for accessibility */
+    dataStatus: "success" | "error" | "pending";
+    errorMsg?: string;
+    rowHeader: string
     'aria-label'?: string;
 }
 
@@ -31,37 +32,24 @@ function SortIcon({ direction }: { direction?: 'ascending' | 'descending' }) {
     return <RiArrowUpDownLine size={16} color='var(--color-text-muted)' />;
 }
 
-export default function Table<T extends { id: number | string }>({
-    columns,
-    rows,
-    'aria-label': ariaLabel = 'Data table',
+export default function Table<T extends { id: number | string }>({ 
+    columns, 
+    rowHeader, 
+    dataStatus, 
+    errorMsg = 'Ha ocurrido un error al cargar los datos', 
+    rows, 'aria-label': ariaLabel = 'Data table'
 }: TableProps<T>) {
-    const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({ column: "id", direction: "ascending" });
-
-    const sortedRows = [...rows].sort((a, b) => {
-        if (!sortDescriptor.column) return 0;
-        const col = sortDescriptor.column as keyof T;
-        const va = a[col];
-        const vb = b[col];
-        let cmp = 0;
-        if (typeof va === 'number' && typeof vb === 'number') {
-            cmp = va - vb;
-        } else {
-            cmp = String(va ?? '').localeCompare(String(vb ?? ''));
-        }
-        return sortDescriptor.direction === 'descending' ? -cmp : cmp;
-    });
 
     return (
         <div className="table-container">
-            <AriaTable aria-label={ariaLabel} sortDescriptor={sortDescriptor} onSortChange={setSortDescriptor} className="w-full">
-                <TableHeader className="table-header">
+            <AriaTable aria-label={ariaLabel} className="w-full">
+                <TableHeader className="bg-[var(--color-table-header)]">
                     {columns.map((col) => (
                         <Column
                             key={col.key}
                             id={col.key}
                             allowsSorting={col.allowsSorting}
-                            isRowHeader={col.key === 'id'}
+                            isRowHeader={col.key === rowHeader}
                             className={({ isFocusVisible, allowsSorting }) =>
                                 [
                                     'column', col.key === 'actions' ? 'w-32' : '',
@@ -80,23 +68,39 @@ export default function Table<T extends { id: number | string }>({
                     ))}
                 </TableHeader>
 
-                <TableBody items={sortedRows}
-                    renderEmptyState={() => (
-                        <div className="table-no-results">Sin resultados</div>
-                    )}
-                >
-                    {(item) => (
-                        <Row key={item.id} className="table-row">
-                            {columns.map((col) => (
-                                <Cell key={col.key} className="table-cell">
-                                    {col.render
-                                        ? col.render(item)
-                                        : String(item[col.key as keyof T] ?? '—')}
-                                </Cell>
-                            ))}
-                        </Row>
-                    )}
-                </TableBody>
+                {dataStatus  !== 'pending' ?
+                    <TableBody items={rows}
+                        renderEmptyState={() => (
+                            <div className="table-no-results">{dataStatus === 'error' ? errorMsg : 'Sin resultados'}</div>
+                        )}
+                    >
+                        {(item) => (
+                            <Row key={item.id} className="table-row">
+                                {columns.map((col) => (
+                                    <Cell key={col.key} className="table-cell">
+                                        {col.render
+                                            ? col.render(item)
+                                            : String(item[col.key as keyof T] ?? '—')}
+                                    </Cell>
+                                ))}
+                            </Row>
+                        )}
+                    </TableBody>
+                :   <TableBody>
+                        {[...Array(elementsPerPage)].map((_, i) => (
+                            <Row key={-1 * i} className="table-row">
+                                {columns.map((col) => (
+                                    <Cell key={col.key} className="table-cell px-4">
+                                        { col.key !== 'actions' ? 
+                                            <div className='w-1/2 h-5 rounded-full animate-pulse bg-[var(--color-table-header)]'/>
+                                            : <div className='w-full h-8 rounded-[var(--border-radius-ui)] animate-pulse bg-[var(--color-table-header)]'/>
+                                        }
+                                    </Cell>
+                                ))}
+                            </Row>
+                        ))}
+                    </TableBody>
+                }
             </AriaTable>
         </div>
     );
