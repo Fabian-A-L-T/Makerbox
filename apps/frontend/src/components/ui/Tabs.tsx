@@ -17,13 +17,13 @@ export function Tabs(props: TabsProps) {
   return <RACTabs {...props} className={`flex flex-col gap-4 w-full ${props.className ?? '' }`}/>;
 }
 
-export function TabList<T>(props: TabListProps<T>) {
+export function TabList<T extends object>(props: TabListProps<T>) {
   return <RACTabList {...props} className={`flex max-w-full overflow-x-auto overflow-y-clip [scrollbar-width:none] border-b-2 border-[var(--color-border)] ${props.className ?? '' }`}/>;
 }
 
 export function Tab(props: TabProps) {
   return (
-    <RACTab {...props} className={`group relative flex items-center cursor-default px-3 py-1.5 text-sm font-medium transition text-[var(--color-text)]  ${props.className ?? '' }`}>
+    <RACTab {...props} className={`group relative flex items-center cursor-default px-3 py-1.5 text-sm font-medium transition ${props.className ?? '' }`}>
       {composeRenderProps(props.children, children => (
         <>
           {children}
@@ -34,10 +34,10 @@ export function Tab(props: TabProps) {
   );
 }
 
-export function TabPanels<T>(props: TabPanelsProps<T>) {
+export function TabPanels<T extends object>(props: TabPanelsProps<T>) {
   return <RACTabPanels {...props} className={`relative h-(--tab-panel-height) motion-safe:transition-[height] overflow-clip ${props.className ?? '' }`}/>;
 }
 
 export function TabPanel(props: TabPanelProps) {
-  return <RACTabPanel {...props} className={`flex-1 box-border p-4 text-[var(--color-text)] transition entering:opacity-0 exiting:opacity-0 exiting:absolute exiting:top-0 exiting:left-0 exiting:w-full ${props.className ?? '' }`}/>;
+  return <RACTabPanel {...props} className={`flex-1 box-border p-4 transition entering:opacity-0 exiting:opacity-0 exiting:absolute exiting:top-0 exiting:left-0 exiting:w-full ${props.className ?? '' }`}/>;
 }

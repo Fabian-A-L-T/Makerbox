@@ -2,7 +2,7 @@ import { type DropZoneProps ,DropZone as RACDropZone, Text } from 'react-aria-co
 import type { DropOperation, DropItem } from 'react-aria-components';
 // import './DropZone.css'
 
-const dropZoneClasses = "p-2 flex flex-col justify-center items-center border-2 border-dashed border-[var(--border-color)] bg-[var(--color-form-select-bg)] rounded-lg data-[focused]:border-[var(--color-primary)] transition-colors duration-300"
+const dropZoneClasses = "p-2 flex flex-col justify-center items-center border-2 border-dashed border-[var(--color-border)] bg-[var(--color-form-select-bg)] rounded-lg data-[focused]:border-[var(--color-primary)] transition-colors duration-300"
 
 export type DropEvent = {
     type: "drop";

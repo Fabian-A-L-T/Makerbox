@@ -55,9 +55,9 @@ export function StatusToast() {
               }
             })()}
             <div className='flex flex-col'>
-              <Text className='text-lg font-semibold'>{toast.content.title}</Text>
+              <Text className='text-[var(--color-text-light)] text-lg font-semibold'>{toast.content.title}</Text>
               {toast.content.description && (
-                <Text className='text-sm'>{toast.content.description}</Text>
+                <Text className='text-[var(--color-text-light)] text-sm'>{toast.content.description}</Text>
               )}
             </div>
           </ToastContent>

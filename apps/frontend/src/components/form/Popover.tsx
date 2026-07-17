@@ -9,7 +9,7 @@ export interface PopoverProps extends Omit<AriaPopoverProps, 'children'> {
 export function Popover({ children, hideArrow, ...props }: PopoverProps) {
   return (
     (
-      <AriaPopover {...props} className={`transition-opacity duration-300 data-[entering]:opacity-0 data-[exiting]:opacity-0 flex bg-[var(--color-form-select-bg)] min-w-(--trigger-width) overflow-y-auto border-2 border-[var(--color-border)] shadow-xl rounded-[var(--border-radius-ui)] ${props.className || ''}`}>
+      <AriaPopover {...props} className={`transition-opacity duration-300 data-[entering]:opacity-0 data-[exiting]:opacity-0 flex bg-[var(--color-form-select-bg)] min-w-(--trigger-width) overflow-y-auto border border-[var(--color-border)] shadow-xl rounded-[var(--border-radius-ui)] ${props.className || ''}`}>
         {({trigger}) => <>
           {!hideArrow && trigger !== 'MenuTrigger' && trigger !== 'SubmenuTrigger' && (
             <OverlayArrow>

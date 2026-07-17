@@ -9,11 +9,11 @@ import {
 import { composeRenderProps } from 'react-aria-components/composeRenderProps';
 import {Text} from '../ReactAria/Content';
 
-const listBoxItemClass = `px-3 py-2 cursor-pointer text-[var(--color-text)] rounded-[var(--border-radius-ui)] transition-colors`;
+const listBoxItemClass = `p-2 cursor-pointer rounded-[var(--border-radius-ui)] transition-colors`;
 
 export function ListBox<T extends object>({ children, ...props }: ListBoxProps<T>) {
   return (
-    <AriaListBox {...props} className={`w-full flex flex-col gap-2 p-2 bg-transparent rounded-[var(--border-radius-ui)] ${props.className || ''}`}>
+    <AriaListBox {...props} className={`w-full max-h-[217px] flex flex-col gap-1 p-2 rounded-[var(--border-radius-ui)] ${props.className || ''}`}>
       {children}
     </AriaListBox>
   );

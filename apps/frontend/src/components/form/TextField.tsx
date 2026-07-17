@@ -24,12 +24,12 @@ export default function TextField({ label, description, errorMessage, placeholde
   return (
     <AriaTextField {...props} className={`flex flex-col gap-2 ${props.className || ''}`}>
       <Label className="text-base font-semibold">{label} {props.isRequired && <span className="text-[var(--color-danger)]">*</span>}</Label>
-      <FieldGroup className={'bg-[var(--color-form-text-bg)] outline-[var(--color-border)] outline-2 rounded-[var(--border-radius-ui)] data-[focus-within]:outline-[var(--color-primary)] transition-colors duration-300'}>
+      <FieldGroup className={'min-h-[40px] bg-[var(--color-form-text-bg)] border-[var(--color-border)] border-2 rounded-[var(--border-radius-ui)] data-[focus-within]:outline-[var(--color-primary)]'}>
         {props.type === 'textarea' 
-          ? <TextArea className="outline-none w-full p-2" placeholder={placeholder} /> 
+          ? <TextArea className="min-h-[36px] outline-none w-full p-2" placeholder={placeholder} /> 
           : <>
-              <Input className="outline-none" placeholder={placeholder}  />
               {icon}
+              <Input className="outline-none" placeholder={placeholder}  />
             </>
         }
       </FieldGroup>
