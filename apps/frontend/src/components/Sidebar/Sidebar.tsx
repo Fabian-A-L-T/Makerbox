@@ -1,55 +1,25 @@
 import './Sidebar.css'
 import logo from '../../assets/logo.png'
-import { RiWrenchLine, RiHome2Line, RiCpuLine, RiPencilRulerLine, RiLogoutBoxRLine } from '@remixicon/react';
+import { RiWrenchLine, RiHome2Line, RiCpuLine, RiPencilRulerLine, RiLogoutBoxRLine, RiMoonLine, RiSunLine, RiNodeTree, RiMapPinLine, RiGroupLine, RiSwap2Line, type RemixiconComponentType, RiBuilding3Line, RiAddLine, RiMore2Line, RiUserSettingsLine } from '@remixicon/react';
 import { Link } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { Switch } from '@components/ui/Switch';
+import { Button } from '@components/form/Button';
+import { Menu, MenuItem, MenuSeparator, MenuTrigger} from '@components/ui/Menu';
 
 interface NavItem {
-  id: string
-  label: string
-  icon: React.ReactNode
-  badge?: number
+  link: string,
+  label: string,
+  icon: RemixiconComponentType
 }
 
 interface NavGroup {
-  title: string
-  items: NavItem[]
+  title: string,
+  items: NavItem[],
+  show: boolean
 }
 
-const navGroups: NavGroup[] = [
-  {
-    title: 'Principal',
-    items: [
-      {
-        id: '',
-        label: 'Inicio',
-        icon: (
-          <RiHome2Line />
-        ),
-      },
-      {
-        id: 'components',
-        label: 'Componentes',
-        icon: (
-          <RiCpuLine />
-        ),
-      },
-      {
-        id: 'tools',
-        label: 'Herramientas',
-        icon: (
-          <RiWrenchLine />
-        ),
-      },
-      {
-        id: 'projects',
-        label: 'Proyectos',
-        icon: (
-          <RiPencilRulerLine />
-        ),
-      },
-    ],
-  },
-]
+type ThemeMode = 'light' | 'dark'
 
 interface SidebarProps {
   isOpen?: boolean
@@ -59,67 +29,202 @@ interface SidebarProps {
   logout: () => void;
 }
 
+const getInitialTheme = (): ThemeMode => {
+  if (typeof window === 'undefined') return 'light'
+
+  const storedTheme = window.localStorage.getItem('theme')
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    return storedTheme
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 export default function Sidebar({ isOpen = true, onClose, userData, activeId, logout }: SidebarProps) {
-  return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="sidebar__overlay"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+	const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
+	const appVersion = import.meta.env.VITE_APP_VERSION;
+	const buildMode = import.meta.env.MODE;
 
-      <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
-        <nav className="sidebar__nav" aria-label="Main navigation">
-          
-          <div className='sidebar__logo'>
-            <img src={logo} alt="logo" />
-          </div>
+  	const navGroups: NavGroup[] = [
+		{
+			title: 'Principal',
+			show: true,
+			items: [
+			{
+				link: '',
+				label: 'Inicio',
+				icon: RiHome2Line,
+			},
+			{
+				link: 'components',
+				label: 'Componentes',
+				icon: RiCpuLine,
+			},
+			{
+				link: 'tools',
+				label: 'Herramientas',
+				icon: RiWrenchLine,
+			},
+			{
+				link: 'projects',
+				label: 'Proyectos',
+				icon: RiPencilRulerLine,
+			},
+			],
+		},
+		{
+			title: 'Gestionar',
+			show: userData.role === 'admin',
+			items: [
+				{
+					label: 'Componentes',
+					icon: RiCpuLine,
+					link: 'admin/components'
+				},
+				{
+					label: 'Herramientas', 
+					icon: RiWrenchLine,
+					link: 'admin/tools'
+				},
+				{
+					label: 'Proyectos',
+					icon: RiPencilRulerLine,
+					link: 'admin/projects'
+				},
+				{
+					label: 'Categorias', 
+					icon: RiNodeTree,
+					link: 'admin/categories/components'
+				},
+				{
+					label: 'Fabricantes',
+					icon: RiBuilding3Line,
+					link: 'admin/manufacturers'
+				},
+				{
+					label: 'Ubicaciones',
+					icon: RiMapPinLine,
+					link: 'admin/locations'
+				},
+				{
+					label: 'Usuarios', 
+					icon: RiGroupLine,
+					link: 'admin/users'
+				},
+				{
+					label: 'Movimientos',
+					icon: RiSwap2Line,
+					link: 'admin/movements'
+				}
+			]
+		}
+	]
 
-          <div className='sidebar__header'>
-            <div className="sidebar__header-avatar">{userData.name.substring(0, 2).toUpperCase()}</div>
-            <div className='sidebar__header-info'>
-              <span className="sidebar__header-name">{userData.name}</span>
-              <span className="sidebar__header-role">{userData.role}</span>
-            </div>
-          </div>
+	useEffect(() => {
+		const root = document.documentElement
+		root.dataset.theme = theme
+		root.style.colorScheme = theme
+		window.localStorage.setItem('theme', theme)
+	}, [theme])
 
-          {navGroups.map((group) => {
-            if(group.title === 'Manage' && userData.role !== 'admin') return null;
-            return (
-            <div key={group.title} className="sidebar__group">
-              <span className="sidebar__group-title">{group.title}</span>
-              <ul className="sidebar__list" role="list">
-                {group.items.map(item => (
-                  <li key={item.id}>
-                    <Link
-                      className={`sidebar__item ${activeId === item.id ? 'sidebar__item--active' : ''}`}
-                      aria-current={activeId === item.id ? 'page' : undefined}
-                      to={`/manager/${item.id}`}
-                    >
-                      <span className="sidebar__item-icon">{item.icon}</span>
-                      <span className="sidebar__item-label">{item.label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            )}
-          )}
-          <div key="logout" className="sidebar__group">
-              <button
-                className={`sidebar__item`}
-                onClick={logout}
-                type='button' 
-              >
-                <span className="sidebar__item-icon"><RiLogoutBoxRLine /></span>
-                <span className="sidebar__item-label">Cerrar sesión</span>
-              </button>
-            </div>
-        </nav>
-      </aside>
-    </>
-  )
+  	const isDarkTheme = theme === 'dark'
+
+	return (
+		<>
+		{/* Mobile overlay */}
+		{isOpen && (
+			<div
+			className="sidebar__overlay"
+			onClick={onClose}
+			aria-hidden="true"
+			/>
+		)}
+
+		<aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
+			<nav className="sidebar__nav h-full" aria-label="Main navigation">
+				<div className='sidebar__logo'>
+					<img className='mx-auto' src={logo} alt="logo" />
+				</div>
+
+				<div className='sidebar__header'>
+					<div className="sidebar__header-avatar">{userData.name.substring(0, 2).toUpperCase()}</div>
+					<div className='sidebar__header-info'>
+						<span className="sidebar__header-name">{userData.name}</span>
+						<span className="sidebar__header-role">{userData.role}</span>
+					</div>
+					<MenuTrigger placement='bottom right'>
+						<Button className='!border-none !outline-none' aria-label="Actions" variant="quiet">
+							<RiMore2Line size={16}/>
+						</Button>
+						<Menu shouldCloseOnSelect={false}>
+							<MenuItem onAction={() => alert('En construcción')}>
+								<RiPencilRulerLine size={20}/>
+								Mis proyectos
+							</MenuItem>
+							<MenuItem onAction={() => alert('En construcción')}>
+								<RiUserSettingsLine size={20}/>
+								Configuración de la cuenta
+							</MenuItem>
+							<MenuSeparator/>
+							<MenuItem>
+								<Switch
+									className="cursor-pointer rounded-[var(--border-radius-ui)] text-[var(--color-text)]"
+									ActiveIcon={<RiMoonLine size={14} />}
+									InactiveIcon={<RiSunLine size={14} />}
+									isSelected={isDarkTheme}
+									onChange={(selected) => setTheme(selected ? 'dark' : 'light')}
+									>
+									<span className="whitespace-nowrap">{isDarkTheme ? 'Modo oscuro' : 'Modo claro'}</span>
+								</Switch>
+							</MenuItem>
+						</Menu>
+					</MenuTrigger>
+				</div>
+				<div className="sidebar__group px-4"> 
+					<Button
+						variant='primary'
+					>
+						<RiAddLine/>
+						Nuevo proyecto
+					</Button>
+				</div>
+
+				{navGroups.map((group) => {
+					if(!group.show) return null;
+					return (
+					<div key={group.title} className="sidebar__group">
+					<span className="sidebar__group-title">{group.title}</span>
+					<ul className="sidebar__list" role="list">
+						{group.items.map((item) => (
+						<li key={group.title + '-' + item.link}>
+							<Link
+							className={`sidebar__item ${activeId === item.link ? 'sidebar__item--active' : ''}`}
+							aria-current={activeId === item.link ? 'page' : undefined}
+							to={item.link ? `/manager/${item.link}` : `/manager`}
+							>
+							<item.icon />
+							<span className="sidebar__item-label">{item.label}</span>
+							</Link>
+						</li>
+						))}
+					</ul>
+					</div>
+					)}
+				)}
+
+				<div key="logout" className="sidebar__group mt-auto">
+					<button
+					className={`sidebar__item`}
+					onClick={logout}
+					type='button' 
+					>
+						<span className="sidebar__item-icon"><RiLogoutBoxRLine /></span>
+						<span className="sidebar__item-label">Cerrar sesión</span>
+					</button>
+				</div>
+				<span className='text-xs text-[var(--color-text-muted)]'>Ver. {appVersion} ({buildMode})</span>
+			</nav>
+		</aside>
+		</>
+	)
 }
