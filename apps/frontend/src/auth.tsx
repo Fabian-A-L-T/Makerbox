@@ -48,9 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     if(isLoading) return (
-        <div className="flex flex-col items-center justify-center h-screen w-full bg-[#fff]/80 fixed">
-            <RiLoader4Line size={64} color="#222" className='animate-spin' />
-            <span className='font-semibold ml-2 text-lg text-[#222]'>Cargando...</span>
+        <div className="flex flex-col items-center justify-center h-screen w-full fixed">
+            <RiLoader4Line size={64} color="var(--color-text)" className='animate-spin' />
+            <span className='font-semibold ml-2 text-lg'>Cargando...</span>
         </div>
     )
 
