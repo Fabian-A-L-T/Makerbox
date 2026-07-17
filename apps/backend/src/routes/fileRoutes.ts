@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import { FileController } from "../controllers/FileController.js";
+import FileController from "../controllers/FileController.js";
 import checkAdmin from "../middlewares/checkAdmin.js";
 import upload from "../middlewares/uploadFile.js";
 
