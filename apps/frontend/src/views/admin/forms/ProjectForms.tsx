@@ -5,10 +5,11 @@ import { DropZone, Text, type DropEvent } from "@components/ReactAria/DropZone";
 import * as v from 'valibot';
 import { RiImageLine } from "@remixicon/react";
 import { NumberField } from "@components/form/NumberField";
-import { validateImgSize } from "@utils/CRUDUtils";
+import { validateImgSize } from "@utils/Utils";
 import { DateField } from "@components/form/DateField";
 import { CalendarDate, parseDate } from "@internationalized/date";
 import { Select, SelectItem } from "@components/form/Select";
+import { AsyncImg } from "@utils/Utils";
 
 const projectSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
@@ -84,7 +85,7 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                     >
                         <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
                             {imgContent || target?.image_url 
-                                ? <img src={imgContent || ('/' + target?.image_url)} alt="" style={{maxWidth: '100%'}} /> 
+                                ? <AsyncImg className="w-full h-full !bg-transparent" src={imgContent || ('/' + target?.image_url)} alt=""/>
                                 :(
                                     <>
                                         <RiImageLine className="mx-auto" size={64} color="var(--color-text-muted)"/>

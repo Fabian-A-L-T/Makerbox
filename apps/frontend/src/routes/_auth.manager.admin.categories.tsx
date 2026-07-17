@@ -20,7 +20,7 @@ function CategoryView(){
 
     return (
         <div>
-            <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
+            <Breadcrumbs className={'m-5'}>
                 <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
                 <Breadcrumb href='/manager/admin/categories'>Categorias</Breadcrumb>
             </Breadcrumbs>
@@ -33,7 +33,7 @@ function CategoryView(){
                     activeProps={{
                         className:'!border-b-[var(--color-primary)] text-[var(--color-primary)]'
                     }} 
-                    to={'../components'}
+                    to={'/manager/admin/categories/components'}
                 >
                     Componentes
                 </Link>
@@ -42,7 +42,7 @@ function CategoryView(){
                     activeProps={{
                         className:'!border-b-[var(--color-primary)] text-[var(--color-primary)]'
                     }} 
-                    to={'../tools'}
+                    to={'/manager/admin/categories/tools'}
                 >
                     Herramientas
                 </Link>

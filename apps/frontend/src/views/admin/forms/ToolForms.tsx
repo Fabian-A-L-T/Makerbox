@@ -8,7 +8,9 @@ import { RiImageLine, RiFileTextLine, RiFileWord2Line } from "@remixicon/react";
 import { last, split } from "lodash";
 import { DateField } from "@components/form/DateField";
 import { parseDate } from '@internationalized/date';
-import { validateImgSize } from "@utils/CRUDUtils";
+import { fetchData, paginationLimit, validateImgSize } from "@utils/Utils";
+import { useAsyncList } from "react-aria-components";
+import { AsyncImg } from "@utils/Utils";
 
 const toolSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
@@ -34,24 +36,73 @@ const validate = (value: string | number | Date | undefined, key: 'name' | 'sku'
 
 interface ToolFormProps {
     target?: Tool | null;
-    allCategories: Category[];
-    allManufacturers: Manufacturer[];
-    allLocation: Location[];
     setImage: (image: File | null) => void;
     setFile: (file: File | null) => void;
 }
 
-export default function ToolForm({ target, allCategories, allManufacturers, allLocation, setImage, setFile }: ToolFormProps) {
+export default function ToolForm({ target, setImage, setFile }: ToolFormProps) {
     const [imgContent, setImgContent] = useState<string | null>(null);
     const [fileContent, setFileContent] = useState<{name: string, type: string} | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [fileErrorMsg, setFileErrorMsg] = useState<string | null>(null);
+    const [targetCategoryFlag, setTargetCategoryFlag] = useState(false);
+    const [targetManufacturerFlag, setManufacturerFlag] = useState(false);
+    const [targetLocationFlag, setLocationFlag] = useState(false);
+
     let fAcquisitionDate, fCalibDate;
     if(target) {
         if(target.acquisition_date) fAcquisitionDate = new Date(target.acquisition_date).toISOString().split('T')[0];
         if(target.next_calibration_date) fCalibDate = new Date(target.next_calibration_date).toISOString().split('T')[0];
     }
     
+    const categories = useAsyncList<Category>({
+        async load({cursor}){
+            const { data } = await fetchData<Category>(cursor || `/tool-categories?limit=${paginationLimit + 1}&offset=0${target ? `&exclude=${target.category_id}` : ''}`);
+            
+            if(target && !targetCategoryFlag) {
+                let res = await fetchData<Category>(`/tool-categories/${target.category_id}`);
+                console.log(res.data)
+                setTargetCategoryFlag(true);
+                data.content.unshift(res.data.content[0]);
+            }
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
+
+    const manufacturers = useAsyncList<Manufacturer>({
+        async load({cursor}){
+            const { data } = await fetchData<Manufacturer>(cursor || `/manufacturers?limit=${paginationLimit + 1}&offset=0${target ? `&exclude=${target.manufacturer_id}` : ''}`);
+            
+            if(target && !targetManufacturerFlag) {
+                let res = await fetchData<Manufacturer>(`/manufacturers/${target.manufacturer_id}`);
+                setManufacturerFlag(true);
+                data.content.unshift(res.data.content[0]);
+            }
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
+
+    const locations = useAsyncList<Location>({
+        async load({cursor}){
+            const { data } = await fetchData<Location>(cursor || `/locations?limit=${paginationLimit + 1}&offset=0${target ? `&exclude=${target.location_id}` : ''}`);
+            
+            if(target && !targetLocationFlag) {
+                let res = await fetchData<Location>(`/locations/${target.location_id}`);
+                setLocationFlag(true);
+                data.content.unshift(res.data.content[0]);
+            }
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
 
     async function fileDropHandler(event: DropEvent){
         let item = event.items.find(item => {
@@ -98,7 +149,7 @@ export default function ToolForm({ target, allCategories, allManufacturers, allL
 
     return (
         <>
-            <div className='grid grid-cols-5 gap-4 '>
+            <div className='grid grid-cols-5 gap-8 '>
                 <div className='flex flex-col gap-2 w-2xs aspect-square col-span-2'>
                     <span className="text-sm font-semibold" >Imagen</span>
                     <DropZone
@@ -112,7 +163,7 @@ export default function ToolForm({ target, allCategories, allManufacturers, allL
                     >
                         <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
                             {imgContent || target?.image_url 
-                                ? <img src={imgContent || ('/' + target?.image_url)} alt="" style={{maxWidth: '100%'}} /> 
+                                ? <AsyncImg className="w-full h-full !bg-transparent" src={imgContent || ('/' + target?.image_url)} alt=""/>
                                 :(
                                     <>
                                         <RiImageLine className="mx-auto" size={64} color="var(--color-text-muted)"/>
@@ -123,7 +174,7 @@ export default function ToolForm({ target, allCategories, allManufacturers, allL
                     </DropZone>
                     {errorMessage && <span className="text-[var(--color-danger)] text-xs">{errorMessage}</span>}
                 </div>
-                <div className="flex flex-col gap-4 col-span-3">
+                <div className="flex flex-col gap-8 col-span-3">
                     <TextField
                         autoFocus
                         label="Nombre"
@@ -163,14 +214,14 @@ export default function ToolForm({ target, allCategories, allManufacturers, allL
                 isRequired
                 errorMessage="Campo requerido"
                 placeholder="Seleccione una categoría"
+                isInvalid={categories.loadingState === 'loading'}
                 validate={(value) => validate(value, 'category_id')}
                 {...(target ? {defaultValue: target.category_id}: {})}
+                loadingState={categories.loadingState}
+                onLoadMore={categories.loadMore}
+                allowsEmptyCollection
             >
-                {allCategories.map((cat) => (
-                    <SelectItem key={cat.id} id={cat.id}>
-                        {cat.name}
-                    </SelectItem>
-                ))}
+                {categories.items.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
             </Select>
             <Select
                 label="Fabricante"
@@ -178,14 +229,14 @@ export default function ToolForm({ target, allCategories, allManufacturers, allL
                 isRequired
                 errorMessage="Campo requerido"
                 placeholder="Seleccione un fabricante"
+                isInvalid={manufacturers.loadingState === 'loading'}
                 validate={(value) => validate(value, 'manufacturer_id')}
                 {...(target ? {defaultValue: target.manufacturer_id}: {})}
+                loadingState={manufacturers.loadingState}
+                onLoadMore={manufacturers.loadMore}
+                allowsEmptyCollection
             >
-                {allManufacturers.map((man) => (
-                    <SelectItem key={man.id} id={man.id}>
-                        {man.name}
-                    </SelectItem>
-                ))}
+                {manufacturers.items.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
             </Select>
             <Select
                 label="Ubicaciones"
@@ -193,14 +244,14 @@ export default function ToolForm({ target, allCategories, allManufacturers, allL
                 isRequired
                 errorMessage="Campo requerido"
                 placeholder="Seleccione una ubicación"
+                isInvalid={locations.loadingState === 'loading'}
                 validate={(value) => validate(value, 'location_id')}
                 {...(target ? {defaultValue: target.location_id}: {})}
+                loadingState={locations.loadingState}
+                onLoadMore={locations.loadMore}
+                allowsEmptyCollection
             >
-                {allLocation.map((loc) => (
-                    <SelectItem key={loc.id} id={loc.id}>
-                        {loc.name}
-                    </SelectItem>
-                ))}
+                {locations.items.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
             </Select>
             <Select
                 label="Estado"

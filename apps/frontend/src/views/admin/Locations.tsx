@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import axios, { type AxiosResponse } from 'axios';
 import { type ColumnDef } from '@components/ui/Table';
 import CRUDLayout from '@components/layouts/CRUDLayout';
 import { useCRUD } from '../../hooks/useCRUD';
@@ -13,26 +11,12 @@ const route = getRouteApi('/_auth/manager/admin/locations');
 
 export default function Locations() {
     const { page: currentPage } = route.useSearch();
-    const {auth: {checkAuth}, pagination: {limit, maxPages}} = route.useRouteContext();
-    const { data } = route.useLoaderData() as {data: Promise<AxiosResponse<Location[]>>, test: Promise<string>};
-    const [allLocations, setAllLocations] = useState<Location[]>([]);
-
-    const crud = useCRUD<Location>({ checkAuth, apiRoute: '/api/locations', resourceLabel: 'ubicación',
-        extraFetch: async () => {
-            try{
-                const response = await axios.get<Location[]>('/api/locations');
-                setAllLocations(response.data);
-            }
-            catch(err:any){
-                throw err;
-            }
-        },
-    });
+    const crud = useCRUD<Location>({ apiRoute: '/locations', resourceLabel: 'ubicación'});
 
     const columns: ColumnDef<Location>[] = [
-        { key: 'id',       label: 'ID',     allowsSorting: true },
-        { key: 'name',     label: 'Nombre', allowsSorting: true },
-        { key: 'path',     label: 'Ruta',   allowsSorting: true,
+        { key: 'id',       label: 'ID'},
+        { key: 'name',     label: 'Nombre'},
+        { key: 'path',     label: 'Ruta',
             render: (item) => {
                 const route = item.path.replaceAll('_', ' ').replaceAll('.', ' > ');
                 return (

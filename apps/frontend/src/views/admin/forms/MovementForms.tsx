@@ -3,11 +3,12 @@ import { Select, SelectItem } from "@components/form/Select";
 import TextField from "@components/form/TextField";
 import { Text } from "@components/ReactAria/Content";
 import type { Component, ComponentLocation, Location, Project, ProjectComponent } from "../../../interfaces/schemas";
-import axios from "axios";
 import { useState } from "react";
 import {useAsyncList} from 'react-aria-components/useAsyncList';
+import { makerboxApi } from "../../../api/makerbox.api";
+import { fetchData, paginationLimit } from "@utils/Utils";
 
-export default function MovementForm({components, projects, locations}: {components: Component[], projects: Project[], locations: Location[]}) {
+export default function MovementForm() {
     const [stockType, setStockType] = useState<string | null>(null);
     const [resetableFormValues, setResetableFormValues] = useState({
         componentId: null as string | null,
@@ -29,21 +30,51 @@ export default function MovementForm({components, projects, locations}: {compone
         });
     };
 
-    let componentLocations = useAsyncList<ComponentLocation>({
+    const components = useAsyncList<Component>({
+        async load({cursor}){
+            const { data } = await fetchData<Component>(cursor || `/components?limit=${paginationLimit}&offset=0`);
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
+
+    const locations = useAsyncList<Location>({
+        async load({cursor}){
+            const { data } = await fetchData<Location>(cursor || `/locations?limit=${paginationLimit}&offset=0`);
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
+
+    const projects = useAsyncList<Project>({
+        async load({cursor}){
+            const { data } = await fetchData<Project>(cursor || `/projects?limit=${paginationLimit}&offset=0`);
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
+
+    const componentLocations = useAsyncList<ComponentLocation>({
         async load({filterText}) {
             if(filterText){
-                const response = await axios.get(`/api/components/${filterText}/locations`);
-                return {items: response.data};
+                const response = await makerboxApi.get(`/components/${filterText}/locations`);
+                return {items: response.data.content};
             }
             return {items: []}
         }
     });
 
-    let projectComponents = useAsyncList<ProjectComponent>({
+    const projectComponents = useAsyncList<ProjectComponent>({
         async load({filterText}) {
             if(filterText){
-                const response = await axios.get(`/api/projects/${filterText}/components`);
-                return {items: response.data};
+                const response = await makerboxApi.get(`/projects/${filterText}/components`);
+                return {items: response.data.content};
             }
             return {items: []}
         }
@@ -69,40 +100,18 @@ export default function MovementForm({components, projects, locations}: {compone
         </Select>
         { stockType && (
             <>
-            <Select label="Componente"
-                name="component_id"
-                placeholder="Seleccione"
-                items={components}
-                value={resetableFormValues.componentId ?? null}
-                onChange={(value) => {
-                    if(stockType === 'return') projectComponents.setFilterText(value as string);
-                    componentLocations.setFilterText(value as string);
-                    setResetableFormValues((prev) => ({...prev, componentId: value as string, originLocationId: null, destinationLocationId: null, projectId: null, maxAmount: null, amount: null}));
-                }}
-                isRequired
-                isInvalid={!components.length}
-                validate={(value) => {
-                    if(!value) return 'Este campo es requerido';
-                    return true;
-                }}
-                errorMessage={({isInvalid, validationErrors}) => {
-                    if(isInvalid) return 'No hay componentes disponibles';
-                    else if(validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
-                    return 'Ha ocurrido un error';
-                }}
-            >
-                {item => <SelectItem id={item.id.toString()}>{item.name}</SelectItem>}
-            </Select>
-
             { stockType === 'return' && (
                 <Select label="Proyecto"
                     name="project_id"
                     placeholder="Seleccione"
-                    items={projectComponents.items}
+                    items={projects.items}
                     value={resetableFormValues.projectId ? resetableFormValues.projectId.toString() : null}
-                    onChange={(value) => setResetableFormValues((prev) => ({...prev, projectId: Number(value)}))}
+                    onChange={(value) => {
+                        projectComponents.setFilterText(value as string);
+                        setResetableFormValues((prev) => ({...prev, projectId: Number(value), componentId: null, originLocationId: null, maxAmount: null, amount: null}))
+                    }}
                     isRequired
-                    isInvalid={!projectComponents.items.length}
+                    isInvalid={!projects.items.length}
                     validate={(value) => {
                         if(!value) return 'Este campo es requerido';
                         return true;
@@ -112,10 +121,67 @@ export default function MovementForm({components, projects, locations}: {compone
                         else if(validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
                         return 'Ha ocurrido un error';
                     }}
+                    loadingState={projects.loadingState}
+                    onLoadMore={projects.loadMore}
                 >
-                    {item => <SelectItem id={item.project_id.toString()} onPress={() => setResetableFormValues((prev) => ({...prev, maxAmount: item.planned_quantity - item.used_quantity}))}>{item.project_name}</SelectItem>}
+                    {item => <SelectItem id={item.id.toString()} onPress={() => setResetableFormValues((prev) => ({...prev, projectId: item.id}))}>{item.name}</SelectItem>}
                 </Select>
             )}
+            { stockType !== 'return' ? 
+                <Select label="Componente"
+                    name="component_id"
+                    placeholder="Seleccione"
+                    items={components.items}
+                    value={resetableFormValues.componentId ?? null}
+                    onChange={(value) => {
+                        componentLocations.setFilterText(value as string);
+                        setResetableFormValues((prev) => ({...prev, componentId: value as string, originLocationId: null, destinationLocationId: null, projectId: null, maxAmount: null, amount: null}));
+                    }}
+                    isRequired
+                    isInvalid={!components.items.length}
+                    validate={(value) => {
+                        if(!value) return 'Este campo es requerido';
+                        return true;
+                    }}
+                    errorMessage={({isInvalid, validationErrors}) => {
+                        if(isInvalid) return 'No hay componentes disponibles';
+                        else if(validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
+                        return 'Ha ocurrido un error';
+                    }}
+                    loadingState={components.loadingState}
+                    onLoadMore={components.loadMore}
+                >
+                    {item => <SelectItem id={item.id.toString()}>{item.name}</SelectItem>}
+                </Select>
+            : resetableFormValues.projectId &&  
+                (<Select label="Componente"
+                    name="component_id"
+                    placeholder="Seleccione"
+                    items={projectComponents.items}
+                    onChange={(value) => {
+                        componentLocations.setFilterText(value as string);
+                        setResetableFormValues((prev) => ({...prev, componentId: value as string}));
+                    }}
+                    isRequired
+                    isInvalid={!projectComponents.items.length}
+                    validate={(value) => {
+                        if(!value) return 'Este campo es requerido';
+                        return true;
+                    }}
+                    errorMessage={({isInvalid}) => {
+                        if(isInvalid) return 'No hay componentes disponibles';
+                        return 'Ha ocurrido un error';
+                    }}
+                    loadingState={projectComponents.loadingState}
+                >
+                    {item => 
+                        <SelectItem id={item.component_id.toString()} textValue={item.component_name} onPress={() => setResetableFormValues((prev) => ({...prev, maxAmount: item.planned_amount - item.used_amount}))}>
+                            <Text slot="label">{item.component_name}</Text>
+                            <Text className="text-xs text-[var(--color-text-muted)]" slot="description">Stock en desuso: {(item.planned_amount - item.used_amount).toString()}</Text>
+                        </SelectItem>
+                    }
+                </Select>)
+            }
 
             { stockType !== 'entry' ? (
                 <>
@@ -127,8 +193,6 @@ export default function MovementForm({components, projects, locations}: {compone
                         value={resetableFormValues.originLocationId ? resetableFormValues.originLocationId.toString() : null}
                         onChange={(value) => setResetableFormValues((prev) => ({...prev, originLocationId: Number(value), destinationLocationId: null, amount: null}))}
                         isRequired
-                        isDisabled={componentLocations.isLoading}
-                        isLoading={componentLocations.isLoading}
                         isInvalid={!componentLocations.items.length && !componentLocations.isLoading}
                         validate={(value) => {
                             if(!value) return 'Este campo es requerido';
@@ -139,9 +203,10 @@ export default function MovementForm({components, projects, locations}: {compone
                             else if(validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
                             return 'Ha ocurrido un error';
                         }}
+                        loadingState={componentLocations.loadingState}
                     >
                         { item => 
-                            <SelectItem id={item.location_id.toString()} textValue={item.location_name} onPress={() => setResetableFormValues((prev) => ({...prev, maxAmount: item.amount}))}>
+                            <SelectItem id={item.location_id.toString()} textValue={item.location_name} onPress={() => setResetableFormValues((prev) => ({...prev, ...(stockType !== 'return' && {maxAmount: item.amount})}))}>
                                 <Text slot="label">{item.location_name}</Text>
                                 <Text className="text-xs text-[var(--color-text-muted)]" slot="description">Stock: {item.amount}</Text>
                             </SelectItem>
@@ -153,11 +218,11 @@ export default function MovementForm({components, projects, locations}: {compone
                 <Select label="Ubicación"
                     name="origin_location_id"
                     placeholder="Seleccione"
-                    items={locations}
+                    items={locations.items}
                     value={resetableFormValues.originLocationId ? resetableFormValues.originLocationId.toString() : null}
                     onChange={(value) => setResetableFormValues((prev) => ({...prev, originLocationId: Number(value)}))}
                     isRequired
-                    isInvalid={!locations.length}
+                    isInvalid={!locations.items.length}
                     validate={(value) => {
                         if(!value) return 'Este campo es requerido';
                         return true;
@@ -167,6 +232,8 @@ export default function MovementForm({components, projects, locations}: {compone
                         else if(validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
                         return 'Ha ocurrido un error';
                     }}
+                    loadingState={locations.loadingState}
+                    onLoadMore={locations.loadMore}
                 >
                     {item => <SelectItem id={item.id.toString()}>{item.name}</SelectItem>}
                 </Select>
@@ -179,7 +246,9 @@ export default function MovementForm({components, projects, locations}: {compone
                     value={resetableFormValues.destinationLocationId ? resetableFormValues.destinationLocationId.toString() : null}
                     onChange={(value) => setResetableFormValues((prev) => ({...prev, destinationLocationId: Number(value)}))}
                     placeholder="Seleccione"
-                    items={locations}
+                    items={locations.items}
+                    loadingState={locations.loadingState}
+                    onLoadMore={locations.loadMore}
                 >
                     {item => <SelectItem id={item.id.toString()}>{item.name}</SelectItem>}
                 </Select>
@@ -189,11 +258,11 @@ export default function MovementForm({components, projects, locations}: {compone
                 <Select label="Proyecto"
                     name="project_id"
                     placeholder="Seleccione"
-                    items={projects}
+                    items={projects.items}
                     value={resetableFormValues.projectId ? resetableFormValues.projectId.toString() : null}
                     onChange={(value) => setResetableFormValues((prev) => ({...prev, projectId: Number(value)}))}
                     isRequired
-                    isInvalid={!projects.length}
+                    isInvalid={!projects.items.length}
                     validate={(value) => {
                         if(!value) return 'Este campo es requerido';
                         return true;
@@ -203,6 +272,8 @@ export default function MovementForm({components, projects, locations}: {compone
                         else if(validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
                         return 'Ha ocurrido un error';
                     }}
+                    loadingState={projects.loadingState}
+                    onLoadMore={projects.loadMore}
                 >
                     {item => <SelectItem id={item.id.toString()}>{item.name}</SelectItem>}
                 </Select>

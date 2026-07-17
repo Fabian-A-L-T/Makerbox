@@ -5,33 +5,31 @@ import type { ColumnDef } from "@components/ui/Table";
 import { getRouteApi } from "@tanstack/react-router";
 import type { Project } from "../../interfaces/schemas";
 import { useCRUD } from "../../hooks/useCRUD";
-import type { AxiosResponse } from "axios";
-import axios from "axios";
 import { useState } from "react";
 import ProjectForm from "./forms/ProjectForms";
+import { handleDelete, handleUpload } from "@utils/Utils";
+import { AsyncImg } from "@utils/Utils";
 
 export default function Projects(){
     const route = getRouteApi('/_auth/manager/admin/projects');
     const { page: currentPage } = route.useSearch();
-    const {auth: {checkAuth, user}, pagination: {limit, maxPages}} = route.useRouteContext();
-    const { data } = route.useLoaderData() as {data: Promise<AxiosResponse<Project[]>>, test: Promise<string>};
+    const { auth: {user} } = route.useRouteContext();
     
     const [image, setImage] = useState<File | null>(null);
     
-    const crud = useCRUD<Project>({ checkAuth, apiRoute: '/api/projects', resourceLabel: 'proyecto'
-    });
+    const crud = useCRUD<Project>({ apiRoute: '/projects', resourceLabel: 'proyecto' });
 
     const columns: ColumnDef<Project>[] = [
-        { key: 'id',       label: 'ID',     allowsSorting: true },
-        { key: 'name',     label: 'Nombre', allowsSorting: true,
+        { key: 'id',       label: 'ID'},
+        { key: 'name',     label: 'Nombre',
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    <img src={"/" + (item.image_url || 'uploads/images/placeholder.png')} alt={item.name} className="w-10 h-10 rounded" />
+                    <AsyncImg className='w-18 h-18 rounded' src={'/' + item.image_url} alt={item.name}/>
                     <span>{item.name}</span>
                 </div>
             )   
         },
-        { key: 'user_name',       label: 'Autor',     allowsSorting: true },
+        { key: 'user_name',       label: 'Autor'},
         { key: 'actions',   label: 'Acciones',
             render: (item) => (
                 <CRUDTableActions 
@@ -43,35 +41,6 @@ export default function Projects(){
         },
     ];
     
-    async function handleUpload(fileToUpload: File, type: 'image' | 'document') {
-        if (!fileToUpload) return;
-        
-        const formImage = new FormData();
-            formImage.append(`${type}s`, fileToUpload);
-            try {
-                let response = await axios.post(`/api/files/upload/${type}`, formImage, {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    }
-                });
-                return response?.data?.url;
-            } 
-            catch (error: any) {
-                throw new Error(error.response?.data?.error ?? error.message);
-            }
-    }
-
-    async function handleDelete(fileRoute: string) {
-        try {
-            await axios.post(`/api/files/delete`, { fileUrl: fileRoute }, {
-                withCredentials: true,
-            });
-        } catch (error: any) {
-            throw new Error(error.response?.data?.error ?? error.message);
-        }
-    }
-
     /**
      * Handles the submission of component data
      * 

@@ -3,51 +3,36 @@ import CRUDTableActions from "@components/CRUDTableActions";
 import type { ColumnDef } from "@components/ui/Table";
 import { useCRUD } from "../../hooks/useCRUD";
 import ComponentForm from "@views/admin/forms/ComponentForms";
-import type { Component, Category, Manufacturer } from "../../interfaces/schemas";
+import type { Component } from "../../interfaces/schemas";
 import { useState } from "react";
-import axios, { type AxiosResponse } from "axios";
 import {getRouteApi} from '@tanstack/react-router';
 import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { handleDelete, handleUpload } from "@utils/Utils";
+import { AsyncImg } from "@utils/Utils";
 
 export default function Components() {
 
     const route = getRouteApi('/_auth/manager/admin/components');
     const { page: currentPage } = route.useSearch();
-    const {auth: {checkAuth}, pagination: {limit, maxPages}} = route.useRouteContext();
-    const { data } = route.useLoaderData() as {data: Promise<AxiosResponse<Component[]>>, test: Promise<string>};
     
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
     const [image, setImage] = useState<File | null>(null);
     const [file, setFile] = useState<File | null>(null);
     
-    const crud = useCRUD<Component>({ checkAuth, apiRoute: '/api/components', resourceLabel: 'componente',
-        extraFetch: async () => {
-            try{
-                const categoriesResponse = await axios.get<Category[]>('/api/component-categories');
-                setCategories(categoriesResponse.data);
-                const manufacturersResponse = await axios.get<Manufacturer[]>('/api/manufacturers');
-                setManufacturers(manufacturersResponse.data);
-            }
-            catch(err: any){
-                throw err;
-            }
-        },
-    });
+    const crud = useCRUD<Component>({ apiRoute: '/components', resourceLabel: 'componente'});
 
     const columns: ColumnDef<Component>[] = [
-        { key: 'id',       label: 'ID',     allowsSorting: true },
-        { key: 'name',     label: 'Nombre', allowsSorting: true,
+        { key: 'id',       label: 'ID'},
+        { key: 'name',     label: 'Nombre',
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    <img src={"/" + (item.image_url || 'uploads/images/placeholder.png')} alt={item.name} className="w-10 h-10 rounded" />
+                    <AsyncImg className='w-18 h-18 rounded' src={'/' + item.image_url} alt={item.name}/>
                     <span>{item.name}</span>
                 </div>
             )   
         },
-        { key: 'sku',      label: 'SKU',    allowsSorting: true },
-        { key: 'manufacturer',      label: 'Fabricante',    allowsSorting: true },
-        { key: 'category',      label: 'Categoría',    allowsSorting: true,
+        { key: 'sku',      label: 'SKU'},
+        { key: 'manufacturer',      label: 'Fabricante'},
+        { key: 'category',      label: 'Categoría',
             render: (item) => {
                 const categoryRoute = item.category.replaceAll('_', ' ');
                 return (
@@ -68,35 +53,6 @@ export default function Components() {
         },
     ];
     
-    async function handleUpload(fileToUpload: File, type: 'image' | 'document') {
-        if (!fileToUpload) return;
-        
-        const formImage = new FormData();
-            formImage.append(`${type}s`, fileToUpload);
-            try {
-                let response = await axios.post(`/api/files/upload/${type}`, formImage, {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    }
-                });
-                return response?.data?.url;
-            } 
-            catch (error: any) {
-                throw new Error(error.response?.data?.error ?? error.message);
-            }
-    }
-
-    async function handleDelete(fileRoute: string) {
-        try {
-            await axios.post(`/api/files/delete`, { fileUrl: fileRoute }, {
-                withCredentials: true,
-            });
-        } catch (error: any) {
-            throw new Error(error.response?.data?.error ?? error.message);
-        }
-    }
-
     /**
      * Handles the submission of component data
      * 

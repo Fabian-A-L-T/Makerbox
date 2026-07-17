@@ -7,7 +7,9 @@ import * as v from 'valibot';
 import { RiImageLine, RiFileTextLine, RiFileWord2Line } from "@remixicon/react";
 import { NumberField } from "@components/form/NumberField";
 import { last, split } from "lodash";
-import { validateImgSize } from "@utils/CRUDUtils";
+import { fetchData, paginationLimit, validateImgSize } from "@utils/Utils";
+import { useAsyncList } from "react-aria-components";
+import { AsyncImg } from "@utils/Utils";
 
 const componentSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
@@ -23,24 +25,56 @@ const componentSchema = v.object({
     notes: v.optional(v.pipe(v.string(), v.maxLength(512, 'Las notas deben tener menos de 512 caracteres')))
 })
 
-const validate = (value: string | number | undefined, key: 'name' | 'sku' | 'description' | 'category_id' | 'manufacturer_id' | 'stock' | 'stock_min' | 'metric' | 'datasheet_url' | 'image_url' | 'notes') => {
+const validate = (value: string | number | undefined, key: 'name' | 'sku' | 'description' | 'category_id' | 'manufacturer_id' | 'stock' | 'stock_min' | 'datasheet_url' | 'image_url' | 'notes') => {
     const result = v.safeParse(componentSchema.entries[key], value);
     return result.issues?.[0]?.message || '';
 }
 
 interface ComponentFormProps {
     target?: Component | null;
-    allCategories: Category[];
-    allManufacturers: Manufacturer[];
     setImage: (image: File | null) => void;
     setFile: (file: File | null) => void;
 }
 
-export default function ComponentForm({ target, allCategories, allManufacturers, setImage, setFile }: ComponentFormProps) {
+export default function ComponentForm({ target, setImage, setFile }: ComponentFormProps) {
     const [imgContent, setImgContent] = useState<string | null>(null);
     const [fileContent, setFileContent] = useState<{name: string, type: string} | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [fileErrorMsg, setFileErrorMsg] = useState<string | null>(null);
+    const [targetCategoryFlag, setTargetCategoryFlag] = useState(false);
+    const [targetManufacturerFlag, setManufacturerFlag] = useState(false);
+
+    const categories = useAsyncList<Category>({
+        async load({cursor}){
+            const { data } = await fetchData<Category>(cursor || `/component-categories?limit=${paginationLimit + 1}&offset=0${target ? `&exclude=${target.category_id}` : ''}`);
+            
+            if(target && !targetCategoryFlag) {
+                let res = await fetchData<Category>(`/component-categories/${target.category_id}`);
+                setTargetCategoryFlag(true);
+                data.content.unshift(res.data.content[0]);
+            }
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
+
+    const manufacturers = useAsyncList<Manufacturer>({
+        async load({cursor}){
+            const { data } = await fetchData<Manufacturer>(cursor || `/manufacturers?limit=${paginationLimit}&offset=0${target ? `&exclude=${target.manufacturer_id}` : ''}`);
+            
+            if(target && !targetManufacturerFlag) {
+                let res = await fetchData<Manufacturer>(`/manufacturers/${target.manufacturer_id}`);
+                setManufacturerFlag(true);
+                data.content.unshift(res.data.content[0]);
+            }
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
 
     async function fileDropHandler(event: DropEvent){
         let item = event.items.find(item => {
@@ -86,9 +120,10 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
     }
 
     return (
-        <>
-            <div className='grid grid-cols-5 gap-8 '>
-                <div className='flex flex-col gap-2 w-2xs aspect-square col-span-2'>
+        <div className="w-full flex gap-8">
+            <div className="w-3/8 flex flex-col gap-8">
+                <div className='grid grid-cols-2 gap-8 '>
+                    <div className='flex flex-col gap-2  aspect-square'>
                     <span className="text-base font-semibold" >Imagen</span>
                     <DropZone
                         className='h-full'
@@ -101,18 +136,18 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
                     >
                         <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
                             {imgContent || target?.image_url 
-                                ? <img src={imgContent || ('/' + target?.image_url)} alt="" style={{maxWidth: '100%'}} /> 
+                                    ? <AsyncImg className="w-full h-full !bg-transparent" src={imgContent || ('/' + target?.image_url)} alt=""/>
                                 :(
                                     <>
                                         <RiImageLine className="mx-auto" size={64} color="var(--color-text-muted)"/>
-                                        <span>Arrastra la imagen aquí</span>
+                                            <span>Arrastra o pega la imagen aquí</span>
                                     </>
                                 )}
                         </Text>
                     </DropZone>
                     {errorMessage && <span className="text-[var(--color-danger)] text-xs">{errorMessage}</span>}
                 </div>
-                <div className="flex flex-col gap-8 col-span-3">
+                    <div className="flex flex-col gap-8">
                     <TextField
                         autoFocus
                         label="Nombre"
@@ -135,15 +170,14 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
                         name="category_id"
                         isRequired
                         errorMessage="Campo requerido"
+                            isInvalid={categories.loadingState === 'loading'}
                         placeholder="Seleccione una categoría"
-                        validate={(value) => validate(value, 'category_id')}
                         {...(target ? {defaultValue: target.category_id}: {})}
-                    >
-                        {allCategories.map((cat) => (
-                            <SelectItem key={cat.id} id={cat.id}>
-                                {cat.name}
-                            </SelectItem>
-                        ))}
+                            loadingState={categories.loadingState}
+                            onLoadMore={categories.loadMore}
+                            allowsEmptyCollection
+                        >
+                            {categories.items.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
                     </Select>
                     <Select
                         label="Fabricante"
@@ -151,14 +185,14 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
                         isRequired
                         errorMessage="Campo requerido"
                         placeholder="Seleccione un fabricante"
+                            isInvalid={manufacturers.loadingState === 'loading'}
                         validate={(value) => validate(value, 'manufacturer_id')}
+                            loadingState={manufacturers.loadingState}
+                            onLoadMore={manufacturers.loadMore}
                         {...(target ? {defaultValue: target.manufacturer_id}: {})}
+                            allowsEmptyCollection
                     >
-                        {allManufacturers.map((man) => (
-                            <SelectItem key={man.id} id={man.id}>
-                                {man.name}
-                            </SelectItem>
-                        ))}
+                            {manufacturers.items.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
                     </Select>
                 </div>
             </div>
@@ -171,22 +205,7 @@ export default function ComponentForm({ target, allCategories, allManufacturers,
                 validate={(value) => validate(value, 'stock_min')}
                 {...(target ? {defaultValue: target.stock_min}: {defaultValue: 0})}
             />
-            <TextField
-                label="Unidad de medida"
-                type="text"
-                name="metric"
-                placeholder="Ej: mm"
-                validate={(value) => validate(value, 'metric')}
-                {...(target ? {defaultValue: target.metric}: {})}
-            />
-            <TextField
-                label="Descripción"
-                name="description"
-                type="textarea"
-                placeholder="Ej: Resistor de 1K Ohm..."
-                validate={(value) => validate(value, 'description')}
-                {...(target ? {defaultValue: target.description}: {})}
-            />
+                
             <div className='flex flex-col gap-2'>
                 <span className="text-base font-semibold" >Datasheet</span>
                 <DropZone

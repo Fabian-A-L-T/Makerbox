@@ -1,10 +1,7 @@
-import { useState } from 'react';
-import { type AxiosResponse } from 'axios';
 import { type ColumnDef } from '@components/ui/Table';
 import type { Category } from '../../interfaces/schemas';
 import { getRouteApi } from '@tanstack/react-router';
 import { useCRUD } from '../../hooks/useCRUD';
-import axios from 'axios';
 import CategoryForm from '@views/admin/forms/CategoryForms';
 import CRUDLayout from '@components/layouts/CRUDLayout';
 import CRUDTableActions from '@components/CRUDTableActions';
@@ -13,27 +10,13 @@ export default function ToolCategories() {
     
     const route = getRouteApi('/_auth/manager/admin/categories/tools');
     const { page: currentPage } = route.useSearch();
-    const {auth: {checkAuth}, pagination: {limit, maxPages}} = route.useRouteContext();
-    const { data } = route.useLoaderData() as {data: Promise<AxiosResponse<Category[]>>, test: Promise<string>};
 
-    const [allCategories, setAllCategories] = useState<Category[]>([]);
-
-    const crud = useCRUD<Category>({checkAuth, apiRoute: '/api/tool-categories', resourceLabel: 'categoría',
-        extraFetch: async () => {
-            try{
-                const response = await axios.get<Category[]>('/api/tool-categories');
-                setAllCategories(response.data);
-            }
-            catch(err: any){
-                throw err;
-            }
-        }
-    });
+    const crud = useCRUD<Category>({ apiRoute: '/tool-categories', resourceLabel: 'categoría'});
 
     const columns: ColumnDef<Category>[] = [
-        { key: 'id',       label: 'ID',     allowsSorting: true },
-        { key: 'name',     label: 'Nombre', allowsSorting: true },
-        { key: 'path',     label: 'Ruta',   allowsSorting: true,
+        { key: 'id',       label: 'ID'},
+        { key: 'name',     label: 'Nombre'},
+        { key: 'path',     label: 'Ruta',
             render: (item) => {
                 const route = item.path.replaceAll('_', ' ').replaceAll('.', ' > ');
                 return (

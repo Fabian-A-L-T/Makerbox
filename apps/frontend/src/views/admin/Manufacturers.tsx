@@ -5,21 +5,18 @@ import { useCRUD } from '../../hooks/useCRUD';
 import type { Manufacturer } from '../../interfaces/schemas';
 import ManufacturerForm from '@views/admin/forms/ManufacturerForms';
 import {getRouteApi} from '@tanstack/react-router';
-import type { AxiosResponse } from 'axios';
 import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
 
 export default function Manufacturers(){
 
     const route = getRouteApi('/_auth/manager/admin/manufacturers');
     const { page: currentPage } = route.useSearch();
-    const {auth: {checkAuth}, pagination: {limit, maxPages}} = route.useRouteContext();
-    const { data } = route.useLoaderData() as {data: Promise<AxiosResponse<Manufacturer[]>>, test: Promise<string>};
 
-    const crud = useCRUD<Manufacturer>({checkAuth, apiRoute: '/api/manufacturers', resourceLabel: 'fabricante' });
+    const crud = useCRUD<Manufacturer>({ apiRoute: '/manufacturers', resourceLabel: 'fabricante' });
     const columns: ColumnDef<Manufacturer>[] = [
-        { key: 'id',       label: 'ID',         allowsSorting: true },
-        { key: 'name',     label: 'Nombre',     allowsSorting: true },
-        { key: 'website',  label: 'Sitio web',  allowsSorting: true },
+        { key: 'id',       label: 'ID'},
+        { key: 'name',     label: 'Nombre'},
+        { key: 'website',  label: 'Sitio web'},
         { key: 'actions',  label: 'Acciones',
             render: (item) => (
                 <CRUDTableActions 

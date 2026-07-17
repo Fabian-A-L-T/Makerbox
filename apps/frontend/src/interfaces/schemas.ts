@@ -7,6 +7,19 @@ export const resourceQuerySchema = object({
 	desc: optional(fallback(boolean(), false))
 })
 
+export interface ApiResponse<T> {
+    content: T,
+    pagination: {
+        limit:  number,
+        offset: number
+    }
+    links?: {
+        start: string, 
+        prev: string | undefined, 
+        next: string | undefined
+    }
+}
+
 export interface User {
     id: number;
     name: string;
