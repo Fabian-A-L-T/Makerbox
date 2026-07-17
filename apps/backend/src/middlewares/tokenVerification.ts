@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
+import { jwtSecret } from '../config/app.js';
 
 const tokenVerification = (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.token;
@@ -7,10 +8,13 @@ const tokenVerification = (req: Request, res: Response, next: NextFunction) => {
         return res.status(401).json({ message: 'Unauthorized' });
     }
     try {
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string);
+        if(!jwtSecret) throw new Error('JWT_SECRET not defined');
+
+        const decodedToken = jwt.verify(token, jwtSecret);
         req.body.user = decodedToken;
         next();
-    } catch (err: any) {
+    }
+    catch (err: any) {
         return res.status(403).json({ message: 'Forbidden' });
     }
 }
