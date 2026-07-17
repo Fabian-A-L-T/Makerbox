@@ -16,12 +16,12 @@ import { Route as AuthManagerRouteImport } from './routes/_auth.manager'
 import { Route as AuthManagerIndexRouteImport } from './routes/_auth.manager.index'
 import { Route as AuthManagerToolsRouteImport } from './routes/_auth.manager.tools'
 import { Route as AuthManagerProjectsRouteImport } from './routes/_auth.manager.projects'
+import { Route as AuthManagerNewProjectRouteImport } from './routes/_auth.manager.newProject'
 import { Route as AuthManagerComponentsRouteImport } from './routes/_auth.manager.components'
 import { Route as AuthManagerAdminRouteImport } from './routes/_auth.manager.admin'
 import { Route as AuthManagerToolsIndexRouteImport } from './routes/_auth.manager.tools.index'
 import { Route as AuthManagerProjectsIndexRouteImport } from './routes/_auth.manager.projects.index'
 import { Route as AuthManagerComponentsIndexRouteImport } from './routes/_auth.manager.components.index'
-import { Route as AuthManagerAdminIndexRouteImport } from './routes/_auth.manager.admin.index'
 import { Route as AuthManagerToolsIdRouteImport } from './routes/_auth.manager.tools.$id'
 import { Route as AuthManagerProjectsIdRouteImport } from './routes/_auth.manager.projects.$id'
 import { Route as AuthManagerComponentsIdRouteImport } from './routes/_auth.manager.components.$id'
@@ -70,6 +70,11 @@ const AuthManagerProjectsRoute = AuthManagerProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => AuthManagerRoute,
 } as any)
+const AuthManagerNewProjectRoute = AuthManagerNewProjectRouteImport.update({
+  id: '/newProject',
+  path: '/newProject',
+  getParentRoute: () => AuthManagerRoute,
+} as any)
 const AuthManagerComponentsRoute = AuthManagerComponentsRouteImport.update({
   id: '/components',
   path: '/components',
@@ -97,11 +102,6 @@ const AuthManagerComponentsIndexRoute =
     path: '/',
     getParentRoute: () => AuthManagerComponentsRoute,
   } as any)
-const AuthManagerAdminIndexRoute = AuthManagerAdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthManagerAdminRoute,
-} as any)
 const AuthManagerToolsIdRoute = AuthManagerToolsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -182,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/manager': typeof AuthManagerRouteWithChildren
   '/manager/admin': typeof AuthManagerAdminRouteWithChildren
   '/manager/components': typeof AuthManagerComponentsRouteWithChildren
+  '/manager/newProject': typeof AuthManagerNewProjectRoute
   '/manager/projects': typeof AuthManagerProjectsRouteWithChildren
   '/manager/tools': typeof AuthManagerToolsRouteWithChildren
   '/manager/': typeof AuthManagerIndexRoute
@@ -196,7 +197,6 @@ export interface FileRoutesByFullPath {
   '/manager/components/$id': typeof AuthManagerComponentsIdRoute
   '/manager/projects/$id': typeof AuthManagerProjectsIdRoute
   '/manager/tools/$id': typeof AuthManagerToolsIdRoute
-  '/manager/admin/': typeof AuthManagerAdminIndexRoute
   '/manager/components/': typeof AuthManagerComponentsIndexRoute
   '/manager/projects/': typeof AuthManagerProjectsIndexRoute
   '/manager/tools/': typeof AuthManagerToolsIndexRoute
@@ -206,6 +206,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/manager/admin': typeof AuthManagerAdminRouteWithChildren
+  '/manager/newProject': typeof AuthManagerNewProjectRoute
   '/manager': typeof AuthManagerIndexRoute
   '/manager/admin/categories': typeof AuthManagerAdminCategoriesRouteWithChildren
   '/manager/admin/components': typeof AuthManagerAdminComponentsRoute
@@ -218,7 +220,6 @@ export interface FileRoutesByTo {
   '/manager/components/$id': typeof AuthManagerComponentsIdRoute
   '/manager/projects/$id': typeof AuthManagerProjectsIdRoute
   '/manager/tools/$id': typeof AuthManagerToolsIdRoute
-  '/manager/admin': typeof AuthManagerAdminIndexRoute
   '/manager/components': typeof AuthManagerComponentsIndexRoute
   '/manager/projects': typeof AuthManagerProjectsIndexRoute
   '/manager/tools': typeof AuthManagerToolsIndexRoute
@@ -233,6 +234,7 @@ export interface FileRoutesById {
   '/_auth/manager': typeof AuthManagerRouteWithChildren
   '/_auth/manager/admin': typeof AuthManagerAdminRouteWithChildren
   '/_auth/manager/components': typeof AuthManagerComponentsRouteWithChildren
+  '/_auth/manager/newProject': typeof AuthManagerNewProjectRoute
   '/_auth/manager/projects': typeof AuthManagerProjectsRouteWithChildren
   '/_auth/manager/tools': typeof AuthManagerToolsRouteWithChildren
   '/_auth/manager/': typeof AuthManagerIndexRoute
@@ -247,7 +249,6 @@ export interface FileRoutesById {
   '/_auth/manager/components/$id': typeof AuthManagerComponentsIdRoute
   '/_auth/manager/projects/$id': typeof AuthManagerProjectsIdRoute
   '/_auth/manager/tools/$id': typeof AuthManagerToolsIdRoute
-  '/_auth/manager/admin/': typeof AuthManagerAdminIndexRoute
   '/_auth/manager/components/': typeof AuthManagerComponentsIndexRoute
   '/_auth/manager/projects/': typeof AuthManagerProjectsIndexRoute
   '/_auth/manager/tools/': typeof AuthManagerToolsIndexRoute
@@ -262,6 +263,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/manager/admin'
     | '/manager/components'
+    | '/manager/newProject'
     | '/manager/projects'
     | '/manager/tools'
     | '/manager/'
@@ -276,7 +278,6 @@ export interface FileRouteTypes {
     | '/manager/components/$id'
     | '/manager/projects/$id'
     | '/manager/tools/$id'
-    | '/manager/admin/'
     | '/manager/components/'
     | '/manager/projects/'
     | '/manager/tools/'
@@ -286,6 +287,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/manager/admin'
+    | '/manager/newProject'
     | '/manager'
     | '/manager/admin/categories'
     | '/manager/admin/components'
@@ -298,7 +301,6 @@ export interface FileRouteTypes {
     | '/manager/components/$id'
     | '/manager/projects/$id'
     | '/manager/tools/$id'
-    | '/manager/admin'
     | '/manager/components'
     | '/manager/projects'
     | '/manager/tools'
@@ -312,6 +314,7 @@ export interface FileRouteTypes {
     | '/_auth/manager'
     | '/_auth/manager/admin'
     | '/_auth/manager/components'
+    | '/_auth/manager/newProject'
     | '/_auth/manager/projects'
     | '/_auth/manager/tools'
     | '/_auth/manager/'
@@ -326,7 +329,6 @@ export interface FileRouteTypes {
     | '/_auth/manager/components/$id'
     | '/_auth/manager/projects/$id'
     | '/_auth/manager/tools/$id'
-    | '/_auth/manager/admin/'
     | '/_auth/manager/components/'
     | '/_auth/manager/projects/'
     | '/_auth/manager/tools/'
@@ -391,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthManagerProjectsRouteImport
       parentRoute: typeof AuthManagerRoute
     }
+    '/_auth/manager/newProject': {
+      id: '/_auth/manager/newProject'
+      path: '/newProject'
+      fullPath: '/manager/newProject'
+      preLoaderRoute: typeof AuthManagerNewProjectRouteImport
+      parentRoute: typeof AuthManagerRoute
+    }
     '/_auth/manager/components': {
       id: '/_auth/manager/components'
       path: '/components'
@@ -425,13 +434,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/manager/components/'
       preLoaderRoute: typeof AuthManagerComponentsIndexRouteImport
       parentRoute: typeof AuthManagerComponentsRoute
-    }
-    '/_auth/manager/admin/': {
-      id: '/_auth/manager/admin/'
-      path: '/'
-      fullPath: '/manager/admin/'
-      preLoaderRoute: typeof AuthManagerAdminIndexRouteImport
-      parentRoute: typeof AuthManagerAdminRoute
     }
     '/_auth/manager/tools/$id': {
       id: '/_auth/manager/tools/$id'
@@ -553,7 +555,6 @@ interface AuthManagerAdminRouteChildren {
   AuthManagerAdminProjectsRoute: typeof AuthManagerAdminProjectsRoute
   AuthManagerAdminToolsRoute: typeof AuthManagerAdminToolsRoute
   AuthManagerAdminUsersRoute: typeof AuthManagerAdminUsersRoute
-  AuthManagerAdminIndexRoute: typeof AuthManagerAdminIndexRoute
 }
 
 const AuthManagerAdminRouteChildren: AuthManagerAdminRouteChildren = {
@@ -565,7 +566,6 @@ const AuthManagerAdminRouteChildren: AuthManagerAdminRouteChildren = {
   AuthManagerAdminProjectsRoute: AuthManagerAdminProjectsRoute,
   AuthManagerAdminToolsRoute: AuthManagerAdminToolsRoute,
   AuthManagerAdminUsersRoute: AuthManagerAdminUsersRoute,
-  AuthManagerAdminIndexRoute: AuthManagerAdminIndexRoute,
 }
 
 const AuthManagerAdminRouteWithChildren =
@@ -615,6 +615,7 @@ const AuthManagerToolsRouteWithChildren =
 interface AuthManagerRouteChildren {
   AuthManagerAdminRoute: typeof AuthManagerAdminRouteWithChildren
   AuthManagerComponentsRoute: typeof AuthManagerComponentsRouteWithChildren
+  AuthManagerNewProjectRoute: typeof AuthManagerNewProjectRoute
   AuthManagerProjectsRoute: typeof AuthManagerProjectsRouteWithChildren
   AuthManagerToolsRoute: typeof AuthManagerToolsRouteWithChildren
   AuthManagerIndexRoute: typeof AuthManagerIndexRoute
@@ -623,6 +624,7 @@ interface AuthManagerRouteChildren {
 const AuthManagerRouteChildren: AuthManagerRouteChildren = {
   AuthManagerAdminRoute: AuthManagerAdminRouteWithChildren,
   AuthManagerComponentsRoute: AuthManagerComponentsRouteWithChildren,
+  AuthManagerNewProjectRoute: AuthManagerNewProjectRoute,
   AuthManagerProjectsRoute: AuthManagerProjectsRouteWithChildren,
   AuthManagerToolsRoute: AuthManagerToolsRouteWithChildren,
   AuthManagerIndexRoute: AuthManagerIndexRoute,
