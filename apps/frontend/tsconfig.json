@@ -6,6 +6,7 @@
   ],
   "compilerOptions": {
     "strictNullChecks": true,
+    "types": ["node"],
     "paths": {
       "@components/*": ["./src/components/*"],
       "@views/*": ["./src/views/*"],
