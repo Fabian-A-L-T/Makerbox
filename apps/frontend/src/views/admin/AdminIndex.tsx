@@ -1,15 +1,15 @@
-import { RiCpuLine, RiFileListLine, RiFunctionLine, RiGroupLine, RiMapPinLine, RiNodeTree, RiPencilRulerLine, RiWrenchLine } from "@remixicon/react"
+import { RiCpuLine, RiFileListLine, RiFunctionLine, RiGroupLine, RiMapPinLine, RiNodeTree, RiPencilRulerLine, RiSwap2Line, RiWrenchLine } from "@remixicon/react"
 import { Link } from "@tanstack/react-router"
 import '@styles/card.scss'
 import InfoCard from "@components/ui/InfoCard"
 
-export default function AdminIndex() {
-    const features = [
+export default function AdminIndex({compTotal, toolTotal, projTotal}: {compTotal: number, toolTotal: number, projTotal: number}) {
+    const adminPages = [
         {
             title: 'Categorias', 
             description: 'Gestión de las categorías de componentes electrónicos y herramientas', 
             icon: RiNodeTree,
-            link: '/manager/admin/categories/'
+            link: '/manager/admin/categories/components'
         },
         {
             title: 'Componentes', 
@@ -44,7 +44,7 @@ export default function AdminIndex() {
         {
             title: 'Movimientos', 
             description: 'Gestión de los movimientos de inventario', 
-            icon: RiGroupLine,
+            icon: RiSwap2Line,
             link: '/manager/admin/movements'
         },
         {
@@ -53,19 +53,19 @@ export default function AdminIndex() {
             icon: RiPencilRulerLine,
             link: '/manager/admin/projects'
         }
-    ]
+    ];
 
     return (
-        <div className="flex gap-5">
-            <div className="makerbox-box w-max flex flex-col gap-5">
+        <div className="flex md:flex-col lg:flex-row gap-5">
+            <div className="makerbox-box lg:w-max md:w-full flex flex-col gap-5 !pb-1">
                 <div className="makerbox-box-title flex items-center gap-2 w-max">
                     <RiFileListLine size={24}/>
                     <span>Resumen</span>
                 </div>
-                <div className="flex flex-col gap-5">
-                    <InfoCard title={'Componentes'} value={1234567} Icon={RiCpuLine}/>
-                    <InfoCard title={'Herramientas'} value={1234567} Icon={RiWrenchLine}/>
-                    <InfoCard title={'Proyectos'} value={1234567} Icon={RiPencilRulerLine}/>
+                <div className="flex md:overflow-x-auto md:flex-row lg:flex-col gap-5 pb-4">
+                    <InfoCard title={'Componentes'} value={compTotal} Icon={RiCpuLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
+                    <InfoCard title={'Herramientas'} value={toolTotal} Icon={RiWrenchLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
+                    <InfoCard title={'Proyectos'} value={projTotal} Icon={RiPencilRulerLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
                 </div>
             </div>
             <div className="makerbox-box w-full flex flex-col gap-4">
@@ -73,11 +73,11 @@ export default function AdminIndex() {
                     <RiFunctionLine size={24}/>
                     <span>Administrar</span>
                 </div>
-                <div className="grid grid-cols-5 gap-10">
-                    {features.map((feature) => (
-                        <Link key={feature.link} to={feature.link} className='card flex items-center gap-2'>
-                            <feature.icon size={24}/>
-                            <span className="font-medium">{feature.title}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+                    {adminPages.map((page) => (
+                        <Link key={page.link} to={page.link} className='card w-full flex items-center gap-2'>
+                            <page.icon size={24}/>
+                            <span className="font-medium">{page.title}</span>
                         </Link>
                     ))}
                 </div>
