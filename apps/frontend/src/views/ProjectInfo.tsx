@@ -4,12 +4,13 @@ import { parseAbsoluteToLocal } from '@internationalized/date';
 import { RiCircleFill, RiGitRepositoryLine } from '@remixicon/react';
 import { getRouteApi } from '@tanstack/react-router';
 import type { Project } from '../interfaces/schemas';
+import { AsyncImg } from '@utils/Utils';
 
 export default function ProjectInfo() {
     
     const route = getRouteApi('/_auth/manager/projects/$id');
     const project = route.useLoaderData() as Project;
-    console.log(project)
+    
     const parseDate = parseAbsoluteToLocal(project.created_at);
     const publishedDate = parseDate.day.toString() + '/' + parseDate.month.toString() + '/' + parseDate.year.toString();
 
@@ -47,21 +48,21 @@ export default function ProjectInfo() {
 
     return (
         <>
-            <Breadcrumbs className={'text-[var(--color-text)] p-4'}>
+            <Breadcrumbs className={'p-4'}>
                 <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
                 <Breadcrumb href='/manager/projects/'>Proyectos</Breadcrumb>
                 <Breadcrumb>{project.name}</Breadcrumb>
             </Breadcrumbs>
             <div className="p-4 flex lg:flex-row md:flex-col gap-8">
                 <div className="xl:w-2/5 lg:w-1/2">
-                    <img src={project.image_url ? '/' + project.image_url : '/uploads/images/placeholder.png'} alt={project.name} className="aspect-square w-full object-cover rounded-lg"/>
+                    <AsyncImg className="aspect-square w-full object-cover rounded-[var(--border-radius-ui)]" src={'/' + project.image_url} alt={project.name}/>
                 </div>
                 <div className="flex flex-col justify-between xl:w-3/5 lg:w-1/2">
                     <div className='flex flex-col'>
                         <div className="flex justify-end mb-4">
                             <span className="text-sm text-[var(--color-text-muted)]">Publicado el: {publishedDate}</span>
                         </div>
-                        <div className="flex flex-col gap-4 mb-4 text-[var(--color-text)]">
+                        <div className="flex flex-col gap-4 mb-4">
                             <div className='flex flex-col gap-1 py-2'>
                                 <h1 className="text-3xl font-bold ">{project.name}</h1>
                             </div>

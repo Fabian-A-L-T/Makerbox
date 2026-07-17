@@ -4,11 +4,44 @@ import { parseAbsoluteToLocal } from '@internationalized/date';
 import { RiArrowRightSLine, RiCircleFill, RiFileDownloadLine } from '@remixicon/react';
 import { getRouteApi } from '@tanstack/react-router';
 import type { Component, ComponentLocation } from '../interfaces/schemas';
+import { AsyncImg, quillInlineStyles } from '@utils/Utils';
+import DOMPurify from 'dompurify';
+import { Delta } from 'quill/core';
+import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html';
+import 'quill/dist/quill.core.css';
+
+function quillGetHTML(inputDelta: Delta): string {
+    const converter = new QuillDeltaToHtmlConverter(inputDelta.ops ?? [], {
+        paragraphTag: 'p',
+        encodeHtml: true,
+        inlineStyles: quillInlineStyles,
+        urlSanitizer: (url: string) => {
+            const sanitizedUrl = DOMPurify.sanitize(url);
+            return sanitizedUrl;
+        }
+    });
+
+    return converter.convert();
+}
 
 export default function ComponentInfo() {
     
     const route = getRouteApi('/_auth/manager/components/$id');
     const { components, locations } = route.useLoaderData() as {components: Component, locations: ComponentLocation[]};
+
+    let deltaData: Delta;
+    let descHTML: string = '';
+
+    try {
+        deltaData = components.description ? JSON.parse(components.description) : new Delta();
+    } 
+    catch (error) {
+        console.error('Error parsing defaultValue:', error);
+        deltaData = new Delta();
+    }
+    if(deltaData.ops.length > 0) { 
+        descHTML = quillGetHTML(deltaData);
+    }
 
     const parseDate = parseAbsoluteToLocal(components.created_at);
     const publishedDate = parseDate.day.toString() + '/' + parseDate.month.toString() + '/' + parseDate.year.toString();
@@ -29,14 +62,14 @@ export default function ComponentInfo() {
 
     return (
         <>
-            <Breadcrumbs className={'text-[var(--color-text)] p-4'}>
+            <Breadcrumbs className={'p-4'}>
                 <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
                 <Breadcrumb href='/manager/components/'>Componentes</Breadcrumb>
                 <Breadcrumb>{components.name}</Breadcrumb>
             </Breadcrumbs>
             <div className="p-4 flex lg:flex-row md:flex-col gap-8">
                 <div className="xl:w-2/5 lg:w-1/2">
-                    <img src={components.image_url ? '/' + components.image_url : '/uploads/images/placeholder.png'} alt={components.name} className="aspect-square w-full object-cover rounded-lg"/>
+                    <AsyncImg className="aspect-square w-full object-cover rounded-[var(--border-radius-ui)]" src={'/' + components.image_url} alt={components.name}/>
                 </div>
                 <div className="flex flex-col justify-between xl:w-3/5 lg:w-1/2">
                     <div className='flex flex-col'>
@@ -51,7 +84,7 @@ export default function ComponentInfo() {
                             </div>
                             <span className="text-sm text-[var(--color-text-muted)]">Publicado el: {publishedDate}</span>
                         </div>
-                        <div className="flex flex-col gap-4 mb-4 text-[var(--color-text)]">
+                        <div className="flex flex-col gap-4 mb-4">
                             <div className='flex flex-col gap-1 py-2'>
                                 <h1 className="text-3xl font-bold ">{components.name}</h1>
                                 <span className="text-sm text-[var(--color-text-muted)]">SKU: {components.sku}</span>
@@ -82,7 +115,6 @@ export default function ComponentInfo() {
                         <div className='divide-y-2 divide-[var(--color-border)]'>
                             <p className="text-[var(--color-text-muted)] py-2">Fabricante: {components.manufacturer}</p>
                             <p className="text-[var(--color-text-muted)] py-2">Categoría: {category}</p>
-                            {components.metric && <p className="text-[var(--color-text-muted)] py-2">Valor: {components.metric}</p>}
                         </div>
                     </div>
                     {components.datasheet_url && 
@@ -104,7 +136,11 @@ export default function ComponentInfo() {
                 </TabList>
                 <TabPanels>
                     <TabPanel id="desc" className="flex">
-                        <p>{components.description}</p>
+                        {descHTML ? (
+                            <div className='w-full p-5' dangerouslySetInnerHTML={{ __html: descHTML }} />
+                        ) : (
+                            <p>No hay descripción disponible.</p>
+                        )}
                     </TabPanel>
                     <TabPanel id="notes" className="flex">
                         <p>{components.notes}</p>

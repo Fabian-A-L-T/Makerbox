@@ -1,181 +1,98 @@
-import Card from "@components/ui/Card";
-import { RiSearchLine, RiSortNumberAsc, RiSortNumberDesc, RiSortAlphabetDesc, RiSortAlphabetAsc } from '@remixicon/react';
-import "@styles/components.css";
 import type { Category, Component, Manufacturer } from '../interfaces/schemas';
 import Pagination from "@components/ui/Pagination";
-import { getRouteApi, Link, useNavigate } from '@tanstack/react-router';
-import { useRef, useState } from 'react';
-import { AxiosError, type AxiosResponse } from 'axios';
-import TextField from "@components/form/TextField";
+import { getRouteApi } from '@tanstack/react-router';
 import { Select, SelectItem } from "@components/form/Select";
-import { chunk } from "lodash";
-import { Button } from "@components/form/Button";
-import AwaitWrapper from "@components/AwaitWrapper";
 import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { fetchData, paginationParams } from "@utils/Utils";
+import { ComponentCardGrid } from "@components/ui/CardGrid";
+import FilterBox from "@components/ui/FilterBox";
+import { useAsyncList } from "react-aria-components";
+import { useFetch } from '../hooks/useFetch';
 
 export default function Components() {
-
     const route = getRouteApi('/_auth/manager/components/');
-    const { page, desc, orderBy, category, manufacturer, search } = route.useSearch();
-    const {checkAuth, pagination: {limit, maxPages}} = route.useRouteContext();
-    const { categories, manufacturers, components } = route.useLoaderData() as {categories: AxiosResponse<Category[]>, manufacturers: AxiosResponse<Manufacturer[]>, components: Promise<AxiosResponse<Component[]>>};
-    const navigate = useNavigate();
-
-    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const [filters, setFilters] = useState<Record<string, any>>({
-        page: page,
-        search: search || '',
-        desc: desc || false,
-        orderBy: orderBy || 'name',
-        category: category || 0,
-        manufacturer: manufacturer || 0
+    const { page, search, orderBy, desc, category, manufacturer } = route.useSearch();
+    const { limit, maxPages } = paginationParams;
+    const aditionalFilters = {
+        ...(category && {category}),
+        ...(manufacturer && {manufacturer}),
+    }
+    const { chunks, chunkIndex, dataLinks, status, filters, setFilters } = useFetch<Component>({
+        page, 
+        apiRoute: '/components',
+        baseFilters: { search, orderBy, desc },
+        aditionalFilters
+    });
+    
+    const categories = useAsyncList<Category>({
+        async load({cursor}){
+            const { data } = await fetchData<Category>(cursor || `/component-categories?limit=${limit}&offset=0`);
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
     });
 
-    function handleFilterChange(value: string | number | boolean, key: 'page' | 'search' | 'orderBy' | 'desc' | 'category' | 'manufacturer', debounce?: number) {
-        
-        let temp: Record<string, any> = {...filters, page: 1};
-        if(value || value != 0) temp[key] = value;
-        else temp[key] = undefined;
-        setFilters(temp);
-
-        if (debounceTimer.current) clearTimeout(debounceTimer.current);
-        debounceTimer.current = setTimeout(() => {
-            navigate({
-                to: '.',
-                search: temp,
-                mask: {to: '.', search: {...temp, orderBy: undefined, desc: undefined, search: undefined}}
-            });
-        }, debounce);
-    }
+    const manufacturers = useAsyncList<Manufacturer>({
+        async load({cursor}){
+            const { data } = await fetchData<Manufacturer>(cursor || `/manufacturers?limit=${limit}&offset=0`);
+            return {
+                items: data.content,
+                cursor: data.links?.next
+            }
+        },
+    });
 
     return (
-        <div>
-            <Breadcrumbs className={'m-5 text-[var(--color-text)]'}>
-                <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-                <Breadcrumb>Componentes</Breadcrumb>
-            </Breadcrumbs>
-            <div className="m-5">
-                <h1 className="text-[var(--color-text)] text-3xl">Componentes</h1>
-                <p className="text-[var(--color-text-muted)]">Aquí podrás encontrar los componentes electronicos disponibles en inventario</p>
-            </div>
-            <div className="m-5 makerbox-box flex flex-col gap-5">
-                <div className="pb-4 flex items-center gap-4 border-b-2 border-[var(--color-border)]">
-                    <TextField label="Buscar"
-                        value={filters.search}
-                        onChange={(value) => handleFilterChange(value, 'search', 400)}
-                        placeholder="Ej: LED Rojo" 
-                        className='w-full border-r-2 border-[var(--color-border)] pr-4' 
-                        icon={<RiSearchLine className="m-2" color="var(--color-text-muted)" size={18}/>}
-                    />
-                    <div className="flex gap-2">
-                        <Select label="Ordenar por"
-                            value={filters.orderBy}
-                            placeholder="Seleccione"
-                            onChange={(value) => handleFilterChange(value as string, 'orderBy')}
-                            className='!w-[var(--select-w-xs)]'
-                        >
-                            <SelectItem id='name'>Nombre</SelectItem>
-                            <SelectItem id='created_at'>Fecha</SelectItem>
-                            <SelectItem id='stock'>Stock</SelectItem>
-                        </Select>
-                        <Link
-                            onClick={() => handleFilterChange(!desc, 'desc')}
-                            to={'.'}
-                            search={{...filters, page: 1}}
-                            resetScroll={false}
-                            className="mt-auto p-2 aspect-square text-[var(--color-text)] bg-[var(--color-form-select-bg)] hover:bg-[var(--color-form-select-bg)]/60 border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)] outline-none"
-                        >
-                            {filters.orderBy == 'stock'
-                                ? (filters.desc ? <RiSortNumberDesc size={20}/> : <RiSortNumberAsc size={20}/>) 
-                                : (filters.desc ? <RiSortAlphabetDesc size={20} /> : <RiSortAlphabetAsc size={20}/>)}
-                        </Link>
-                    </div>
-                </div>
-                <div className="flex justify-between gap-4 flex-wrap">
-                    <div className="flex gap-2">
-                        <Select label="Categoría" 
-                            defaultValue={0}
-                            value={filters.category}
-                            placeholder="Seleccione"
-                            onChange={(value) => handleFilterChange(value as number, 'category')} 
-                            items={categories.data} 
-                            className='!w-[var(--select-w-sm)]'
-                        >
-                            <SelectItem key='' id={0} >Todos</SelectItem>
-                            {categories.data.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
-                        </Select>
-                        <Select label="Fabricante" 
-                            defaultValue={0}
-                            value={filters.manufacturer}
-                            placeholder="Seleccione"
-                            onChange={(value) => handleFilterChange(value as number, 'manufacturer')}
-                            className='!w-[var(--select-w-sm)]'
-                        >
-                            <SelectItem key='' id={0} >Todos</SelectItem>
-                            {manufacturers.data.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
-                        </Select>
-                    </div>
-                    <Button 
-                        variant="primary"
-                        className='my-auto'
-                        onPress={() => {
-                            setFilters((prev) => ({...prev, page:1, manufacturer: 0, category: 0}));
-                            navigate({
-                                to: '.', 
-                                search: {...filters, page: 1, category: undefined, manufacturer:undefined},
-                                mask: {to: '.', search: {page:1}}
-                            })
-                        }}
-                    >
-                        Limpiar filtros
-                    </Button>
-                </div>
-            </div>
-            <AwaitWrapper<AxiosResponse<Component[]>> asyncData={components} onCatch={(error) => {if(error instanceof AxiosError) checkAuth(); throw error;}}>
-                {(response) => {
-                    let chunks = chunk(response.data, Math.floor(limit/maxPages));
-                    return chunks.length && chunks[(page-1)%maxPages] ? (
-                        <>
-                        <div className='m-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 3xl:grid-cols-5 gap-4'>
-                            {chunks[(page-1)%maxPages].map((component) => (
-                                <Card
-                                    key={component.id} 
-                                    title={component.name} 
-                                    {... component.stock >= component.stock_min 
-                                        ? {status:{text:'Stock disponible', color:'var(--color-success)'}} 
-                                        : (component.stock != 0) 
-                                            ? {status:{text:'Quedan pocos', color:'var(--color-warning)'}}  
-                                            : {status:{text:'Sin stock', color:'var(--color-danger)'}}}
-                                    description={''} 
-                                    subtitle={component.manufacturer} 
-                                    {... component.image_url ? {image:'/' + component.image_url} : {}}
-                                    link={{pathname: '/manager/components/$id', id: component.id}}
-                                />
-                            ))}
-                        </div>
-                        <Pagination 
-                            maxPages={maxPages} 
-                            totalPages={chunks.length} 
-                            currentPage={page} 
-                            cursor={Math.floor((page-1)/maxPages)} 
-                            filters={filters}
-                            mask={{ 
-                                orderBy: undefined, 
-                                desc: undefined, 
-                                search: undefined, 
-                                ...(filters.category === 0 && {category: undefined}),
-                                ...(filters.manufacturer === 0 && {manufacturer: undefined})
-                            }}
-                        />
-                        </>
-                    ) :
-                    (
-                        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-400 text-sm">
-                            <strong>No se han encontrado resultados</strong>
-                        </div>
-                    )
-                }}
-            </AwaitWrapper>
+        <>
+        <Breadcrumbs className={'m-5'}>
+            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <Breadcrumb>Componentes</Breadcrumb>
+        </Breadcrumbs>
+        <div className="m-5">
+            <h1 className="text-3xl">Componentes</h1>
+            <p className="text-[var(--color-text-muted)]">Aquí podrás encontrar los componentes electronicos disponibles en inventario</p>
         </div>
+        <FilterBox filters={filters} setFilters={setFilters}>
+            <Select label="Categoría"
+                value={filters.category || 0}
+                placeholder="Seleccione"
+                onChange={(value) => value !== null && setFilters((prev) => ({...prev, category: value as number}))}
+                className='!w-[var(--select-w-sm)]'
+                loadingState={categories.loadingState}
+                onLoadMore={categories.loadMore}
+            >
+                <SelectItem key='' id={0} >Todos</SelectItem>
+                {categories.items.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
+            </Select>
+            <Select label="Fabricante"
+                value={filters.manufacturer || 0}
+                placeholder="Seleccione"
+                onChange={(value) => value !== null && setFilters((prev) => ({...prev, manufacturer: value as number}))}
+                className='!w-[var(--select-w-sm)]'
+                loadingState={manufacturers.loadingState}
+                onLoadMore={manufacturers.loadMore}
+            >
+                <SelectItem key='' id={0} >Todos</SelectItem>
+                {manufacturers.items.map( (item) => <SelectItem key={item.id} id={item.id} >{item.name}</SelectItem>)}
+            </Select>
+        </FilterBox>
+        <ComponentCardGrid data={chunks[chunkIndex] || []} status={status}/>
+        <Pagination 
+            dataStatus={status}
+            pagination={{page, maxPages, totalPages: chunks.length}}
+            filters={filters}
+            mask={{
+                orderBy: undefined, 
+                desc: undefined,
+                ...(filters.search === '' && {search: undefined}),
+                ...(filters.category === 0 && {category: undefined}),
+                ...(filters.manufacturer === 0 && {manufacturer: undefined})
+            }}
+            hasPrev={dataLinks?.prev !== undefined}
+            hasNext={dataLinks?.next !== undefined}
+        />
+        </>
     )
 }
