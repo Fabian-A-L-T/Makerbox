@@ -1,23 +1,17 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import CMSLayout from '@components/layouts/MakerboxLayout';
+import MakerboxLayout from '@components/layouts/MakerboxLayout';
 import NotFound from '@views/errors/NotFound';
 
 export const Route = createFileRoute('/_auth/manager')({
 	notFoundComponent: NotFound,
-	beforeLoad: () => ({
-		pagination: {
-			limit: 20,
-			maxPages: 2
-		}
-	}),
 	component: RouteComponent,
 })
 
 function RouteComponent() {
 	const { auth: { user, logout } } = Route.useRouteContext();
 	return (
-		<CMSLayout userData={user} logout={logout}>
+		<MakerboxLayout userData={user} logout={logout}>
 			<Outlet />
-		</CMSLayout>
+		</MakerboxLayout>
 	)
 }
