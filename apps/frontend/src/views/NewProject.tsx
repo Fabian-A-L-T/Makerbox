@@ -1,6 +1,6 @@
 
 export default function NewProject(){
     return (
-        <div>Test</div>
+        <div>En construcción</div>
     );
 }

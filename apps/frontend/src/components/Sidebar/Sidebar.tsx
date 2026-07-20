@@ -180,13 +180,14 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 						</Menu>
 					</MenuTrigger>
 				</div>
-				<div className="sidebar__group px-4"> 
-					<Button
-						variant='primary'
+				<div className="sidebar__group"> 
+					<Link
+						className='w-max p-2 mx-auto flex items-center gap-2 bg-[var(--color-primary)] rounded-[var(--border-radius-ui)]'
+						to='/manager/newProject'
 					>
 						<RiAddLine/>
-						Nuevo proyecto
-					</Button>
+						<span className='mr-1'>Nuevo proyecto</span>
+					</Link>
 				</div>
 
 				{navGroups.map((group) => {
