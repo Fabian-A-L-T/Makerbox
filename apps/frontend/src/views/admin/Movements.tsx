@@ -3,7 +3,7 @@ import type { Movement } from '../../interfaces/schemas';
 import { getRouteApi } from '@tanstack/react-router';
 import { useCRUD } from '../../hooks/useCRUD';
 import CRUDLayout from '@components/layouts/CRUDLayout';
-import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
+import { Breadcrumb } from '@components/ui/Breadcrumbs';
 import MovementForm from '@views/admin/forms/MovementForms';
 
 export default function Movements() {
@@ -12,7 +12,7 @@ export default function Movements() {
     const { page: currentPage } = route.useSearch();
     const { auth: {user} } = route.useRouteContext();
 
-    const crud = useCRUD<Movement>({ apiRoute: '/movements', resourceLabel: 'movimiento'});
+    const crud = useCRUD<Movement>({ apiRoute: '/api/movements', resourceLabel: 'movimiento'});
     
     const columns: ColumnDef<Movement>[] = [
         { key: 'id', label: 'ID'},
@@ -38,21 +38,21 @@ export default function Movements() {
     }
 
     return (
-        <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Movimientos</Breadcrumb>
-        </Breadcrumbs>
         <CRUDLayout<Movement>
             title="Movimientos" 
-            subtitle="Gestión de movimientos de inventario"
+            subtitle="Aquí podrás administrar los movimientos de inventario de los componentes electronicos"
+            actionText='Nuevo movimiento'
+            breadcrumbs={
+                <>
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
+                <Breadcrumb>Movimientos</Breadcrumb>
+                </>
+            }
             columns={columns}
             currentPage={currentPage}
             crud={crud}
             formDataTransform={formDataTransform}
-            createForm={<MovementForm />}
-            editForm={<></>}
+            createForm={<MovementForm isPending={crud.isSubmitting}/>}
         />
-        </>
     )
 }

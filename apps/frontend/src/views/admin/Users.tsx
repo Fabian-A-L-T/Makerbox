@@ -5,14 +5,14 @@ import { UserCreateForm, UserEditForm } from './forms/UserForms';
 import type { User } from '../../interfaces/schemas';
 import {getRouteApi} from '@tanstack/react-router';
 import CRUDTableActions from '@components/CRUDTableActions';
-import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
+import { Breadcrumb } from '@components/ui/Breadcrumbs';
 
 export default function Users(){
 
     const route = getRouteApi('/_auth/manager/admin/users');
     const { page: currentPage } = route.useSearch();
 
-    const crud = useCRUD<User>({ apiRoute: '/users', resourceLabel: 'usuario' });
+    const crud = useCRUD<User>({ apiRoute: '/api/users', resourceLabel: 'usuario' });
 
     const userRoles = {
         admin: { label: 'Administrador', className: 'bg-red-500' },
@@ -43,20 +43,21 @@ export default function Users(){
     ];
 
     return(
-        <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Usuarios</Breadcrumb>
-        </Breadcrumbs>
         <CRUDLayout<User>
             title="Usuarios"
-            subtitle="Aquí puedes gestionar los usuarios del sistema"
+            subtitle="Aquí podrás administrar los usuarios del sistema"
+            actionText='Nuevo usuario'
+            breadcrumbs={
+                <>
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
+                <Breadcrumb>Usuarios</Breadcrumb>
+                </>
+            }
             columns={columns}
             crud={crud}
             currentPage={currentPage}
-            createForm={<UserCreateForm />}
-            editForm={<UserEditForm user={crud.targetData} />}
+            createForm={<UserCreateForm isPending={crud.isSubmitting}/>}
+            editForm={<UserEditForm user={crud.targetData} isPending={crud.isSubmitting}/>}
         />
-        </>
     )
 }

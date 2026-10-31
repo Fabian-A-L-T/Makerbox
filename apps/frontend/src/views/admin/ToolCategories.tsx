@@ -11,7 +11,7 @@ export default function ToolCategories() {
     const route = getRouteApi('/_auth/manager/admin/categories/tools');
     const { page: currentPage } = route.useSearch();
 
-    const crud = useCRUD<Category>({ apiRoute: '/tool-categories', resourceLabel: 'categoría'});
+    const crud = useCRUD<Category>({ apiRoute: '/api/tool-categories', resourceLabel: 'categoría'});
 
     const columns: ColumnDef<Category>[] = [
         { key: 'id',       label: 'ID'},
@@ -50,14 +50,13 @@ export default function ToolCategories() {
 
     return (
         <CRUDLayout<Category>
-            title="" 
-            subtitle=""
+            actionText='Nueva categoría'
             columns={columns}
             currentPage={currentPage}
             crud={crud}
             formDataTransform={formDataTransform}
-            createForm={<CategoryForm type='tool'/>}
-            editForm={<CategoryForm type='tool' target={crud.targetData}/>}
+            createForm={<CategoryForm type='tool'isPending={crud.isSubmitting}/>}
+            editForm={<CategoryForm type='tool' target={crud.targetData} isPending={crud.isSubmitting}/>}
         />
     )
 }

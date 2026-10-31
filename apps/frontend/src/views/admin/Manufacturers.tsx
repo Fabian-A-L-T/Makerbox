@@ -5,14 +5,14 @@ import { useCRUD } from '../../hooks/useCRUD';
 import type { Manufacturer } from '../../interfaces/schemas';
 import ManufacturerForm from '@views/admin/forms/ManufacturerForms';
 import {getRouteApi} from '@tanstack/react-router';
-import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
+import { Breadcrumb } from '@components/ui/Breadcrumbs';
 
 export default function Manufacturers(){
 
     const route = getRouteApi('/_auth/manager/admin/manufacturers');
     const { page: currentPage } = route.useSearch();
 
-    const crud = useCRUD<Manufacturer>({ apiRoute: '/manufacturers', resourceLabel: 'fabricante' });
+    const crud = useCRUD<Manufacturer>({ apiRoute: '/api/manufacturers', resourceLabel: 'fabricante' });
     const columns: ColumnDef<Manufacturer>[] = [
         { key: 'id',       label: 'ID'},
         { key: 'name',     label: 'Nombre'},
@@ -29,20 +29,21 @@ export default function Manufacturers(){
     ];
     
     return(
-        <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Fabricantes</Breadcrumb>
-        </Breadcrumbs>
         <CRUDLayout<Manufacturer>
             title="Fabricantes"
-            subtitle="Aquí puedes gestionar los fabricantes de componentes electrónicos y herramientas."
+            subtitle="Aquí podrás administrar los registros de fabricantes de componentes electrónicos y herramientas"
+            actionText='Registrar fabricante'
+            breadcrumbs={
+                <>
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
+                <Breadcrumb>Fabricantes</Breadcrumb>
+                </>
+            }
             columns={columns}
             crud={crud}
             currentPage={currentPage}
-            createForm={<ManufacturerForm/>}
-            editForm={<ManufacturerForm target={crud.targetData}/>}
+            createForm={<ManufacturerForm isPending={crud.isSubmitting}/>}
+            editForm={<ManufacturerForm target={crud.targetData} isPending={crud.isSubmitting}/>}
         />
-        </>
     )
 }

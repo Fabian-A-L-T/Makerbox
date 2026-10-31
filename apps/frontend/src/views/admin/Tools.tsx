@@ -6,7 +6,7 @@ import ToolForm from "@views/admin/forms/ToolForms";
 import type { Tool } from "../../interfaces/schemas";
 import { useState } from "react";
 import {getRouteApi} from '@tanstack/react-router';
-import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { Breadcrumb } from "@components/ui/Breadcrumbs";
 import { handleDelete, handleUpload } from "@utils/Utils";
 import { AsyncImg } from "@utils/Utils";
 
@@ -18,14 +18,14 @@ export default function Tools() {
     const [image, setImage] = useState<File | null>(null);
     const [file, setFile] = useState<File | null>(null);
     
-    const crud = useCRUD<Tool>({ apiRoute: '/tools', resourceLabel: 'herramienta'});
+    const crud = useCRUD<Tool>({ apiRoute: '/api/tools', resourceLabel: 'herramienta'});
 
     const columns: ColumnDef<Tool>[] = [
         { key: 'id',       label: 'ID'},
         { key: 'name',     label: 'Nombre',
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    <AsyncImg className='w-18 h-18 rounded' src={'/' + item.image_url} alt={item.name}/>
+                    <AsyncImg className='w-18 h-18 rounded' src={item.image_url ? '/' + item.image_url : undefined} alt={item.name}/>
                     <span>{item.name}</span>
                 </div>
             )   
@@ -44,7 +44,7 @@ export default function Tools() {
         },
         { key: 'location',      label: 'Ubicación',
             render: (item) => {
-                const locationRoute = item.location.replaceAll('_', ' ');
+                const locationRoute = item.location_route.replaceAll('_', ' ');
                 return (
                     <div className="flex flex-col">
                         <span>{locationRoute.split('.').at(-1)}</span>
@@ -104,20 +104,22 @@ export default function Tools() {
     }
 
     return (
-        <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Herramientas</Breadcrumb>
-        </Breadcrumbs>
         <CRUDLayout<Tool>
             title="Herramientas"
+            subtitle="Aquí podrás administrar todas las herramientas registradas en el sistema"
+            actionText='Nueva herramienta'
+            breadcrumbs={
+                <>
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
+                <Breadcrumb>Herramientas</Breadcrumb>
+                </>
+            }
             columns={columns}
             currentPage={currentPage}
             crud={crud}
             formDataTransform={formDataTransform}
-            createForm={<ToolForm setImage={setImage} setFile={setFile} />}
-            editForm={<ToolForm target={crud.targetData} setImage={setImage} setFile={setFile}/>}
+            createForm={<ToolForm setImage={setImage} setFile={setFile} isPending={crud.isSubmitting}/>}
+            editForm={<ToolForm target={crud.targetData} setImage={setImage} setFile={setFile} isPending={crud.isSubmitting}/>}
         />
-        </>
     );
 }   

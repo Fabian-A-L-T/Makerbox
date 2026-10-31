@@ -11,7 +11,7 @@ export default function Categories() {
     const route = getRouteApi('/_auth/manager/admin/categories/components');
     const { page: currentPage } = route.useSearch();
     
-    const crud = useCRUD<Category>({apiRoute: '/component-categories', resourceLabel: 'categoría'});
+    const crud = useCRUD<Category>({apiRoute: '/api/component-categories', resourceLabel: 'categoría'});
 
     const columns: ColumnDef<Category>[] = [
         { key: 'id',       label: 'ID'},
@@ -51,14 +51,13 @@ export default function Categories() {
 
     return (
         <CRUDLayout<Category>
-            title=''
-            subtitle=''
+            actionText='Nueva categoría'
             columns={columns}
             currentPage={currentPage}
             crud={crud}
             formDataTransform={formDataTransform}
-            createForm={<CategoryForm type='component'/>}
-            editForm={<CategoryForm type='component' target={crud.targetData}/>}
+            createForm={<CategoryForm type='component' isPending={crud.isSubmitting}/>}
+            editForm={<CategoryForm type='component' target={crud.targetData} isPending={crud.isSubmitting}/>}
         />
     )
 }

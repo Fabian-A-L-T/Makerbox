@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router"
 import '@styles/card.scss'
 import InfoCard from "@components/ui/InfoCard"
 
-export default function AdminIndex({compTotal, toolTotal, projTotal}: {compTotal: number, toolTotal: number, projTotal: number}) {
+export default function AdminIndex({compTotal, toolTotal, projTotal}: {compTotal?: number, toolTotal?: number, projTotal?: number}) {
     const adminPages = [
         {
             title: 'Categorias', 

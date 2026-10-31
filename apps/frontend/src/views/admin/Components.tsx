@@ -6,7 +6,7 @@ import ComponentForm from "@views/admin/forms/ComponentForms";
 import type { Component } from "../../interfaces/schemas";
 import { useState } from "react";
 import {getRouteApi} from '@tanstack/react-router';
-import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { Breadcrumb } from "@components/ui/Breadcrumbs";
 import { handleDelete, handleUpload } from "@utils/Utils";
 import { AsyncImg } from "@utils/Utils";
 
@@ -18,14 +18,14 @@ export default function Components() {
     const [image, setImage] = useState<File | null>(null);
     const [file, setFile] = useState<File | null>(null);
     
-    const crud = useCRUD<Component>({ apiRoute: '/components', resourceLabel: 'componente'});
+    const crud = useCRUD<Component>({ apiRoute: '/api/components', resourceLabel: 'componente'});
 
     const columns: ColumnDef<Component>[] = [
         { key: 'id',       label: 'ID'},
         { key: 'name',     label: 'Nombre',
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    <AsyncImg className='w-18 h-18 rounded' src={'/' + item.image_url} alt={item.name}/>
+                    <AsyncImg className='w-18 h-18 rounded' src={item.image_url ? '/' + item.image_url : undefined} alt={item.name}/>
                     <span>{item.name}</span>
                 </div>
             )   
@@ -71,7 +71,7 @@ export default function Components() {
                 if (crud.targetData?.image_url) {
                     await handleDelete(crud.targetData.image_url);
                 }
-                formData?.append('image_url', newImageRoute!);
+                formData.append('image_url', newImageRoute!);
                 setImage(null);
             }
             if(file){
@@ -86,20 +86,22 @@ export default function Components() {
     }
 
     return (
-        <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Componentes</Breadcrumb>
-        </Breadcrumbs>
         <CRUDLayout<Component>
             title="Componentes"
+            subtitle="Aquí podrás administrar todos los componentes electronicos registrados en el sistema"
+            actionText='Nuevo componente'
+            breadcrumbs={
+                <>
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
+                <Breadcrumb>Componentes (Administrador)</Breadcrumb>
+                </>
+            }
             columns={columns}
             currentPage={currentPage}
             crud={crud}
             formDataTransform={formDataTransform}
-            createForm={<ComponentForm setImage={setImage} setFile={setFile} />}
-            editForm={<ComponentForm target={crud.targetData} setImage={setImage} setFile={setFile}/>}
+            createForm={<ComponentForm setImage={setImage} setFile={setFile} isPending={crud.isSubmitting}/>}
+            editForm={<ComponentForm target={crud.targetData} setImage={setImage} setFile={setFile } isPending={crud.isSubmitting}/>}
         />
-        </>
     );
 }   

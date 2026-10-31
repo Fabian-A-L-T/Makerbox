@@ -1,12 +1,11 @@
 import CRUDTableActions from "@components/CRUDTableActions";
 import CRUDLayout from "@components/layouts/CRUDLayout";
-import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { Breadcrumb } from "@components/ui/Breadcrumbs";
 import type { ColumnDef } from "@components/ui/Table";
 import { getRouteApi } from "@tanstack/react-router";
 import type { Project } from "../../interfaces/schemas";
 import { useCRUD } from "../../hooks/useCRUD";
 import { useState } from "react";
-import ProjectForm from "./forms/ProjectForms";
 import { handleDelete, handleUpload } from "@utils/Utils";
 import { AsyncImg } from "@utils/Utils";
 
@@ -17,14 +16,14 @@ export default function Projects(){
     
     const [image, setImage] = useState<File | null>(null);
     
-    const crud = useCRUD<Project>({ apiRoute: '/projects', resourceLabel: 'proyecto' });
+    const crud = useCRUD<Project>({ apiRoute: '/api/projects', resourceLabel: 'proyecto' });
 
     const columns: ColumnDef<Project>[] = [
         { key: 'id',       label: 'ID'},
         { key: 'name',     label: 'Nombre',
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    <AsyncImg className='w-18 h-18 rounded' src={'/' + item.image_url} alt={item.name}/>
+                    <AsyncImg className='w-18 h-18 rounded' src={item.image_url ? '/' + item.image_url : undefined} alt={item.name}/>
                     <span>{item.name}</span>
                 </div>
             )   
@@ -33,8 +32,7 @@ export default function Projects(){
         { key: 'actions',   label: 'Acciones',
             render: (item) => (
                 <CRUDTableActions 
-                    name={item.name} 
-                    editAction={() => crud.openModal({ mode: 'put', target: item })}
+                    name={item.name}
                     deleteAction={() => crud.openModal({ mode: 'delete', target: item })}
                 />
             ),
@@ -66,20 +64,19 @@ export default function Projects(){
     }
 
     return (
-        <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Proyectos</Breadcrumb>
-        </Breadcrumbs>
         <CRUDLayout<Project>
             title="Proyectos"
+            subtitle="Aquí podrás administrar todos los proyectos registrados en el sistema"
+            breadcrumbs={
+                <>
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
+                <Breadcrumb>Proyectos</Breadcrumb>
+                </>
+            }
             columns={columns}
             currentPage={currentPage}
             crud={crud}
             formDataTransform={formDataTransform}
-            createForm={<ProjectForm setImage={setImage}/>}
-            editForm={<ProjectForm target={crud.targetData} setImage={setImage}/>}
         />
-        </>
     );
 }   

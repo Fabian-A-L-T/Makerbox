@@ -5,13 +5,13 @@ import { LocationForm } from './forms/LocationForms';
 import type { Location } from '../../interfaces/schemas';
 import {getRouteApi} from '@tanstack/react-router';
 import CRUDTableActions from '@components/CRUDTableActions';
-import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
+import { Breadcrumb } from '@components/ui/Breadcrumbs';
 
 const route = getRouteApi('/_auth/manager/admin/locations');
 
 export default function Locations() {
     const { page: currentPage } = route.useSearch();
-    const crud = useCRUD<Location>({ apiRoute: '/locations', resourceLabel: 'ubicación'});
+    const crud = useCRUD<Location>({ apiRoute: '/api/locations', resourceLabel: 'ubicación'});
 
     const columns: ColumnDef<Location>[] = [
         { key: 'id',       label: 'ID'},
@@ -50,21 +50,22 @@ export default function Locations() {
     }
 
     return (
-        <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
-            <Breadcrumb>Ubicaciones</Breadcrumb>
-        </Breadcrumbs>
         <CRUDLayout<Location>
             title="Ubicaciones"
-            subtitle="Gestión de ubicaciones de componentes y herramientas"
+            subtitle="Aquí podrás administrar los registros de ubicaciones para componentes y herramientas"
+            actionText='Registrar ubicación'
+            breadcrumbs={
+                <>
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
+                <Breadcrumb>Ubicaciones</Breadcrumb>
+                </>
+            }
             columns={columns}
             currentPage={currentPage}
             crud={crud}
             formDataTransform={formDataTransform}
-            createForm={<LocationForm />}
-            editForm={<LocationForm target={crud.targetData} />}
+            createForm={<LocationForm isPending={crud.isSubmitting}/>}
+            editForm={<LocationForm target={crud.targetData} isPending={crud.isSubmitting}/>}
         />
-        </>
     );
 }
