@@ -17,7 +17,7 @@ const validate = (value: string | number | undefined, key: 'name' | 'description
     return result.issues?.[0]?.message || '';
 }
 
-export function LocationForm({target}:{target?: Location | null;}) {
+export function LocationForm({target, isPending}:{isPending: boolean, target?: Location | null;}) {
     const [parent, setParent] = useState<{path: string, name: string} | undefined>();
     const [initialLocationsFlag, setInitialLocationsFlag] = useState(false);
 
@@ -36,7 +36,7 @@ export function LocationForm({target}:{target?: Location | null;}) {
     const locations = useAsyncList<Location>({
         async load({cursor}){
             let filteredData: Location[] | undefined;
-            const { data } = await fetchData<Location>(cursor || `/locations?limit=${paginationLimit}&offset=0${target ? `&exclude=${target.id}` : ''}`);
+            const data = await fetchData<Location>(cursor || `/api/locations?limit=${paginationLimit}&offset=0${target ? `&exclude=${target.id}` : ''}`);
             
             if(!initialLocationsFlag) {
                 setInitialLocationsFlag(true);
@@ -54,7 +54,7 @@ export function LocationForm({target}:{target?: Location | null;}) {
     });
 
     return (
-        <>
+        <div className="flex flex-col gap-5 w-lg">
             <TextField
                 autoFocus
                 label="Nombre"
@@ -62,19 +62,21 @@ export function LocationForm({target}:{target?: Location | null;}) {
                 {...(target ? {defaultValue: target.name} : {})}
                 validate={(value) => validate(value, 'name')}
                 name="name"
+                isDisabled={isPending}
                 placeholder="Ej: Escritorio"
             />
             <TextField
                 label="Descripción"
                 name="description"
                 type='textarea'
+                isDisabled={isPending}
                 {...(target ? {defaultValue: target.description} : {})}
                 validate={(value) => validate(value, 'description')}
             />
             <Select
                 label="Ubicación padre"
                 name="parent"
-                isInvalid={locations.loadingState === 'loading'}
+                isDisabled={isPending}
                 {...(parent ? {defaultValue: parent.path} : {defaultValue: ''})}
                 placeholder="Seleccione una ubicación"
                 loadingState={locations.loadingState}
@@ -82,6 +84,6 @@ export function LocationForm({target}:{target?: Location | null;}) {
             >
                 {locations.items.map( (item) => <SelectItem key={item.id} id={item.path} >{item.name}</SelectItem>)}
             </Select>
-        </>
+        </div>
     );
 }

@@ -11,6 +11,7 @@ import { last, split } from "lodash";
 import { fetchData, paginationLimit, validateImgSize } from "@utils/Utils";
 import { useAsyncList } from "react-aria-components";
 import { AsyncImg } from "@utils/Utils";
+import { Separator } from "@components/ui/Separator";
 
 const componentSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
@@ -20,23 +21,25 @@ const componentSchema = v.object({
     manufacturer_id: v.number(),
     stock: v.pipe(v.number('Debe ser un número valido'), v.minValue(0, 'El stock debe ser un número positivo'), v.maxValue(9999, 'El stock debe ser un número menor a 9999')),
     stock_min: v.pipe(v.number('Debe ser un número valido'), v.minValue(0, 'El stock mínimo debe ser un número positivo'), v.maxValue(9998, 'El stock mínimo debe ser un número menor a 9998')),
+    unit_cost: v.pipe(v.number('Debe ser un número valido'), v.minValue(0, 'El stock mínimo debe ser un número positivo'), v.maxValue(999999999, 'El stock mínimo debe ser un número menor a 9998')),
     datasheet_url: v.union([v.pipe(v.string(), v.domain('URL inválida')), v.literal('')]),
     image_url: v.union([v.pipe(v.string(), v.domain('URL inválida')), v.literal('')]),
     notes: v.optional(v.pipe(v.string(), v.maxLength(512, 'Las notas deben tener menos de 512 caracteres')))
 })
 
-const validate = (value: string | number | undefined, key: 'name' | 'sku' | 'description' | 'category_id' | 'manufacturer_id' | 'stock' | 'stock_min' | 'datasheet_url' | 'image_url' | 'notes') => {
+const validate = (value: string | number | undefined, key: 'name' | 'sku' | 'description' | 'category_id' | 'manufacturer_id' | 'stock' | 'stock_min' | 'unit_cost' |'datasheet_url' | 'image_url' | 'notes') => {
     const result = v.safeParse(componentSchema.entries[key], value);
     return result.issues?.[0]?.message || '';
 }
 
 interface ComponentFormProps {
+    isPending: boolean;
     target?: Component | null;
     setImage: (image: File | null) => void;
     setFile: (file: File | null) => void;
 }
 
-export default function ComponentForm({ target, setImage, setFile }: ComponentFormProps) {
+export default function ComponentForm({ target, isPending, setImage, setFile }: ComponentFormProps) {
     const [imgContent, setImgContent] = useState<string | null>(null);
     const [fileContent, setFileContent] = useState<{name: string, type: string} | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,12 +49,12 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
 
     const categories = useAsyncList<Category>({
         async load({cursor}){
-            const { data } = await fetchData<Category>(cursor || `/component-categories?limit=${paginationLimit + 1}&offset=0${target ? `&exclude=${target.category_id}` : ''}`);
+            const data = await fetchData<Category>(cursor || `/api/component-categories?limit=${paginationLimit + 1}&offset=0${target ? `&exclude=${target.category_id}` : ''}`);
             
             if(target && !targetCategoryFlag) {
-                let res = await fetchData<Category>(`/component-categories/${target.category_id}`);
+                let res = await fetchData<Category>(`/api/component-categories/${target.category_id}`);
                 setTargetCategoryFlag(true);
-                data.content.unshift(res.data.content[0]);
+                data.content.unshift(res.content[0]);
             }
             return {
                 items: data.content,
@@ -62,12 +65,12 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
 
     const manufacturers = useAsyncList<Manufacturer>({
         async load({cursor}){
-            const { data } = await fetchData<Manufacturer>(cursor || `/manufacturers?limit=${paginationLimit}&offset=0${target ? `&exclude=${target.manufacturer_id}` : ''}`);
+            const data = await fetchData<Manufacturer>(cursor || `/api/manufacturers?limit=${paginationLimit}&offset=0${target ? `&exclude=${target.manufacturer_id}` : ''}`);
             
             if(target && !targetManufacturerFlag) {
-                let res = await fetchData<Manufacturer>(`/manufacturers/${target.manufacturer_id}`);
+                let res = await fetchData<Manufacturer>(`/api/manufacturers/${target.manufacturer_id}`);
                 setManufacturerFlag(true);
-                data.content.unshift(res.data.content[0]);
+                data.content.unshift(res.content[0]);
             }
             return {
                 items: data.content,
@@ -120,11 +123,11 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
     }
 
     return (
-        <div className="w-full flex gap-8">
-            <div className="w-3/8 flex flex-col gap-8">
-                <div className='grid grid-cols-2 gap-8 '>
-                    <div className='flex flex-col gap-2  aspect-square'>
-                        <span className="text-base font-semibold" >Imagen</span>
+        <div className="flex gap-5">
+            <div className="2xl:w-2xl xl:w-xl lg:w-lg flex flex-col gap-5">
+                <div className='grid grid-cols-2 gap-5 '>
+                    <div className='flex flex-col gap-1  aspect-square'>
+                        <span className="text-base" >Imagen</span>
                         <DropZone
                             className='h-full'
                             getDropOperation={types => (
@@ -132,6 +135,7 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                                 ? 'copy'
                                 : 'cancel'
                             )}
+                            isDisabled={isPending}
                             onDrop={imageDropHandler}
                         >
                             <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
@@ -147,13 +151,14 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                         </DropZone>
                         {errorMessage && <span className="text-[var(--color-danger)] text-xs">{errorMessage}</span>}
                     </div>
-                    <div className="flex flex-col gap-8">
+                    <div className="flex flex-col gap-5">
                         <TextField
                             autoFocus
                             label="Nombre"
                             isRequired
                             name="name"
                             placeholder="Ej: Resistor"
+                            isDisabled={isPending}
                             validate={(value) => validate(value, 'name')}
                             {...(target ? {defaultValue: target.name}: {})}
                         />
@@ -162,6 +167,7 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                             isRequired
                             name="sku"
                             placeholder="Ej: C-R-0001"
+                            isDisabled={isPending}
                             validate={(value) => validate(value, 'sku')}
                             {...(target ? {defaultValue: target.sku}: {})}
                         />
@@ -169,8 +175,13 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                             label="Categoría"
                             name="category_id"
                             isRequired
-                            errorMessage="Campo requerido"
-                            isInvalid={categories.loadingState === 'loading'}
+                            errorMessage={({validationErrors}) => {
+                                if(!categories.items.length) return "No se han encontrado categorias registradas en el sistema";
+                                else if (validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
+                                return "Ha ocurrido un error";
+                            }}
+                            isDisabled={isPending}
+                            {...(!categories.items.length && categories.loadingState !== 'loading' ? { isInvalid: true } : {})}
                             placeholder="Seleccione una categoría"
                             {...(target ? {defaultValue: target.category_id}: {})}
                             loadingState={categories.loadingState}
@@ -183,9 +194,14 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                             label="Fabricante"
                             name="manufacturer_id"
                             isRequired
-                            errorMessage="Campo requerido"
+                            isDisabled={isPending}
+                            errorMessage={({validationErrors}) => {
+                                if(!manufacturers.items.length) return "No se han encontrado fabricantes registrados en el sistema";
+                                else if (validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
+                                return "Ha ocurrido un error";
+                            }}
                             placeholder="Seleccione un fabricante"
-                            isInvalid={manufacturers.loadingState === 'loading'}
+                            {...(!manufacturers.items.length && manufacturers.loadingState !== 'loading' ? { isInvalid: true } : {})}
                             validate={(value) => validate(value, 'manufacturer_id')}
                             loadingState={manufacturers.loadingState}
                             onLoadMore={manufacturers.loadMore}
@@ -202,12 +218,24 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                     name="stock_min"
                     minValue={0}
                     maxValue={9999}
+                    isDisabled={isPending}
                     validate={(value) => validate(value, 'stock_min')}
                     {...(target ? {defaultValue: target.stock_min}: {defaultValue: 0})}
                 />
+
+                <NumberField
+                    label="Costo unitario"
+                    name="unit_cost"
+                    formatOptions={{style: "currency", currency: "CLP", currencyDisplay: "narrowSymbol"}}
+                    minValue={0}
+                    maxValue={999999999}
+                    isDisabled={isPending}
+                    validate={(value) => validate(value, 'unit_cost')}
+                    {...(target ? {defaultValue: target.unit_cost}: {defaultValue: 0})}
+                />
                 
-                <div className='flex flex-col gap-2'>
-                    <span className="text-base font-semibold" >Datasheet</span>
+                <div className='flex flex-col gap-1'>
+                    <span className="text-base" >Datasheet</span>
                     <DropZone
                         className='h-full'
                         getDropOperation={types => (
@@ -215,20 +243,22 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                             ? 'copy'
                             : 'cancel'
                         )}
+                        isDisabled={isPending}
                         onDrop={fileDropHandler}
                     >
                         <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
                             {fileContent || target?.datasheet_url
-                                ? <div>
+                                ? <div className="p-4">
                                     {fileContent?.type === 'application/pdf' || (target?.datasheet_url.endsWith('.pdf') || target?.datasheet_url.endsWith('.PDF') )
                                         ? <RiFileTextLine className="mx-auto mb-2" size={64} color="var(--color-success)"/>
                                         : <RiFileWord2Line className="mx-auto mb-2" size={64} color="var(--color-success)"/>}
                                     <span className="font-semibold italic text-[var(--color-success)]">{fileContent ? fileContent.name : last(split(target?.datasheet_url ,'\\'))}</span>
                                     </div>
-                                : <>
-                                    <RiFileTextLine className="mx-auto" size={64} color="var(--color-text-muted)"/>
-                                    <span>Arrastra el datasheet aquí</span>
-                                    </>
+                                : 
+                                    <div className="p-4">
+                                        <RiFileTextLine className="mx-auto" size={64} color="var(--color-text-muted)"/>
+                                        <span>Arrastra el datasheet aquí</span>
+                                    </div>
                             }
                         </Text>
                     </DropZone>
@@ -238,11 +268,13 @@ export default function ComponentForm({ target, setImage, setFile }: ComponentFo
                     label="Notas"
                     name="notes"
                     type="textarea"
+                    isDisabled={isPending}
                     validate={(value) => validate(value, 'notes')}
                     {...(target ? {defaultValue: target.notes}: {})}
                 />
             </div>
-            <div className="w-5/8 border-l-[2px] border-[var(--color-border)] pl-8">
+            <Separator orientation="vertical" className="!h-auto !w-[2px]"/>
+            <div className="2xl:w-4xl xl:w-2xl lg:w-xl">
                 <QuillTextEditor
                     label="Descripción"
                     name="description"

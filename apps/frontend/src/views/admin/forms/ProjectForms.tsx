@@ -6,10 +6,10 @@ import * as v from 'valibot';
 import { RiImageLine } from "@remixicon/react";
 import { NumberField } from "@components/form/NumberField";
 import { validateImgSize } from "@utils/Utils";
-import { DateField } from "@components/form/DateField";
-import { CalendarDate, parseDate } from "@internationalized/date";
+import { CalendarDate, getLocalTimeZone, parseDate, today } from "@internationalized/date";
 import { Select, SelectItem } from "@components/form/Select";
 import { AsyncImg } from "@utils/Utils";
+import { DatePicker } from "@components/form/DatePicker";
 
 const projectSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
@@ -29,19 +29,18 @@ const validate = (value: string | number | Date | undefined, key: 'name' | 'desc
 }
 
 interface ProjectFormProps {
-    target?: Project | null;
+    target: Project;
+    isPending: boolean;
     setImage: (image: File | null) => void;
 }
 
-export default function ProjectForm({ target, setImage }: ProjectFormProps) {
+export default function ProjectForm({ target, isPending, setImage }: ProjectFormProps) {
     const [imgContent, setImgContent] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     let fStartDate, fEstimatedEndDate;
-    if(target) {
-        if(target.start_date) fStartDate = new Date(target.start_date).toISOString().split('T')[0];
-        if(target.end_date_estimated) fEstimatedEndDate = new Date(target.end_date_estimated).toISOString().split('T')[0];
-    }
+    if(target.start_date) fStartDate = new Date(target.start_date).toISOString().split('T')[0];
+    if(target.end_date_estimated) fEstimatedEndDate = new Date(target.end_date_estimated).toISOString().split('T')[0];
 
     const [startDate, setStartDate] = useState<CalendarDate | null>(target?.start_date ? parseDate(fStartDate!) : null);
     const [endDate, setEndDate] = useState<CalendarDate | null>(target?.end_date_estimated ? parseDate(fEstimatedEndDate!) : null);
@@ -70,10 +69,10 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
     }
 
     return (
-        <>
-            <div className='grid grid-cols-5 gap-8 '>
-                <div className='flex flex-col gap-2 w-2xs aspect-square col-span-2'>
-                    <span className="text-base font-semibold" >Imagen</span>
+        <div className="w-3xl flex flex-col gap-5">
+            <div className='flex gap-5'>
+                <div className='flex flex-col gap-1 w-2xs aspect-square col-span-2'>
+                    <span className="text-base" >Imagen</span>
                     <DropZone
                         className='h-full'
                         getDropOperation={types => (
@@ -81,6 +80,7 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                             ? 'copy'
                             : 'cancel'
                         )}
+                        isDisabled={isPending}
                         onDrop={imageDropHandler}
                     >
                         <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
@@ -96,7 +96,7 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                     </DropZone>
                     {errorMessage && <span className="text-[var(--color-danger)] text-xs">{errorMessage}</span>}
                 </div>
-                <div className="flex flex-col gap-8 col-span-3">
+                <div className="flex-auto flex flex-col gap-5 col-span-3">
                     <TextField
                         autoFocus
                         label="Nombre del proyecto"
@@ -104,6 +104,7 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                         maxLength={200}
                         isRequired
                         name="name"
+                        isDisabled={isPending}
                         validate={(value) => validate(value, 'name')}
                         {...(target ? {defaultValue: target.name}: {})}
                     />
@@ -111,9 +112,9 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                         label="Estado"
                         name="state"
                         isRequired
-                        errorMessage="Campo requerido"
                         placeholder="Seleccione un estado"
                         validate={(value) => validate(value, 'state')}
+                        isDisabled={isPending}
                         {...(target ? {defaultValue: target.state}: {})}
                     >
                         <SelectItem id='planning'>En planificación</SelectItem>
@@ -127,7 +128,8 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                         name="budget"
                         minValue={0}
                         maxValue={999999999999}
-                        {...(target ? {defaultValue: target.budget}: {})}
+                        isDisabled={isPending}
+                        {...(target ? {defaultValue: Number(target.budget)}: {})}
                     />
                     <TextField
                         label="URL del repositorio"
@@ -135,6 +137,7 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                         minLength={3}
                         maxLength={200}
                         validate={(value) => validate(value, 'repository_url')}
+                        isDisabled={isPending}
                         {...(target ? {defaultValue: target.repository_url}: {})}
                     />
                     
@@ -147,10 +150,10 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                 type="textarea"
                 maxLength={1000}
                 validate={(value) => validate(value, 'description')}
+                isDisabled={isPending}
                 {...(target ? {defaultValue: target.description}: {})}
             />
-            <DateField
-                label="Fecha de inicio del proyecto"
+            <DatePicker label="Fecha de inicio del proyecto"
                 name="start_date"
                 value={startDate}
                 isRequired
@@ -158,20 +161,20 @@ export default function ProjectForm({ target, setImage }: ProjectFormProps) {
                     setStartDate(value);
                     setEndDate(null);
                 }}
+                isDisabled={isPending}
                 validate={(value) => validate(value.toDate('America/Santiago'), 'start_date')}
                 {...(target?.start_date ? {defaultValue: parseDate(fStartDate!)}: {})}
-            />
-            {startDate && 
-                <DateField
-                    label="Fecha estimada de finalización"
-                    name="end_date_estimated"
+                maxValue={today(getLocalTimeZone())} />
+            {startDate &&
+                <DatePicker label="Fecha estimada de finalización"
+                    name="end_date_real"
                     value={endDate}
-                    minValue={startDate}
                     onChange={(value) => setEndDate(value)}
+                    minValue={startDate}
+                    isDisabled={isPending}
                     validate={(value) => validate(value.toDate('America/Santiago'), 'end_date_estimated')}
-                    {...(target?.end_date_estimated ? {defaultValue: parseDate(fEstimatedEndDate!)}: {})}
-                />
+                    {...(target?.end_date_estimated ? {defaultValue: parseDate(fEstimatedEndDate!)}: {})}/>
             }
-        </>
+        </div>
     );
 }

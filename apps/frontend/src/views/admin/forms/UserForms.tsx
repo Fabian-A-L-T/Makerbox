@@ -16,7 +16,7 @@ const userSchema = object({
         string(),
         nonEmpty('Campo requerido'),
         minLength(1, 'El nombre debe tener al menos 1 caracter'),
-        maxLength(128, 'El nombre debe tener menos de 128 caracteres'),
+        maxLength(80, 'El nombre debe tener menos de 80 caracteres'),
     ),
     email: pipe(
         string(),
@@ -40,13 +40,14 @@ const validate = (value: string, field: 'name' | 'email' | 'role' | 'passwd') =>
     return result.success ? null : result.issues[0].message;
 };
 
-export function UserCreateForm(){
+export function UserCreateForm({isPending}:{isPending: boolean}){
     return(
-        <>
+        <div className="flex flex-col gap-5 w-lg">
             <TextField
                 autoFocus
                 label="Nombre"
                 isRequired
+                isDisabled={isPending}
                 validate={(value) => validate(value, 'name')}
                 name="name"
             />
@@ -54,6 +55,7 @@ export function UserCreateForm(){
                 label="Correo"
                 isRequired
                 autoComplete='off'
+                isDisabled={isPending}
                 validate={(value) => validate(value, 'email')}
                 name="email"
             />
@@ -62,6 +64,7 @@ export function UserCreateForm(){
                 name="role"
                 isRequired
                 errorMessage='Campo requerido'
+                isDisabled={isPending}
                 validate={(value) => validate(value as string, 'role')}
                 placeholder='Selecione rol'
             >
@@ -79,31 +82,25 @@ export function UserCreateForm(){
                 label="Contraseña"
                 autoComplete='new-password'
                 isRequired
+                isDisabled={isPending}
                 validate={(value) => validate(value, 'passwd')}
                 name="passwd"
                 type="password"
             />
-        </>
+        </div>
     )
 }
 
-export function UserEditForm({user}: {user: User | null}){
+export function UserEditForm({user, isPending}: {user: User | null, isPending: boolean}){
     if (!user) return null;
     return(
-        <>
-            <TextField
-                autoFocus
-                label="Nombre"
-                isRequired
-                defaultValue={user.name}
-                validate={(value) => validate(value, 'name')}
-                name="name"
-            />
+        <div className="flex flex-col gap-5 w-lg">
             <Select
                 label="Rol"
                 name="role"
                 isRequired
                 defaultValue={user.role}
+                isDisabled={isPending}
                 validate={(value) => validate(value as string, 'role')}
                 placeholder='Selecione rol'
                 errorMessage='Campo requerido'
@@ -118,6 +115,6 @@ export function UserEditForm({user}: {user: User | null}){
                     Lector
                 </SelectItem>
             </Select>
-        </>
+        </div>
     )
 }

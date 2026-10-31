@@ -12,13 +12,14 @@ const validate = (value: string, key: 'name' | 'website') => {
     return result.issues?.[0]?.message || '';
 }
 
-export default function ManufacturerForm({target}: {target?: Manufacturer | null}) {
+export default function ManufacturerForm({target, isPending}: {isPending: boolean, target?: Manufacturer | null}) {
     return (
-        <>
+        <div className="flex flex-col gap-5 w-lg">
             <TextField
                 label="Nombre"
                 placeholder="Ej: Texas Instruments"
                 isRequired
+                isDisabled={isPending}
                 validate={(value) => validate(value, 'name')}
                 name="name"
                 {...(target ? {defaultValue: target.name}: {})}
@@ -26,10 +27,11 @@ export default function ManufacturerForm({target}: {target?: Manufacturer | null
             <TextField
                 label="Sitio web del fabricante"
                 placeholder="Ej: ejemplo.com"
+                isDisabled={isPending}
                 validate={(value) => validate(value, 'website')}
                 name="website"
                 {...(target ? {defaultValue: target.website}: {})}
             />
-        </>
+        </div>
     )
 }

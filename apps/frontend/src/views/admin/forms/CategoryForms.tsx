@@ -16,7 +16,7 @@ const validate = (value: string | undefined, key: 'name' ) => {
     return result.issues?.[0]?.message || '';
 }
 
-export default function CategoryForm({ target, type }:{target?: Category | null, type: 'component' | 'tool'}) {
+export default function CategoryForm({ target, isPending, type }:{target?: Category | null, isPending: boolean, type: 'component' | 'tool'}) {
     const [parent, setParent] = useState<{path: string, name: string} | undefined>();
     const [initialCategoriesFlag, setInitialCategoriesFlag] = useState(false);
     
@@ -35,7 +35,7 @@ export default function CategoryForm({ target, type }:{target?: Category | null,
     const categories = useAsyncList<Category>({
         async load({cursor}){
             let filtered: Category[] | undefined;
-            const { data } = await fetchData<Category>(cursor || `/${type}-categories?limit=${paginationLimit}&offset=0${target ? `&exclude=${target.id}` : ''}`);
+            const data = await fetchData<Category>(cursor || `/api/${type}-categories?limit=${paginationLimit}&offset=0${target ? `&exclude=${target.id}` : ''}`);
             
             if(!initialCategoriesFlag) {
                 setInitialCategoriesFlag(true);
@@ -53,26 +53,27 @@ export default function CategoryForm({ target, type }:{target?: Category | null,
     });
 
     return (
-        <>
+        <div className="flex flex-col gap-5 w-lg">
             <TextField
                 autoFocus
                 label="Nombre de la categoría"
                 isRequired
                 {...(target ? {defaultValue: target.name} : {})}
+                isDisabled={isPending}
                 validate={(value) => validate(value, 'name')}
                 name="name"
             />
             <Select
                 label="Categoría padre"
                 name="parent"
-                isInvalid={categories.loadingState === 'loading'}
                 {...(parent ? {defaultValue: parent.path} : {defaultValue: ' '})}
                 placeholder="Seleccione una categoría"
+                isDisabled={isPending}
                 loadingState={categories.loadingState}
                 onLoadMore={categories.loadMore}
             >
                 {categories.items.map( (item) => <SelectItem key={item.id} id={item.path} >{item.name}</SelectItem>)}
             </Select>
-        </>
+        </div>
     );
 }
