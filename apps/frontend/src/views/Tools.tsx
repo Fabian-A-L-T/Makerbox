@@ -2,12 +2,13 @@ import type { Category, Manufacturer, Tool } from '../interfaces/schemas';
 import Pagination from "@components/ui/Pagination";
 import { getRouteApi } from '@tanstack/react-router';
 import { Select, SelectItem } from "@components/form/Select";
-import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { Breadcrumb } from "@components/ui/Breadcrumbs";
 import FilterBox from "@components/ui/FilterBox";
 import { useAsyncList } from "react-aria-components";
 import { fetchData, paginationParams } from "@utils/Utils";
 import { ToolCardGrid } from "@components/ui/CardGrid";
 import { useFetch } from '../hooks/useFetch';
+import PageHeader from '@components/ui/PageHeader';
 
 export default function Tools() {
 
@@ -21,14 +22,14 @@ export default function Tools() {
     }
     const { chunks, chunkIndex, dataLinks, status, filters, setFilters } = useFetch<Tool>({
         page, 
-        apiRoute: '/tools',
+        apiRoute: '/api/tools',
         baseFilters: { search, orderBy, desc },
         aditionalFilters
     });
 
     const categories = useAsyncList<Category>({
         async load({cursor}){
-            const { data } = await fetchData<Category>(cursor || `/tool-categories?limit=${limit}&offset=0`);
+            const data = await fetchData<Category>(cursor || `/api/tool-categories?limit=${limit}&offset=0`);
             return {
                 items: data.content,
                 cursor: data.links?.next
@@ -38,7 +39,7 @@ export default function Tools() {
     
     const manufacturers = useAsyncList<Manufacturer>({
         async load({cursor}){
-            const { data } = await fetchData<Manufacturer>(cursor || `/manufacturers?limit=${limit}&offset=0`);
+            const data = await fetchData<Manufacturer>(cursor || `/api/manufacturers?limit=${limit}&offset=0`);
             return {
                 items: data.content,
                 cursor: data.links?.next
@@ -46,17 +47,17 @@ export default function Tools() {
         },
     });
 
+    const filterItems = [
+        {id: 'created_at', name: 'Fecha'}
+    ];
+
     return (
         <>
-        <Breadcrumbs className='m-5'>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+        <PageHeader title="Herramientas" description="Aquí podrás encontrar las herramientas disponibles en inventario">
+            <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
             <Breadcrumb>Herramientas</Breadcrumb>
-        </Breadcrumbs>
-        <div className="m-5">
-            <h1 className="text-3xl">Herramientas</h1>
-            <span className="text-[var(--color-text-muted)] text-md">Aquí podrás encontrar las herramientas disponibles en inventario</span>
-        </div>
-        <FilterBox filters={filters} setFilters={setFilters}>
+        </PageHeader>
+        <FilterBox filters={filters} filterItems={filterItems} setFilters={setFilters}>
             <Select label="Categoría"
                 value={filters.category || 0}
                 placeholder="Seleccione"

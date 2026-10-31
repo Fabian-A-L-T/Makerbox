@@ -2,12 +2,13 @@ import type { Category, Component, Manufacturer } from '../interfaces/schemas';
 import Pagination from "@components/ui/Pagination";
 import { getRouteApi } from '@tanstack/react-router';
 import { Select, SelectItem } from "@components/form/Select";
-import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { Breadcrumb } from "@components/ui/Breadcrumbs";
 import { fetchData, paginationParams } from "@utils/Utils";
 import { ComponentCardGrid } from "@components/ui/CardGrid";
 import FilterBox from "@components/ui/FilterBox";
 import { useAsyncList } from "react-aria-components";
 import { useFetch } from '../hooks/useFetch';
+import PageHeader from '@components/ui/PageHeader';
 
 export default function Components() {
     const route = getRouteApi('/_auth/manager/components/');
@@ -19,14 +20,14 @@ export default function Components() {
     }
     const { chunks, chunkIndex, dataLinks, status, filters, setFilters } = useFetch<Component>({
         page, 
-        apiRoute: '/components',
+        apiRoute: '/api/components',
         baseFilters: { search, orderBy, desc },
         aditionalFilters
     });
     
     const categories = useAsyncList<Category>({
         async load({cursor}){
-            const { data } = await fetchData<Category>(cursor || `/component-categories?limit=${limit}&offset=0`);
+            const data = await fetchData<Category>(cursor || `/api/component-categories?limit=${limit}&offset=0`);
             return {
                 items: data.content,
                 cursor: data.links?.next
@@ -36,7 +37,7 @@ export default function Components() {
 
     const manufacturers = useAsyncList<Manufacturer>({
         async load({cursor}){
-            const { data } = await fetchData<Manufacturer>(cursor || `/manufacturers?limit=${limit}&offset=0`);
+            const data = await fetchData<Manufacturer>(cursor || `/api/manufacturers?limit=${limit}&offset=0`);
             return {
                 items: data.content,
                 cursor: data.links?.next
@@ -44,17 +45,18 @@ export default function Components() {
         },
     });
 
+    const filterItems = [
+        {id: 'created_at', name: 'Fecha'},
+        {id: 'stock', name: 'Stock'}
+    ];
+
     return (
         <>
-        <Breadcrumbs className={'m-5'}>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+        <PageHeader title="Componentes" description="Aquí podrás encontrar todos los componentes electronicos disponibles en inventario">
+            <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
             <Breadcrumb>Componentes</Breadcrumb>
-        </Breadcrumbs>
-        <div className="m-5">
-            <h1 className="text-3xl">Componentes</h1>
-            <p className="text-[var(--color-text-muted)]">Aquí podrás encontrar los componentes electronicos disponibles en inventario</p>
-        </div>
-        <FilterBox filters={filters} setFilters={setFilters}>
+        </PageHeader>
+        <FilterBox filters={filters} filterItems={filterItems} setFilters={setFilters}>
             <Select label="Categoría"
                 value={filters.category || 0}
                 placeholder="Seleccione"
