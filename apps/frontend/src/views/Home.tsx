@@ -1,28 +1,30 @@
 import { getRouteApi } from "@tanstack/react-router";
 import type {ComponentStats, Project, ProjectStats, ToolStats} from "../interfaces/schemas";
-import AdminIndex from "./admin/AdminIndex";
-import { RiCheckboxCircleLine, RiCloseCircleLine, RiFileListLine, RiPauseCircleLine, RiPencilRuler2Line, RiStairsLine, RiStarLine, RiTimeLine } from "@remixicon/react";
+import { RiCheckboxCircleLine, RiCloseCircleLine, RiCpuLine, RiFileListLine, RiHistoryLine, RiPauseCircleLine, RiPencilRuler2Line, RiPencilRulerLine, RiStairsLine, RiTimeLine, RiWrenchLine } from "@remixicon/react";
 import InfoCard from "@components/ui/InfoCard";
 import Table, { type ColumnDef } from "@components/ui/Table";
 import { fetchData } from "@utils/Utils";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import PageHeader from "@components/ui/PageHeader";
 
 export default function Home(){
     const route = getRouteApi('/_auth/manager/');
     const {auth: { user }} = route.useRouteContext();
 
-    const recentProjects = useQuery({queryKey:['/projects', 'recent', user!.id], queryFn: () => fetchData<Project>('/projects?limit=5&offset=0', undefined, {orderBy: 'created_at', desc: 'true', userId: user!.id})});
-    const projectsByBudget = useQuery({queryKey:['/projects', 'budget', user!.id], queryFn: () => fetchData<Project>('/projects?limit=5&offset=0', undefined, {orderBy: 'budget', desc: 'true', userId: user!.id})});
+    const recentProjects = useQuery({queryKey:['/projects', 'recent', user!.id], queryFn: () => fetchData<Project>('/api/projects?limit=5&offset=0', undefined, {orderBy: 'created_at', desc: 'true', userId: user!.id})});
+    const projectsByBudget = useQuery({queryKey:['/projects', 'budget', user!.id], queryFn: () => fetchData<Project>('/api/projects?limit=5&offset=0', undefined, {orderBy: 'budget', desc: 'true', userId: user!.id})});
 
-    const compStats = useQuery({queryKey:['/stats/components'], queryFn: () => fetchData<ComponentStats>('/stats/components')});
-    const toolStats = useQuery({queryKey:['/stats/tools'], queryFn: () => fetchData<ToolStats>('/stats/tools')});
-    const projStats = useQuery({queryKey:['/stats/projects'], queryFn: () => fetchData<ProjectStats>('/stats/projects')});
+    const compStats = useQuery({queryKey:['/stats/components'], queryFn: () => fetchData<ComponentStats>('/api/stats/components')});
+    const toolStats = useQuery({queryKey:['/stats/tools'], queryFn: () => fetchData<ToolStats>('/api/stats/tools')});
+    const projStats = useQuery({queryKey:['/stats/projects'], queryFn: () => fetchData<ProjectStats>('/api/stats/projects')});
 
     const projTotal = useMemo(() => {
-        let planning = 0, active = 0, paused = 0, completed = 0, cancelled = 0;
-        if(projStats.status === 'success') {
-            projStats.data.data.content.forEach((item) => {
+        let planning, active, paused, completed, cancelled, total;
+        if(projStats.status === 'success' && projStats.data.content) {
+            planning = 0; active = 0, paused = 0, completed = 0, cancelled = 0, total = 0;
+
+            projStats.data.content.forEach((item) => {
                 switch (item.state) {
                     case 'planning':
                         planning = parseInt(item.project_count);
@@ -41,28 +43,30 @@ export default function Home(){
                         break;
                 }
             });
+            return {
+                total: planning + active + paused + completed + cancelled,
+                planning, active, paused, completed, cancelled
+            }
         }
-        return {
-            total: planning + active + paused + completed + cancelled,
-            planning, active, paused, completed, cancelled
-        }
-    },[projStats.data]);
+        return { total, planning, active, paused, completed, cancelled }
+        
+    },[projStats.status]);
 
     const compTotal = useMemo(() => {
-        let total = 0;
-        if(compStats.status === 'success') {
-            compStats.data.data.content.forEach((item) => total += parseInt(item.category_stock));
+        if(compStats.status === 'success' && compStats.data.content) {
+            let total = 0;
+            compStats.data.content.forEach((item) => total += parseInt(item.category_stock));
+            return total;
         }
-        return total;
-    },[compStats.data]);
+    },[compStats.status]);
 
     const toolTotal = useMemo(() => {
-        let total = 0;
         if(toolStats.status === 'success') {
-            toolStats.data.data.content.forEach((item) => total += parseInt(item.category_stock));
+            let total = 0;
+            toolStats.data.content.forEach((item) => total += parseInt(item.category_stock));
+            return total;
         }
-        return total;
-    },[toolStats.data]);
+    },[toolStats.status]);
 
     const projectStates = {
         planning: {text: 'En planificación', color:'var(--color-primary)', icon: RiTimeLine},
@@ -98,19 +102,23 @@ export default function Home(){
         }},
         { key: 'budget',     label: 'Presupuesto', render:(item) => (<span>${item.budget?.toLocaleString()}</span>)},
     ];
-
     return (
         <>
-            <div className="m-5">
-                <h1 className="text-3xl">Dashboard</h1>
-                <p className="text-[var(--color-text-muted)]">Aquí podrás encontrar las estadísticas de tus proyectos</p>
-            </div>
-            { user?.role === 'admin' && (
-                <div className="p-5 flex flex-col gap-5">
-                    <h2 className="makerbox-box-title">Sistema (Solo administradores)</h2>
-                    <AdminIndex compTotal={compTotal} toolTotal={toolTotal} projTotal={projTotal.total}/>
+            <PageHeader title="Dashboard"/>
+            <div className="p-5 flex flex-col gap-5">
+                <h2 className="makerbox-box-title">Sistema</h2>
+                <div className="makerbox-box w-full flex flex-col gap-5 !pb-1">
+                    <div className="makerbox-box-title flex items-center gap-2 w-max">
+                        <RiFileListLine size={24}/>
+                        <span>Resumen</span>
+                    </div>
+                    <div className="flex justify-between gap-5 overflow-x-auto pb-4">
+                        <InfoCard title={'Componentes'} value={compTotal} Icon={RiCpuLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
+                        <InfoCard title={'Herramientas'} value={toolTotal} Icon={RiWrenchLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
+                        <InfoCard title={'Proyectos'} value={projTotal.total} Icon={RiPencilRulerLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
+                    </div>
                 </div>
-            )}
+            </div>
             <div className="p-5 flex flex-col gap-5">
                 <h2 className="makerbox-box-title">Proyectos</h2>
                 <div className="makerbox-box flex flex-col gap-5 !pb-1">
@@ -129,14 +137,14 @@ export default function Home(){
                 <div className="flex md:flex-col lg:flex-row gap-5">
                     <div className="makerbox-box flex flex-col gap-5 md:w-full lg:w-1/2">
                         <div className="makerbox-box-title flex items-center gap-2">
-                            <RiStarLine size={24}/>
+                            <RiHistoryLine size={24}/>
                             <span>Proyectos recientes</span>
                         </div>
                         <Table 
                             dataStatus={recentProjects.status}
                             aria-label={`Tabla de proyectos mas recientes`} 
                             columns={recentColumns}
-                            rows={recentProjects.data?.data.content || []} 
+                            rows={recentProjects.data?.content || []} 
                             rowHeader="name"
                         />
                     </div>
@@ -148,7 +156,7 @@ export default function Home(){
                         <Table 
                             dataStatus={projectsByBudget.status} 
                             columns={budgetColumns} 
-                            rows={projectsByBudget.data?.data.content || []} 
+                            rows={projectsByBudget.data?.content || []} 
                             rowHeader="name"
                         />
                     </div>
