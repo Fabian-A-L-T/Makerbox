@@ -3,10 +3,11 @@ import { useEffect, StrictMode } from 'react';
 import { RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useAuth, AuthProvider } from './auth';
+import AuthProvider from './providers/AuthProvider';
 import '@styles/main.css';
 import { router } from '@utils/router';
 import { ProgressProvider } from '@bprogress/react';
+import { useAuth } from './hooks/useAuth';
 
 const rootElement = document.getElementById('root')!
 const queryClient = new QueryClient();
