@@ -1,12 +1,14 @@
 import { Select, SelectItem } from "@components/form/Select";
-import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
+import { Breadcrumb } from "@components/ui/Breadcrumbs";
 import Pagination from "@components/ui/Pagination";
-import { getRouteApi } from "@tanstack/react-router";
+import { getRouteApi, Link } from "@tanstack/react-router";
 import type { Project } from "../interfaces/schemas";
 import { useFetch } from "../hooks/useFetch";
 import { ProjectCardGrid } from "@components/ui/CardGrid";
 import { paginationParams } from "@utils/Utils";
 import FilterBox from "@components/ui/FilterBox";
+import { RiAddLine } from "@remixicon/react";
+import PageHeader from "@components/ui/PageHeader";
 
 export default function Projects(){
     const route = getRouteApi('/_auth/manager/projects/');
@@ -17,22 +19,31 @@ export default function Projects(){
     }
     const { chunks, chunkIndex, dataLinks, status, filters, setFilters } = useFetch<Project>({
         page, 
-        apiRoute: '/projects',
+        apiRoute: '/api/projects',
         baseFilters: { search, orderBy, desc },
         aditionalFilters
     });
 
+    const filterItems = [
+        {id: 'created_at', name: 'Fecha'}
+    ];
+
     return (
         <>
-        <Breadcrumbs className={'m-5'}>
-            <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+        <PageHeader title="Proyectos" description="Aquí podrás encontrar todos tus proyectos registrados en el sistema">
+            <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
             <Breadcrumb>Proyectos</Breadcrumb>
-        </Breadcrumbs>
-        <div className="m-5">
-            <h1 className="text-3xl">Proyectos</h1>
-            <p className="text-[var(--color-text-muted)]">Aquí podrás encontrar todos los proyectos registrados en el sistema</p>
+        </PageHeader>
+        <div className="flex justify-end items-center m-5"> 
+            <Link
+                className='w-max h-max p-2 flex items-center gap-2 bg-[var(--color-primary)] rounded-[var(--border-radius-ui)] text-white'
+                to='/manager/newProject'
+            >
+                <RiAddLine/>
+                <span className='mr-1'>Nuevo proyecto</span>
+            </Link>
         </div>
-        <FilterBox filters={filters} setFilters={setFilters}>
+        <FilterBox filters={filters} filterItems={filterItems} setFilters={setFilters}>
             <Select label="Estado" 
                 value={filters.state || ''}
                 placeholder="Seleccione"
