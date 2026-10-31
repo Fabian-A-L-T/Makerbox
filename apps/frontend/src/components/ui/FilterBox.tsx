@@ -1,7 +1,7 @@
 import { Button } from "@components/form/Button";
 import { Select, SelectItem } from "@components/form/Select";
 import TextField from "@components/form/TextField";
-import { RiSearchLine, RiSortAlphabetAsc, RiSortAlphabetDesc, RiSortNumberAsc, RiSortNumberDesc } from "@remixicon/react";
+import { RiSearchLine, RiSortAsc, RiSortDesc } from "@remixicon/react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
@@ -13,13 +13,14 @@ export interface FilterState {
 }
 
 interface FilterboxProps {
-    // children?: ReactNode | ((props: { filters: FilterState; }) => ReactNode);
     children?: ReactNode;
     filters: FilterState;
+    /**Filter items for the select field. [NOTE]: The field already includes the name filter */
+    filterItems?: {id: string, name: string}[]
     setFilters: Dispatch<SetStateAction<FilterState>>;
 }
 
-export default function FilterBox({children, filters, setFilters} : FilterboxProps){
+export default function FilterBox({children, filterItems, filters, setFilters} : FilterboxProps){
     const navigate = useNavigate();
 
     function useDebouncedValue<T>(value: T, delay = 500) {
@@ -32,32 +33,23 @@ export default function FilterBox({children, filters, setFilters} : FilterboxPro
     }
 
     const [searchInput, setSearchInput] = useState(filters.search || '');
-
-    useEffect(() => {
-        setSearchInput(filters.search || '');
-    }, [filters.search]);
-
     const debouncedSearch = useDebouncedValue(searchInput, 500);
 
     useEffect(() => {
-        setFilters((prev) => ({
-            ...prev,
-            ...(debouncedSearch && { search: debouncedSearch as string })
-        }));
+        if(debouncedSearch.length > 2 || !debouncedSearch){
+            setFilters((prev) => {
+                if(!debouncedSearch) delete prev.search;
+                return {...prev, ...(debouncedSearch && { search: debouncedSearch as string })};
+            });
+        }
     }, [debouncedSearch, setFilters]);
-
-    // const renderedChildren = typeof children === 'function'
-    //     ? children({ filters })
-    //     : children;
 
     return (
         <div className="m-5 makerbox-box flex flex-col gap-5">
             <div className="pb-4 flex items-center gap-4 border-b-2 border-[var(--color-border)]">
                 <TextField label="Buscar"
                     value={searchInput}
-                    onChange={(value) => {
-                        setSearchInput(value as string);
-                    }}
+                    onChange={setSearchInput}
                     placeholder="Ej: LED Rojo" 
                     className='w-full border-r-2 border-[var(--color-border)] pr-4' 
                     icon={<RiSearchLine className="m-2" color="var(--color-text-muted)" size={18}/>}
@@ -70,19 +62,16 @@ export default function FilterBox({children, filters, setFilters} : FilterboxPro
                         className='!w-[var(--select-w-xs)]'
                     >
                         <SelectItem id='name'>Nombre</SelectItem>
-                        <SelectItem id='created_at'>Fecha</SelectItem>
-                        <SelectItem id='stock'>Stock</SelectItem>
+                        {filterItems && filterItems.map((item) => <SelectItem key={item.id} id={item.id}>{item.name}</SelectItem>)}
                     </Select>
                     <Link
                         onClick={() => setFilters((prev) => ({...prev, desc: filters.desc === 'true' ? 'false' : 'true' as string}))}
                         to={'.'}
                         search={{...filters, page: 1}}
                         resetScroll={false}
-                        className="mt-auto p-2 aspect-square bg-[var(--color-form-select-bg)] hover:bg-[var(--color-form-select-bg)]/60 border-2 border-[var(--color-border)] rounded-[var(--border-radius-ui)] outline-none"
+                        className="mt-auto p-2 aspect-square bg-[var(--color-form-select-bg)] hover:bg-[var(--color-form-select-bg)]/60 border-1 border-[var(--color-border)] rounded-[var(--border-radius-ui)] outline-none"
                     >
-                        {filters.orderBy == 'stock'
-                            ? (filters.desc === 'true' ? <RiSortNumberDesc size={20}/> : <RiSortNumberAsc size={20}/>) 
-                            : (filters.desc === 'true' ? <RiSortAlphabetDesc size={20} /> : <RiSortAlphabetAsc size={20}/>)}
+                        {filters.desc === 'true' ? <RiSortDesc size={18}/> : <RiSortAsc size={18}/>}
                     </Link>
                 </div>
             </div>
