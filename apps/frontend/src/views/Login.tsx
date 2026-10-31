@@ -1,131 +1,87 @@
 import '@styles/login.css'
 import { useState } from 'react';
-import logo from "@assets/logo.png"
-import bg from "@assets/login-bg.webp"
-import { string, minLength, pipe, email, maxLength } from 'valibot';
-import { useForm } from '@tanstack/react-form';
-import InputField from '@components/InputField/InputField';
 import { Route } from '@routes/login';
 import { RiLoader4Line } from '@remixicon/react';
+import Circuit from '@components/svg/Circuit';
+import Logo from '@components/svg/Logo';
+import { Form } from '@components/form/Form';
+import TextField from '@components/form/TextField';
+import { Button } from '@components/form/Button';
+import { getInitialTheme } from '@utils/Utils';
+import { Checkbox } from '@components/form/Checkbox';
 
-function Login() {
-  const emailSchema = pipe(string(), email("Email inválido"), maxLength(32, "El email debe tener menos de 32 caracteres"));
-  const passwordSchema = pipe(string(), minLength(8, "La contraseña debe tener al menos 8 caracteres"), maxLength(100, "La contraseña debe tener menos de 100 caracteres"));
-
+export default function Login() {
   const { auth } = Route.useRouteContext();
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Record<string,string>>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const form = useForm({
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-    onSubmit: async ({ value }) => {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        auth.login(value.email, value.password)
-        .catch(() => {
-          setError("Correo o contraseña incorrecta");
-          form.resetField("password");
-        })
-        .finally(() => {
-          setIsSubmitting(false);
-        });
-      }, 200);
-    },
-  });
+
+  const root = document.documentElement;
+  root.dataset.theme = getInitialTheme();
+  root.style.colorScheme = getInitialTheme();
+  window.localStorage.setItem('theme', getInitialTheme());
 
   return (
-    <main className="flex">
-      {isSubmitting && (
-          <div className="login-container flex items-center justify-center fixed bg-[#000]/40">
-            <div className='flex flex-col bg-[#fff] p-6 rounded-xl items-center gap-4'>
-              <RiLoader4Line size={64} color="#222" className='animate-spin' />
-              <span className='font-semibold ml-2 text-lg text-[#222]'>Iniciando sesión</span>
-            </div>
-          </div>
-        )}
-      <div className="login-container flex flex-col gap-8 bg-[#EBEBEB]">
-        <div className='logo_container p-10 flex flex-col items-center gap-4'>
-          <img src={logo} alt="logo" className='mb-10' />
-          <h1>Login</h1>
-        </div>
-        <div>
-          <form 
-            className='flex flex-col gap-4' 
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              form.handleSubmit();
+    <main className="flex w-full bg-[#0A3A00]">
+      <div className="w-1/2 h-full flex justify-between bg-[var(--color-background)]">
+        <div className='w-1/8 mb-auto mt-8'><Circuit/></div>
+        <div className='w-1/2 flex flex-col gap-4'>
+          <div className='mx-auto my-10 w-1/2'><Logo withText/></div>
+          <Form
+            className='flex flex-col gap-8 mb-4'
+            aria-label='Formulario de inicio de sesión'
+            validationErrors={error}
+            action={(formData)=>{
+              setIsSubmitting(true);
+              const email = formData.get('email')?.toString() || '';
+              const password = formData.get('password')?.toString() || '';
+              const remember = formData.get('remember')?.toString() || '';
+              setTimeout(() => {
+                auth.login(email, password, remember)
+                  .catch(() => setError({email: "Correo o contraseña incorrecta"}))
+                  .finally(() => setIsSubmitting(false));
+              }, 200);
             }}
           >
-            <form.Field
-              name="email"
-              validators={{
-                onBlur: emailSchema
-              }}
-            >
-              {(field) => (
-                <InputField
+            <div className='flex flex-col'>
+              <span className='text-lg font-semibold'>Bienvenid@ a Makerbox</span>
+              <span className='text-[var(--color-text-muted)]'>Iniciar sesión con correo</span>
+            </div>
+            {isSubmitting ? (
+              <div className='flex flex-col p-6 rounded-xl items-center gap-4'>
+                <RiLoader4Line size={64} color="var(--color-border)" className='animate-spin' />
+                <span>Iniciando sesión</span>
+              </div>
+            ):(
+              <>
+              <div className='flex flex-col gap-4'>
+                <TextField
                   label="Correo electrónico"
                   type="email"
-                  placeholder="Ingrese su correo electrónico"
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  error={field.state.meta.errors.pop()?.message}
+                  placeholder="correo@ejemplo.com"
+                  name="email"
+                  maxLength={64}
+                  isRequired
                 />
-              )}
-            </form.Field>
-
-            <form.Field
-              name="password"
-              validators={{
-                onBlur: passwordSchema
-              }}
-            >
-              {(field) => (
-                <InputField
+                <TextField
                   label="Contraseña"
                   type="password"
-                  placeholder="Ingrese su contraseña"
-                  name={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  error={field.state.meta.errors.pop()?.message}
+                  name="password"
+                  minLength={8}
+                  maxLength={100}
+                  isRequired
                 />
-              )}
-            </form.Field>
-            {error && <p className='text-red-500'>{error}</p>}
-
-            <button 
-              type='submit' 
-              style={{cursor: 'pointer'}} 
-              className={`bg-[#DB0202] text-white p-3 text-center ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión'}
-            </button>
-          </form>
-          <div className='flex items-center justify-between mt-2'>
-            <div>
-              <input type="checkbox" />
-              <label htmlFor="remember">Recordarme</label>
-            </div>
-            <a href="#">¿Olvidaste tu contraseña?</a>
-          </div>
+                <Checkbox name='remember' value='true'>Recordarme</Checkbox>
+              </div>
+              <div className='flex flex-col gap-1 text-end'>
+                <Button className='justify-center w-full' type="submit">Iniciar sesión</Button>
+              </div>
+              </>
+            )}
+          </Form>
         </div>
-        <hr />
-        <p >¿No tienes una cuenta? <a href="#">Regístrate</a></p>
-      </div>
-      <div className='bg-container'>
-        <img src={bg} alt="bg" className='w-full h-full object-cover' />
+        <div className='w-1/8 mb-8 mt-auto'><Circuit rotate/></div>
       </div>
     </main>
   )
 }
-export default Login
