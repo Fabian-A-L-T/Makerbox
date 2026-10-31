@@ -1,4 +1,3 @@
-import CRUDHeader from '@components/CRUDHeader';
 import CRUDModal from '@components/CRUDModal';
 import { type ColumnDef } from '@components/ui/Table';
 import { type UseCRUDReturn } from '../../hooks/useCRUD';
@@ -7,22 +6,30 @@ import Table from '../ui/Table';
 import { paginationParams } from '@utils/Utils';
 import { useNavigate } from '@tanstack/react-router';
 import { useFetch } from '../../hooks/useFetch';
+import PageHeader from '@components/ui/PageHeader';
+import { RiAddLine } from '@remixicon/react';
+import CRUDAction from '@components/CRUDAction';
 
 interface CRUDLayoutProps<T extends { id: number }> {
-    /** Page heading and "create" button label source */
-    title: string;
+    /** Page title */
+    title?: string;
     /** Page subtitle */
     subtitle?: string;
-
+    /**Breadcrumbs */
+    breadcrumbs?: React.ReactNode;
+    /** Current page number */
     currentPage: number;
     /** Column definitions forwarded to PaginatedTable */
     columns: ColumnDef<T>[];
     /** Everything returned by useCRUD<T>() */
     crud: UseCRUDReturn<T>;
     /** Form rendered when modal is in "post" (create) mode */
-    createForm: React.ReactNode;
+    createForm?: React.ReactNode;
     /** Form rendered when modal is in "put" (edit) mode */
-    editForm: React.ReactNode;
+    editForm?: React.ReactNode;
+    /** Text for the create action button */
+    actionText?: string;
+    /** Function to transform form data before submission */
     formDataTransform?: (formData: FormData) => void;
 }
 
@@ -36,6 +43,8 @@ interface CRUDLayoutProps<T extends { id: number }> {
 export default function CRUDLayout<T extends { id: number }>({
     title,
     subtitle,
+    actionText,
+    breadcrumbs,
     currentPage,
     columns,
     crud,
@@ -43,7 +52,7 @@ export default function CRUDLayout<T extends { id: number }>({
     editForm,
     formDataTransform
 }: CRUDLayoutProps<T>) {
-    const { apiRoute, resourceLabel, modalMode, isModalOpen, setIsModalOpen, isSubmitting, modalProps, openModal, submitMutation } = crud;
+    const { apiRoute, resourceLabel, modalMode, isModalOpen, setIsModalOpen, isSubmitting, openModal, modalProps, submitMutation } = crud;
     const { maxPages } = paginationParams;
     const navigate = useNavigate();
 
@@ -53,13 +62,19 @@ export default function CRUDLayout<T extends { id: number }>({
     });
 
     const activeForm: React.ReactNode =
-        modalMode === 'post'   ? createForm :
-        modalMode === 'put'    ? editForm   :
-        <></>;
+        modalMode === 'post' && createForm ? createForm :
+        modalMode === 'put' && editForm    ? editForm   :
+        undefined;
     
     return (
-        <div className="p-5 w-full flex flex-col gap-6">
-            <CRUDHeader title={title} subtitle={subtitle} buttonText={`Crear ${resourceLabel}`} action={() => openModal({mode:'post'})}/>
+        <>
+        { title &&
+            <PageHeader title={title} description={subtitle}>
+                {breadcrumbs}
+            </PageHeader>
+        }
+        {actionText && <CRUDAction action={() => openModal({mode:'post'})} icon={<RiAddLine/>} text={actionText} />}
+        <div className="m-5 flex flex-col">
             <Table 
                 dataStatus={status} 
                 errorMsg={error?.message} 
@@ -74,18 +89,24 @@ export default function CRUDLayout<T extends { id: number }>({
                 hasPrev={dataLinks?.prev !== undefined}
                 hasNext={dataLinks?.next !== undefined}
             />
-            <CRUDModal {...modalProps} 
-                action={(formData) => {
-                    if(formDataTransform) formDataTransform(formData);
-                    submitMutation.mutate({formData, queryKey: [apiRoute, chunkCursor.toString()]});
-                    navigate({to:'.'}); //To navigate to page 1 after a CRUD action
-                }}
-                isOpen={isModalOpen} 
-                setOpen={setIsModalOpen} 
-                isPending={isSubmitting}
-            >
-                {activeForm}
-            </CRUDModal>
+            {(activeForm || modalMode === 'delete') && 
+                <CRUDModal {...modalProps} 
+                    action={async (formData) => {
+                        if(formDataTransform) await formDataTransform(formData);
+                        submitMutation.mutate({formData, queryKey: [apiRoute, chunkCursor.toString()]});
+                        navigate({to:'.'}); //To navigate to page 1 after a CRUD action
+                    }}
+                    isOpen={isModalOpen} 
+                    setOpen={setIsModalOpen} 
+                    isPending={isSubmitting}
+                >
+                    {modalMode === 'delete' ? 
+                        <div className='w-lg'>
+                            <span>¿Estás seguro(a) de que deseas eliminar este recurso?</span>
+                        </div> 
+                    : activeForm}
+                </CRUDModal>}
         </div>
+        </>
     )
 }
