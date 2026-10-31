@@ -1,9 +1,10 @@
+import React from "react";
 import type { ApiResponse } from "../interfaces/schemas";
 import { makerboxApi } from "../api/makerbox.api";
 import { RiImageLine, RiLoader5Line } from "@remixicon/react";
 import { useEffect, useState, type DetailedHTMLProps, type ImgHTMLAttributes } from "react";
 
-export const paginationLimit = 20;
+export const paginationLimit = 60;
 export const paginationMaxPages = 5;
 export const elementsPerPage = ~~(paginationLimit / paginationMaxPages);
 
@@ -58,6 +59,17 @@ export interface FetchFilter {
 	orderBy?: string,
 	desc?: string,
 	[key: string]: string | number | undefined;
+}
+
+export function getInitialTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'light';
+
+  const storedTheme = window.localStorage.getItem('theme');
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    return storedTheme;
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 export function validateImgSize(image: File){
@@ -121,47 +133,50 @@ export async function fetchData<T>(apiRoute: string, pagination?: Pagination,  f
 		});
 		const query = apiRoute.includes('?') ? `${apiRoute}&${params}` : `${apiRoute}?${params}`;
 		console.log('Query: ' + query);
-		await delay(200);
-		return makerboxApi.get<ApiResponse<T[]>>(query);
+		//await delay(200);
+		const res = await makerboxApi.get<ApiResponse<T[]>>(query);
+		return res.data;
 	}
 	else {
 		console.log('Query: ' + apiRoute);
-		await delay(200);
-		return makerboxApi.get<ApiResponse<T[]>>(apiRoute);
+		//await delay(200);
+		const res = await makerboxApi.get<ApiResponse<T[]>>(apiRoute);
+		return res.data;
 	}
 }
 
 interface AsyncImgProps extends DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>,HTMLImageElement> {
-    notFoundSubtitle?: string
+    notfoundsubtitle?: string
 }
 
 export function AsyncImg(props: AsyncImgProps): React.ReactNode{
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
+	const [imgURL, setImgURL] = useState<string | null>(null);
 
     useEffect(() => {
         if(props.src){
-            const img = new Image();
-            img.src = props.src;
-            img.onload = () => setTimeout( () => setLoaded(true),200);
-            img.onerror = () => {
-                setError(true);
-            };
+			makerboxApi.get(props.src, { responseType: 'blob'})
+			.then((response) => {
+				setImgURL(URL.createObjectURL(response.data))
+				setTimeout( () => setLoaded(true),200);
+			})
+			.catch(() => setError(true));
         }
         else {
             setError(true);
         }
     }, [props.src]);
 
-    if(loaded) return <img {...props}/>;
+    if(loaded && imgURL) return <img {...props} src={imgURL}/>;
     else if(error) 
-        return  <div className={`flex flex-col gap-2 items-center justify-center bg-[var(--color-form-select-bg)] ${props.className ?? ''}`}>
-                    <RiImageLine size={48}/>
-                    {props.notFoundSubtitle && <p className="text-sm text-center">{props.notFoundSubtitle}</p>}
+        return  <div className={`flex flex-col gap-2 items-center justify-center bg-[var(--color-form-text-bg)] ${props.className ?? ''}`}>
+                    <RiImageLine size={48} color="var(--color-text-muted)"/>
+                    {props.notfoundsubtitle && <p className="text-sm text-center text-[var(--color-text-muted)]">{props.notfoundsubtitle}</p>}
                 </div>;
     else 
-        return  <div className={`flex items-center justify-center bg-[var(--color-form-select-bg)] ${props.className ?? ''}`}>
-                    <RiLoader5Line className='transition-transform duration-300 animate-spin' size={48} />
+        return  <div className={`flex items-center justify-center bg-[var(--color-form-text-bg)] ${props.className ?? ''}`}>
+                    <RiLoader5Line color="var(--color-text-muted)" className='transition-transform duration-300 animate-spin' size={48} />
                 </div>;
 }
 
