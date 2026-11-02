@@ -43,6 +43,7 @@ export interface Location {
 
 export interface ComponentLocation {
     location_name: string,
+    location_description?: string,
     location_route: string,
     component_id: number,
     location_id: number,
@@ -58,8 +59,10 @@ export interface Component {
     category: string;
     manufacturer_id: number;
     manufacturer: string;
+    manufacturer_website?: string;
     stock: number;
     stock_min: number;
+    unit_cost: number;
     datasheet_url: string;
     image_url: string;
     notes: string;
@@ -103,12 +106,12 @@ export interface Tool {
     manual_url: string
     category: string
     category_id: number
-    location: string
+    location_name: string
+    location_route: string
+    location_description: string
     location_id: number
     state: 'available' | 'in_use' | 'maintenance' | 'disposed' | 'lent'
     acquisition_date: string
-    calibration_required: boolean
-    next_calibration_date: string
     notes: string
     created_at: string
 }
@@ -116,6 +119,8 @@ export interface Tool {
 export interface Project {
     id: number;
     name: string;
+    components: ProjectComponent[];
+    milestones: Milestone[];
     description: string;
     state: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled';
     start_date: string;
@@ -123,7 +128,7 @@ export interface Project {
     end_date_real?: string;
     responsible_id: number;
     user_name: string;
-    budget?: number;
+    budget?: string;
     image_url?: string;
     repository_url?: string;
     created_at: string;
@@ -133,10 +138,23 @@ export interface ProjectComponent {
     project_id: number,
     project_name: string,
     component_id: number,
-    component_name: string,
+    name: string,
+    sku: string,
     planned_amount: number,
+    unit_cost: number,
     used_amount: number,
     notes?: string
+}
+
+export interface Milestone {
+    completed_at: Date,
+    created_at: Date,
+    description: string,
+    id: number,
+    is_completed: boolean,
+    order_index: number,
+    project_id: number,
+    title: string
 }
 
 export interface ComponentStats {
