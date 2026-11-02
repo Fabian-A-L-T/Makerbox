@@ -49,9 +49,9 @@ export function useFetch<T>({page, apiRoute, baseFilters, aditionalFilters}:UseF
         queryKey,
         queryFn: () => fetchData<T>(apiRoute, {page, maxPages, limit}, filters)
     });
-    const chunks = useMemo(() => chunk(data?.data.content, ~~(limit / maxPages)), [data]);
+    const chunks = useMemo(() => chunk(data?.content, ~~(limit / maxPages)), [data]);
     const chunkIndex = useMemo(() => (page-1)%maxPages, [page]);
-    const dataLinks = data?.data.links;
+    const dataLinks = data?.links;
 
     return { chunks, chunkIndex, chunkCursor, dataLinks, error, status, filters, setFilters }
 }
