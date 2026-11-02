@@ -1,0 +1,350 @@
+import app from "../../app";
+import type { CategoryData } from "../../utils/schemas";
+import { clearToolCategories, clearUsers, seedData, seedUsers, type TestData, type UserDataTest } from "../db/seeder";
+import { generateAuthHeader } from "../helpers/auth";
+import request from 'supertest';
+
+let adminToken: { Authorization: string };
+let readerToken: { Authorization: string };
+let technicianToken: { Authorization: string };
+const categoryData: {[x: string]: CategoryData & TestData} = {
+    'Test Category': {id: 0, name: 'Test Category', path: 'Test_Category'},
+    'Test Subcategory': {id: 0, name: 'Test Subcategory', path: 'Test_Category.Test_Subcategory'},
+    'Test Category 2': {id: 0, name: 'Test Category 2', path: 'Test_Category_2'},
+    'Test Subcategory 2': {id: 0, name: 'Test Subcategory 2', path: 'Test_Category_2.Test_Subcategory_2'},
+    'Deleted Category': {id: 0, name: 'Deleted Category', path: 'Deleted_Category', deleted_at: Date()}
+};
+const usersData: {[x: string]: UserDataTest} = {
+    'admin@test.com': {id: 0, name: 'Admin user', email: 'admin@test.com', passwd: 'adminPass', role: 'admin'},
+    'reader@test.com': {id: 0, name: 'Reader user', email: 'reader@test.com', passwd: 'readerPass', role: 'reader'},
+    'technician@test.com': {id: 0, name: 'Technician user', email: 'technician@test.com', passwd: 'technicianPass', role: 'technician'}
+};
+
+beforeAll(async () => {
+    await seedData('tool_categories', categoryData);
+    await seedUsers(usersData);
+    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+    const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
+    const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+
+    adminToken = generateAuthHeader(adminData);
+    readerToken = generateAuthHeader(readerData);
+    technicianToken = generateAuthHeader(technicianData);
+});
+afterAll(async () => {
+    await clearToolCategories();
+    await clearUsers();
+});
+
+describe('admin-only route protection', function() {
+  const adminOnlyTestCases: {method: string, path: string}[] = [
+    {method: 'post', path: '/api/tool-categories'},
+    {method: 'put', path: '/api/tool-categories/:id'},
+    {method: 'delete', path: '/api/tool-categories/:id'}
+  ];
+  it.each(adminOnlyTestCases)('%s rejects reader users', ({method, path}, done: any) => {
+    request(app)[method as 'post'](path).set(readerToken).expect(403, done);
+  });
+
+  it.each(adminOnlyTestCases)('%s rejects technician users', ({method, path}, done: any) => {
+    request(app)[method as 'post'](path).set(technicianToken).expect(403, done);
+  });
+});
+
+describe("GET /tool-categories", function() {
+  it("should return a list of tool categories", function(done) {
+    request(app)
+      .get("/api/tool-categories")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(Array.isArray(response.body.content)).toBe(true);
+        expect(response.body.content.length).toBeGreaterThan(0);
+        expect(response.body.content[0]).toHaveProperty("id");
+        expect(response.body.content[0]).toHaveProperty("name");
+        expect(response.body.content[0]).toHaveProperty("path");
+        done();
+      })
+      .catch(done);
+  });
+
+  describe('should have pagination', function(){
+    it("should return three categories on first page", function(done) {
+      request(app)
+        .get("/api/tool-categories?offset=0&limit=3")
+        .set(adminToken)
+        .expect(200)
+        .then(function(response) {
+          expect(response.body.content.length).toEqual(3);
+          expect(response.body).toHaveProperty("pagination");
+          expect(response.body).toHaveProperty("links");
+          done();
+        })
+        .catch(done);
+    });
+
+    it("should return one category on last page", function(done) {
+      request(app)
+        .get("/api/tool-categories?offset=3&limit=3")
+        .set(adminToken)
+        .expect(200)
+        .then(function(response) {
+          expect(response.body.content.length).toEqual(1);
+          expect(response.body).toHaveProperty("pagination");
+          expect(response.body).toHaveProperty("links");
+          done();
+        })
+        .catch(done);
+    });
+  });
+});
+
+describe("GET /tool-categories/children", function() {
+  it("should return root categories when path is omitted", function(done) {
+    request(app)
+      .get("/api/tool-categories/children")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(Array.isArray(response.body.content)).toBe(true);
+        expect(response.body.content.some((category: CategoryData & TestData) => category.id === categoryData['Test Category'].id)).toBe(true);
+        done();
+      })
+      .catch(done);
+  });
+
+  it("should return descendants of the requested path", function(done) {
+    request(app)
+      .get("/api/tool-categories/children?path=Test_Category")
+      .set(readerToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(Array.isArray(response.body.content)).toBe(true);
+        expect(response.body.content.some((category: CategoryData & TestData) => category.id === categoryData['Test Subcategory'].id)).toBe(true);
+        done();
+      })
+      .catch(done);
+  });
+
+  it("should return empty array when fetching a deleted category", function(done) {
+    request(app)
+      .get("/api/tool-categories/children?path=Deleted_Category")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(Array.isArray(response.body.content)).toBe(true);
+        expect(response.body.content.length).toBe(0);
+        done();
+      })
+      .catch(done);
+  });
+
+  it("should return empty array when fetching a nonexistent category", function(done) {
+    request(app)
+      .get("/api/tool-categories/children?path=asd")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(Array.isArray(response.body.content)).toBe(true);
+        expect(response.body.content.length).toBe(0);
+        done();
+      })
+      .catch(done);
+  });
+});
+
+describe("GET /tool-categories/:id", function() {
+  it("should return tool category data", function(done) {
+    const category = categoryData['Test Category'];
+    request(app)
+      .get(`/api/tool-categories/${category.id}`)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(response.body.content[0]).toHaveProperty("id", category.id);
+        expect(response.body.content[0]).toHaveProperty("name", category.name);
+        expect(response.body.content[0]).toHaveProperty("path", category.path);
+        done();
+      })
+      .catch(done);
+  });
+
+  it("should reject an invalid category id", function(done) {
+    request(app)
+      .get("/api/tool-categories/asd")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(422, done);
+  });
+
+  it("should return not found for a deleted category", function(done) {
+    const category = categoryData['Deleted Category'];
+    request(app)
+      .get(`/api/tool-categories/${category.id}`)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(404, done);
+  });
+
+  it("should return not found for a nonexistent category", function(done) {
+    request(app)
+      .get("/api/tool-categories/123456")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(404, done);
+  });
+});
+
+describe("POST /tool-categories", function() {
+  it("should create a tool category", function(done) {
+    const newCategory = {name: 'New Category', path: 'New_Category'};
+    request(app)
+      .post("/api/tool-categories")
+      .send(newCategory)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(201)
+      .then(function(response) {
+        expect(response.body).toHaveProperty("message");
+        expect(response.body).toHaveProperty("data");
+        expect(response.body.data[0]).toMatchObject(newCategory);
+        done();
+      })
+      .catch(done);
+  });
+
+  it("should reject duplicated path", function(done) {
+    request(app)
+      .post("/api/tool-categories")
+      .send({name: 'Test Category', path: 'Test_Category'})
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(409, done);
+  });
+
+  it("should reject empty data", function(done) {
+    request(app)
+      .post("/api/tool-categories")
+      .send({})
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(422, done);
+  });
+});
+
+describe("PUT /tool-categories/:id", function() {
+  it("should update a tool category", function(done) {
+    const category = categoryData['Test Subcategory'];
+    const updatedCategory = {name: 'Updated Subcategory', path: 'Test_Category.Updated_Subcategory'};
+    request(app)
+      .put(`/api/tool-categories/${category.id}`)
+      .send(updatedCategory)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(response.body).toHaveProperty("message");
+        expect(response.body.data[0]).toMatchObject(updatedCategory);
+        done();
+      })
+      .catch(done);
+  });
+
+  it("should reject duplicated path", function(done) {
+    const category = categoryData['Test Subcategory'];
+    const updatedCategory = {name: 'Updated Subcategory', path: 'Test_Category_2.Test_Subcategory_2'};
+    request(app)
+      .put(`/api/tool-categories/${category.id}`)
+      .send(updatedCategory)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(409, done);
+  });
+
+  it("should reject an invalid category id", function(done) {
+    request(app)
+      .put("/api/tool-categories/asd")
+      .send({name: 'Updated Subcategory', path: 'Updated_Subcategory'})
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(422, done);
+  });
+
+  it("should return not found for a nonexistent category", function(done) {
+    request(app)
+      .put("/api/tool-categories/123456")
+      .send({name: 'Updated Subcategory', path: 'Updated_Subcategory'})
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(404, done);
+  });
+
+  it("should return not found for a deleted category", function(done) {
+    const category = categoryData['Deleted Category'];
+    const updatedCategory = {name: 'Updated Subcategory', path: 'Test_Category.Updated_Subcategory'};
+    request(app)
+      .put(`/api/tool-categories/${category.id}`)
+      .send(updatedCategory)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(404, done);
+  });
+
+  it("should reject empty data", function(done) {
+    const category = categoryData['Test Category'];
+    request(app)
+      .put(`/api/tool-categories/${category.id}`)
+      .send({})
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(422, done);
+  });
+});
+
+describe("DELETE /tool-categories/:id", function() {
+  it("should delete a tool category", function(done) {
+    const category = categoryData['Test Category 2'];
+    request(app)
+      .delete(`/api/tool-categories/${category.id}`)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(response.body).toHaveProperty("message");
+        expect(response.body).toHaveProperty("data");
+        done();
+      })
+      .catch(done);
+  });
+  
+  it("should return not found when deleting an already deleted category", function(done) {
+    const category = categoryData['Deleted Category'];
+    request(app)
+      .delete(`/api/tool-categories/${category.id}`)
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(404, done);
+  });
+
+  it("should return not found when deleting a nonexistent category", function(done) {
+    request(app)
+      .delete("/api/tool-categories/123456")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(404, done);
+  });
+
+  it("should reject invalid category id", function(done) {
+    request(app)
+      .delete("/api/tool-categories/asd")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(422, done);
+  });
+});
