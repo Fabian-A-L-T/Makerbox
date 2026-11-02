@@ -3,8 +3,8 @@ import { RiEditLine, RiDeleteBinLine, type RemixiconComponentType } from '@remix
 
 interface CRUDTableActionsProps {
     name: string,
-    editAction: () => void,
-    deleteAction: () => void,
+    editAction?: () => void,
+    deleteAction?: () => void,
     aditionalButtons?: [{
         RiIcon: RemixiconComponentType,
         ariaLabel: string,
@@ -25,20 +25,20 @@ export default function CRUDTableActions({name, editAction, deleteAction, aditio
                     <item.RiIcon size={16} color="#fff" />
                 </Button>
             ))}
-            <Button
+            {editAction && <Button
                 variant="primary"
                 aria-label={`Editar ${name}`}
                 onClick={editAction}
             >
                 <RiEditLine size={16} color="#fff" />
-            </Button>
-            <Button
+            </Button>}
+            {deleteAction && <Button
                 variant="danger"
                 aria-label={`Eliminar ${name}`}
                 onClick={deleteAction}
             >
                 <RiDeleteBinLine size={16} color="#fff" />
-            </Button>
+            </Button>}
         </div>
     );
 }
