@@ -26,11 +26,4 @@ export default defineConfig({
       '@utils': path.resolve(__dirname, './src/utils'),
     },
   },
-  server: {
-    proxy: {
-      '/api': 'http://localhost:3000',
-      '/auth': 'http://localhost:3000',
-      '/uploads': 'http://localhost:3000',
-    },
-  },
 })
