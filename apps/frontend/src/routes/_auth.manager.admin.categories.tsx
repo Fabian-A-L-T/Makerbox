@@ -1,7 +1,7 @@
-import CRUDHeader from '@components/CRUDHeader';
-import { Breadcrumb, Breadcrumbs } from '@components/ui/Breadcrumbs';
+import { Breadcrumb } from '@components/ui/Breadcrumbs';
 import { useEffect } from 'react';
 import { createFileRoute, Link, Outlet, useNavigate, useLocation } from '@tanstack/react-router';
+import PageHeader from '@components/ui/PageHeader';
 
 export const Route = createFileRoute('/_auth/manager/admin/categories')({
     component: CategoryView,
@@ -20,14 +20,11 @@ function CategoryView(){
 
     return (
         <div>
-            <Breadcrumbs className={'m-5'}>
-                <Breadcrumb href='/manager/'>Inicio</Breadcrumb>
+            <PageHeader className='!border-none mb-2' title="Categorías" description="Aquí podrás administrar todas las categorías de herramientas y componentes registradas en el sistema">
+                <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
                 <Breadcrumb href='/manager/admin/categories'>Categorias</Breadcrumb>
-            </Breadcrumbs>
-            <div className='m-5'>
-                <CRUDHeader title={'Categorias'} subtitle={''}/>
-            </div>
-            <div className='m-5 flex gap-4 text-[var(--color-border)] font-medium border-b-2 border-b-[var(--color-border)]'>
+            </PageHeader>
+            <div className='m-5 mt-2 flex gap-4 text-[var(--color-text-muted)] font-medium border-b-2 border-b-[var(--color-border)]'>
                 <Link 
                     className='p-2 border-b-4 border-b-transparent' 
                     activeProps={{
