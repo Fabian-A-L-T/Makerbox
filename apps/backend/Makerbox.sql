@@ -17,6 +17,17 @@ CREATE TABLE users (
     updated_at  TIMESTAMPTZ DEFAULT NULL,
     deleted_at  TIMESTAMPTZ DEFAULT NULL
 );
+
+CREATE TABLE refresh_tokens (
+  id            SERIAL PRIMARY KEY,
+  user_id       INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash    TEXT NOT NULL UNIQUE,
+  remember      BOOLEAN NOT NULL DEFAULT false,
+  user_agent    TEXT,
+  ip_address    TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at    TIMESTAMPTZ NOT NULL
+);
 -- ------------------------------------------------------------
 
 -- Categorias --------------------------------------------------
@@ -78,7 +89,7 @@ CREATE TABLE components (
     manufacturer_id     INT REFERENCES manufacturers(id),
     stock               INT            NOT NULL DEFAULT 0 CHECK(stock >= 0),
     stock_min           INT            NOT NULL DEFAULT 0,
-    unit_cost           DECIMAL(9,2)   NOT NULL DEFAULT 0 CHECK(unit_cost >= 0),
+    unit_cost           NUMERIC(9)   NOT NULL DEFAULT 0 CHECK(unit_cost >= 0),
     datasheet_url       TEXT,
     image_url           TEXT,
     notes               TEXT,
@@ -100,15 +111,13 @@ CREATE TABLE tools (
     manufacturer_id      INT REFERENCES manufacturers(id),
     model                VARCHAR(100),
     serial_number        VARCHAR(100) UNIQUE,
-    cost                 DECIMAL(9,2)   NOT NULL DEFAULT 0 CHECK(unit_cost >= 0),
+    cost                 NUMERIC(9)   NOT NULL DEFAULT 0 CHECK(cost >= 0),
     image_url            TEXT,
     manual_url           TEXT,
     category_id          INT REFERENCES tool_categories(id),
     location_id          INT REFERENCES locations(id),
     state                state_tool NOT NULL DEFAULT 'available',
     acquisition_date     DATE,
-    calibration_required BOOLEAN NOT NULL DEFAULT FALSE,
-    next_calibration_date DATE,
     notes                TEXT,
     created_at           TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at           TIMESTAMPTZ DEFAULT NULL,
@@ -130,12 +139,23 @@ CREATE TABLE projects (
     end_date_estimated      DATE,
     end_date_real           DATE,
     responsible_id          INT REFERENCES users(id),
-    budget                  NUMERIC(9),
+    budget                  NUMERIC(9) NOT NULL DEFAULT 0,
     image_url               TEXT,
     repository_url          TEXT,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ DEFAULT NULL,
     deleted_at              TIMESTAMPTZ DEFAULT NULL
+);
+
+CREATE TABLE project_milestones (
+    id                      SERIAL PRIMARY KEY,
+    project_id              INT REFERENCES projects(id),
+    title                   VARCHAR(64) NOT NULL,
+    description             VARCHAR(5000),
+    is_completed            BOOLEAN NOT NULL DEFAULT FALSE,
+    completed_at            TIMESTAMPTZ DEFAULT NULL,
+    order_index             INT DEFAULT 0 CHECK(order_index >= 0 AND order_index <= 20),
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 -- ------------------------------------------------------------
 
@@ -186,13 +206,24 @@ CREATE TABLE stock_movements (
     id                  SERIAL PRIMARY KEY,
     component_id        INT NOT NULL REFERENCES components(id),
     stock_type          stock_movement_type NOT NULL,
-    amount              INT NOT NULL,
+    amount              INT NOT NULL CHECK(amount > 0),
     origin_location_id  INT REFERENCES locations(id),
     destination_location_id INT REFERENCES locations(id),
     project_id          INT REFERENCES projects(id),
     user_id             INT REFERENCES users(id),
     notes               TEXT,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE stock_movements
+ADD CONSTRAINT stock_movements_required_locations
+CHECK (
+    (stock_type <> 'entry' AND stock_type <> 'disposal'
+        OR origin_location_id IS NOT NULL)
+    AND (stock_type <> 'reserve' AND stock_type <> 'return'
+        OR (origin_location_id IS NOT NULL AND project_id IS NOT NULL))
+    AND (stock_type <> 'transfer'
+        OR (origin_location_id IS NOT NULL AND destination_location_id IS NOT NULL))
 );
 
 --- ===========================================================
@@ -206,7 +237,7 @@ SELECT
 	cc.path AS category_path,
     SUM(c.stock * c.unit_cost) as category_cost,
 	SUM(c.stock) as category_stock,
-	SUM(c.stock * c.unit_cost) / SUM(c.stock) AS avg_unit_cost
+	CASE WHEN SUM(c.stock) > 0 THEN SUM(c.stock * c.unit_cost) / SUM(c.stock) ELSE 0 END AS avg_unit_cost
 FROM components c
 JOIN component_categories cc ON c.category_id = cc.id
 GROUP BY c.category_id, cc.name, cc.path;
@@ -218,7 +249,7 @@ SELECT
 	tc.path AS category_path,
     COUNT(t.id) as category_stock,
     SUM(t.cost) as category_cost,
-    SUM(t.cost) / COUNT(t.id) as avg_cost
+    CASE WHEN COUNT(t.id) > 0 THEN SUM(t.cost) / COUNT(t.id) ELSE 0 END AS avg_cost
 FROM tools t
 JOIN tool_categories tc ON t.category_id = tc.id
 GROUP BY t.category_id, tc.name, tc.path;
@@ -228,13 +259,17 @@ SELECT
     p.state,
     COUNT(p.id) AS project_count,
     SUM(p.budget) AS total_budget,
-    SUM(p.budget) / COUNT(p.id) AS avg_budget
+    CASE WHEN COUNT(p.id) > 0 THEN SUM(p.budget) / COUNT(p.id) ELSE 0 END AS avg_budget
 FROM projects p
 GROUP BY p.state;
 
 -- ============================================================
 -- ÍNDICES DE RENDIMIENTO
 -- ============================================================
+
+-- Refresh tokens
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 
 -- Búsqueda de componentes por nombre / SKU
 CREATE INDEX idx_component_name    ON components(name);
@@ -281,6 +316,10 @@ BEGIN
         SET amount = amount - NEW.amount
         WHERE component_id = NEW.component_id AND location_id = NEW.origin_location_id;
 
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Insufficient stock at origin location';
+        END IF;
+
         INSERT INTO project_component (component_id, project_id, planned_amount)
         VALUES (NEW.component_id, NEW.project_id, NEW.amount)
         ON CONFLICT (component_id, project_id)
@@ -288,18 +327,24 @@ BEGIN
             planned_amount = project_component.planned_amount + EXCLUDED.planned_amount;
     
     ELSIF NEW.stock_type = 'return' AND NEW.origin_location_id IS NOT NULL AND NEW.project_id IS NOT NULL THEN
+        UPDATE project_component
+        SET planned_amount = planned_amount - NEW.amount
+        WHERE component_id = NEW.component_id AND project_id = NEW.project_id;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'No stock reserved in project';
+        END IF;
+        
         UPDATE components
         SET stock = stock + NEW.amount
         WHERE id = NEW.component_id;
 
-        UPDATE component_location
-        SET amount = amount + NEW.amount
-        WHERE component_id = NEW.component_id AND location_id = NEW.origin_location_id;
-
-        UPDATE project_component
-        SET planned_amount = planned_amount - NEW.amount
-        WHERE component_id = NEW.component_id AND project_id = NEW.project_id AND planned_amount - NEW.amount >= used_amount;
-
+        INSERT INTO component_location (component_id, location_id, amount)
+        VALUES (NEW.component_id, NEW.origin_location_id, NEW.amount)
+        ON CONFLICT (component_id, location_id)
+        DO UPDATE SET 
+            amount = component_location.amount + EXCLUDED.amount;
+        
     ELSIF NEW.stock_type = 'disposal' AND NEW.origin_location_id IS NOT NULL THEN
         UPDATE components
         SET stock = stock - NEW.amount
@@ -309,10 +354,18 @@ BEGIN
         SET amount = amount - NEW.amount
         WHERE component_id = NEW.component_id AND location_id = NEW.origin_location_id;
 
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Insufficient stock at origin location';
+        END IF;
+
     ELSIF NEW.stock_type = 'transfer' AND NEW.origin_location_id IS NOT NULL AND NEW.destination_location_id IS NOT NULL THEN
         UPDATE component_location
         SET amount = amount - NEW.amount
         WHERE component_id = NEW.component_id AND location_id = NEW.origin_location_id;
+
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Insufficient stock at origin location';
+        END IF;
 
         INSERT INTO component_location (component_id, location_id, amount)
         VALUES (NEW.component_id, NEW.destination_location_id, NEW.amount)
@@ -325,7 +378,7 @@ BEGIN
 
 EXCEPTION
     WHEN OTHERS THEN
-        RAISE EXCEPTION 'Error al actualizar stock: %', SQLERRM; 
+        RAISE EXCEPTION 'An error has ocurred while updating stock: %', SQLERRM; 
 END;
 $$ LANGUAGE plpgsql;
 
