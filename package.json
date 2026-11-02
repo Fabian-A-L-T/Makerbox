@@ -5,6 +5,8 @@
     "dev": "pnpm --filter frontend dev",
     "dev:backend": "pnpm --filter backend dev",
     "dev:all": "pnpm -r --filter frontend --filter backend dev",
+    "test:backend": "pnpm -r --filter backend test",
+    "type-check:backend": "pnpm -r --filter backend type-check",
     "build": "pnpm --filter frontend build"
   }
 }
