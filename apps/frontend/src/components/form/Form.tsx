@@ -33,5 +33,5 @@ export function FieldGroup(props: GroupProps) {
 }
 
 export function Input(props: InputProps){
-  return <RACInput {...props} className={`${props.className || ''} w-full p-2`}/>
+  return <RACInput {...props} className={`${props.className || ''} w-full px-3 py-2`}/>
 }

@@ -20,7 +20,7 @@ export function DateField<T extends DateValue>(
 ) {
   return (
     <AriaDateField {...props} className={`flex flex-col gap-1 ${props.className}`}>
-      {label && <Label>{label}</Label>}
+      {label && <Label className="text-base font-medium">{label} {props.isRequired && <span className="text-[var(--color-danger)]">*</span>}</Label>}
       <DateInput />
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
@@ -45,8 +45,8 @@ const segmentStyles = tv({
 */
 export function DateInput(props: Omit<DateInputProps, 'children'>) {
   return (
-    <AriaDateInput className={`w-full p-2 bg-[var(--color-form-text-bg)] outline-[var(--color-border)] outline-2 rounded-[var(--border-radius-ui)] focus:outline-[var(--color-primary)] transition-colors duration-300 ${props.className}`} {...props}>
-      {(segment) => <DateSegment segment={segment} className={`px-2 whitespace-nowrap outline outline-0 data-[focused]:bg-blue-600 data-[focused]:p-2 data-[focused]:rounded-[var(--border-radius-ui)]`}/>}
+    <AriaDateInput {...props} className={`h-[34px] w-full px-3 py-2 bg-[var(--color-form-text-bg)] border border-[var(--color-border)] rounded-[var(--border-radius-ui)] focus:border-[var(--color-primary)] transition-colors duration-300 ${props.className}`} >
+      {(segment) => <DateSegment segment={segment} className={`px-1 whitespace-nowrap outline outline-0 data-[focused]:text-[var(--color-primary)] cursor-pointer data-[disabled]:cursor-default`}/>}
     </AriaDateInput>
   );
 }

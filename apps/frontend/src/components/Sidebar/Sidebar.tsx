@@ -1,6 +1,6 @@
 import './Sidebar.css'
 import logo from '../../assets/logo.png'
-import { RiWrenchLine, RiHome2Line, RiCpuLine, RiPencilRulerLine, RiLogoutBoxRLine, RiMoonLine, RiSunLine, RiNodeTree, RiMapPinLine, RiGroupLine, RiSwap2Line, type RemixiconComponentType, RiBuilding3Line, RiAddLine, RiMore2Line, RiUserSettingsLine } from '@remixicon/react';
+import { RiWrenchLine, RiHome2Line, RiCpuLine, RiPencilRulerLine, RiLogoutBoxRLine, RiMoonLine, RiSunLine, RiNodeTree, RiMapPinLine, RiGroupLine, RiSwap2Line, type RemixiconComponentType, RiBuilding3Line, RiMore2Line, RiUserSettingsLine, RiAddLine } from '@remixicon/react';
 import { Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { Switch } from '@components/ui/Switch';
@@ -18,8 +18,6 @@ interface NavGroup {
   items: NavItem[],
   show: boolean
 }
-
-type ThemeMode = 'light' | 'dark'
 
 interface SidebarProps {
   isOpen?: boolean
@@ -41,13 +39,13 @@ const getInitialTheme = (): ThemeMode => {
 }
 
 export default function Sidebar({ isOpen = true, onClose, userData, activeId, logout }: SidebarProps) {
-	const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
+	const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme());
 	const appVersion = import.meta.env.VITE_APP_VERSION;
 	const buildMode = import.meta.env.MODE;
 
   	const navGroups: NavGroup[] = [
 		{
-			title: 'Principal',
+			title: '',
 			show: true,
 			items: [
 			{
@@ -146,24 +144,30 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 					<img className='mx-auto' src={logo} alt="logo" />
 				</div>
 
-				<div className='sidebar__header'>
+				<div className='flex gap-2 p-2 items-center justify-between border-y-1 border-[var(--color-border)]'>
+					<div className='flex gap-2 items-center'>
 					<div className="sidebar__header-avatar">{userData.name.substring(0, 2).toUpperCase()}</div>
-					<div className='sidebar__header-info'>
-						<span className="sidebar__header-name">{userData.name}</span>
-						<span className="sidebar__header-role">{userData.role}</span>
+						<div className='flex flex-col overflow-hidden'>
+							<span className="text-sm">{userData.name}</span>
+							<span className="text-xs text-[var(--color-text-muted)]">{userData.role}</span>
+						</div>
 					</div>
 					<MenuTrigger placement='bottom right'>
 						<Button className='!border-none !outline-none' aria-label="Actions" variant="quiet">
 							<RiMore2Line size={16}/>
 						</Button>
 						<Menu shouldCloseOnSelect={false}>
-							<MenuItem onAction={() => alert('En construcción')}>
-								<RiPencilRulerLine size={20}/>
-								Mis proyectos
+							<MenuItem shouldCloseOnSelect>
+								<Link className='flex gap-2' to='/manager/newProject'>
+									<RiAddLine size={20}/>
+									Nuevo proyecto
+								</Link>
 							</MenuItem>
-							<MenuItem onAction={() => alert('En construcción')}>
+							<MenuItem shouldCloseOnSelect>
+								<Link className='flex gap-2' to='/manager/account'>
 								<RiUserSettingsLine size={20}/>
 								Configuración de la cuenta
+								</Link>
 							</MenuItem>
 							<MenuSeparator/>
 							<MenuItem>

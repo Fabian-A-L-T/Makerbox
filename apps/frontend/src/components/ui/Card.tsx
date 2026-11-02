@@ -48,7 +48,7 @@ export default function Card({ title, description, status, subtitle, image, link
             className={cardStyle}
         >
             <div className='p-2 card-image'>
-                <AsyncImg className='w-[242px] h-[200px] rounded-[var(--border-radius-ui)]' src={image} alt={title} notFoundSubtitle="Imagen no disponible"/>
+                <AsyncImg className='w-[242px] h-[200px] rounded-[var(--border-radius-ui)]' src={image} alt={title} notfoundsubtitle="Imagen no disponible"/>
             </div>
             <div className='px-4 py-2 flex flex-col gap-2'>
                 {status &&

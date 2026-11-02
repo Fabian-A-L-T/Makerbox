@@ -3,9 +3,8 @@ import { RiInformationLine, type RemixiconComponentType } from "@remixicon/react
 import { TooltipTrigger } from "react-aria-components";
 import { Tooltip } from "./Tooltip";
 
-export default function InfoCard({title, value, Icon, color, tooltipText, className} : {title: string, value?: number | string, Icon: RemixiconComponentType, color?: string, tooltipText?: string, className?: string }) {
-    
-    if(!value) value = '- -';
+export default function InfoCard({title, value, Icon, color, tooltipText, className} : {title: string, value?: number, Icon: RemixiconComponentType, color?: string, tooltipText?: string, className?: string }) {
+
     if(!color) color = 'var(--color-border)';
     return (
         <div className={`makerbox-box flex items-center gap-4 w-60 !border-[2px] transition-colors duration-300 ease-in-out ${className ?? ''}`}>
@@ -24,7 +23,7 @@ export default function InfoCard({title, value, Icon, color, tooltipText, classN
                         </TooltipTrigger>
                     )}
                 </div>
-                <span className="text-3xl">{typeof(value) == 'number' ? value.toLocaleString() : value}</span>
+                <span className="text-3xl">{typeof(value) === 'number' ? value.toLocaleString() : '- -'}</span>
             </div>
         </div>
     )

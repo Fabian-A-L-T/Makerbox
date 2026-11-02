@@ -14,8 +14,7 @@ import {ListBoxItem, ListBox} from './ListBox';
 import { RiArrowDownSLine, RiLoader5Line } from '@remixicon/react';
 import {Popover} from './Popover';
 import {Label, FieldError, Description} from './Form';
-
-const buttonStyle = 'bg-[var(--color-form-select-bg)] hover:bg-[var(--color-form-select-bg)]/60 border-[var(--color-border)] rounded-[var(--border-radius-ui)] outline-none';
+import { tv } from 'tailwind-variants';
 
 export interface SelectProps<T extends object, M extends 'single' | 'multiple'> extends Omit<AriaSelectProps<T, M>, 'children'> {
   label?: string
@@ -27,18 +26,27 @@ export interface SelectProps<T extends object, M extends 'single' | 'multiple'> 
   onLoadMore?: () => any
 }
 
+const buttonStyles = tv({
+  base: 'bg-[var(--color-form-select-bg)] hover:bg-[var(--color-form-select-bg)]/60 border border-[var(--color-border)] rounded-[var(--border-radius-ui)] outline-none',
+  variants: {
+    isDisabled : {
+      true: 'opacity-60 cursor-default'
+    }
+  }
+})
+
 export function Select<T extends object, M extends 'single' | 'multiple' = 'single'>(
   { label, description, errorMessage, children, items, loadingState, onLoadMore, ...props }: SelectProps<T, M>
 ) {
   return (
     (
-      <AriaSelect {...props} className={`flex flex-col gap-2 w-full ${props.className || ''}`}>
-        {label && <Label className="text-base font-semibold">{label} {props.isRequired && <span className="text-[var(--color-danger)]">*</span>}</Label>}
-        <Button className={buttonStyle} variant='custom' isPending={loadingState === 'loading' || loadingState === 'filtering'} isDisabled={loadingState === 'loading' || loadingState === 'filtering'}>
+      <AriaSelect {...props} className={`flex flex-col gap-1 w-full [&[data-invalid="true"]>button]:border-[var(--color-danger)] ${props.className || ''}`}>
+        {label && <Label className="text-base">{label} {props.isRequired && <span className="text-[var(--color-danger)]">*</span>}</Label>}
+        <Button className={buttonStyles({isDisabled:props.isDisabled})} variant='custom' isPending={loadingState === 'loading' || loadingState === 'filtering'} isDisabled={loadingState === 'loading' || loadingState === 'filtering'}>
             {({ isPressed }) => (
               <>
                 <SelectValue className={'flex justify-between items-center w-full font-normal mr-4'}/>
-                {(loadingState !== 'loading' && loadingState !== 'filtering') && <RiArrowDownSLine className={`transition-transform duration-300 ${isPressed ? 'rotate-180' : ''}`} size={20} />}
+                {(loadingState !== 'loading' && loadingState !== 'filtering') && <RiArrowDownSLine className={`transition-transform duration-300 ${isPressed && !props.isDisabled ? 'rotate-180' : ''}`} size={20} />}
               </>
             )}
         </Button>

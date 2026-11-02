@@ -138,15 +138,6 @@
 }
 
 /* ── Footer ── */
-.sidebar__header {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.875rem 1rem;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-}
 
 .sidebar__header-avatar {
   display: flex;
@@ -160,26 +151,6 @@
   background: linear-gradient(135deg, #63f171, #35885c);
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.sidebar__header-info {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.sidebar__header-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar__header-role {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
 }
 
 /* ── Overlay (mobile) ── */

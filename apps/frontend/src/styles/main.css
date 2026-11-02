@@ -26,7 +26,7 @@ body {
 }
 
 .makerbox-box {
-    padding: 1rem;
+    padding: 1.25rem;
     background-color: var(--color-card-bg);
     border: var(--border-card);
     border-radius: var(--border-radius-ui);

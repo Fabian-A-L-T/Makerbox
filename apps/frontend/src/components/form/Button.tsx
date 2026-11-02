@@ -2,6 +2,7 @@
 import { RiLoader5Line } from '@remixicon/react';
 import { Button as RACButton, type ButtonProps as RACButtonProps } from 'react-aria-components/Button';
 import { composeRenderProps } from 'react-aria-components/composeRenderProps';
+import { tv } from 'tailwind-variants';
 
 interface ButtonProps extends RACButtonProps {
   /**
@@ -11,27 +12,34 @@ interface ButtonProps extends RACButtonProps {
   variant?: 'primary' | 'secondary' | 'danger' | 'warning' | 'quiet' | 'custom'
 }
 
-const variantStyles = {
-  primary: 'bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/60 border-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/40 text-white',
-  secondary: 'bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/60 border-[var(--color-secondary)]/20 hover:border-[var(--color-secondary)]/40 text-white',
-  danger: 'bg-[var(--color-danger)] hover:bg-[var(--color-danger)]/60 border-[var(--color-danger)]/20 hover:border-[var(--color-danger)]/40 text-white',
-  warning: 'bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/60 border-[var(--color-warning)]/20 hover:border-[var(--color-warning)]/40 text-white',
-  quiet: 'bg-transparent hover:bg-[var(--color-primary)]/10 border-transparent',
-  custom: ''
-};
-
-const baseClasses = 'h-[40px] px-3 py-1.5 rounded-[var(--border-radius-ui)] border-2 cursor-pointer flex items-center justify-between font-semibold'
+const buttonStyles = tv({
+  base: 'h-[36px] px-3 py-2 rounded-[var(--border-radius-ui)] cursor-pointer flex items-center justify-between',
+  variants: {
+    variant: {
+      primary: 'bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/60 text-white',
+      secondary: 'bg-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/60 text-white',
+      danger: 'bg-[var(--color-danger)] hover:bg-[var(--color-danger)]/60 text-white',
+      warning: 'bg-[var(--color-warning)] hover:bg-[var(--color-warning)]/60 text-white',
+      quiet: 'bg-transparent hover:bg-[var(--color-secondary)]/10',
+      custom: ''
+    },
+    isDisabled: {
+      true: 'opacity-60 cursor-default'
+    },
+    isPending: {
+      true: 'opacity-60'
+    }
+  },
+  defaultVariants: {
+    variant: 'primary'
+  },
+});
 
 export function Button(props: ButtonProps) {
-  const variant = props.variant || 'primary';
-  const variantClass = variantStyles[variant];
 
   return (
     <RACButton {...props} 
-      className={composeRenderProps(props.className, (className, state) => {
-        return `${variantClass} ${baseClasses} ${className} ${state.isPending && '!cursor-not-allowed text-current/30 !bg-current/30 border-current/30'} ${state.isPressed || state.isFocused || state.isFocusVisible ? 'border-[var(--color-primary)]' : ''}` 
-      })}
-      data-variant={variant}
+      className={composeRenderProps(props.className, (className, state) => buttonStyles({ ...state, variant: props.variant, className }))}
     >
       {composeRenderProps(props.children, (children, {isPending}) => (
         <>

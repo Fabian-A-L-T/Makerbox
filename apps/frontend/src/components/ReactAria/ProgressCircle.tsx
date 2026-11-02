@@ -10,7 +10,6 @@ export interface ProgressCircleProps extends ProgressBarProps {
 export function ProgressCircle(props: ProgressCircleProps) {
   // SVG strokes are centered, so subtract half the stroke width from the radius to create an inner stroke.
   let strokeWidth = 4;
-  let radius = `calc(50% - ${strokeWidth / 2}px)`;
 
   return (
       <ProgressBar
@@ -27,16 +26,21 @@ export function ProgressCircle(props: ProgressCircleProps) {
               width="100%"
               height="100%"
               viewBox="0 0 32 32">
+              <style>{`
+                .dynamic-circle {
+                  r: calc(50% - ${strokeWidth / 2}px);
+                }
+              `}</style>
               <circle
                 cx="50%"
                 cy="50%"
-                r={radius}
+                className='dynamic-circle'
                 stroke="var(--highlight-pressed)"
                 strokeWidth={strokeWidth} />
               <circle
                 cx="50%"
                 cy="50%"
-                r={radius}
+                className='dynamic-circle'
                 stroke="var(--highlight-background)"
                 strokeWidth={strokeWidth}
                 // Normalize the path length to 100 so we can easily set stroke-dashoffset to a percentage.

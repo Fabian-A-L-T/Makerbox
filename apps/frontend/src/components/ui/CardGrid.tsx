@@ -105,8 +105,8 @@ export function ProjectCardGrid<T extends Project>({data, status}:{data: Array<T
                                 switch (project.state) {
                                     case 'active': return {status:{text:'Activo', color:'var(--color-success)'}};
                                     case 'planning': return {status:{text:'En planificación', color:'var(--color-primary)'}};
-                                    case 'paused':   return {status:{text:'Pausado', color:'var(--color-warning)'}};
-                                    case 'completed':   return {status:{text:'Terminado', color:'var(--color-success)'}};
+                                    case 'paused':   return {status:{text:'Pausado', color:'var(--color-secondary)'}};
+                                    case 'completed':   return {status:{text:'Finalizado', color:'var(--color-warning)'}};
                                     case 'cancelled':   return {status:{text:'Cancelado', color:'var(--color-danger)'}};
                                     default:        return null;
                                 }

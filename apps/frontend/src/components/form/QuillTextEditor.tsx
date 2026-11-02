@@ -25,11 +25,11 @@ export default function QuillTextEditor({ label, name, defaultValue = '', classN
   }
 
   return (
-    <div className={`flex flex-col gap-2 h-full ${className}`}>
-      <label className="text-base font-semibold">
+    <div className={`flex flex-col gap-1 h-full ${className}`}>
+      <label className="text-base">
         {label} {isRequired && <span className="text-[var(--color-danger)]">*</span>}
       </label>
-      <div className="h-full rounded-[var(--border-radius-ui)] border-2 border-[var(--color-border)] bg-[var(--color-form-text-bg)]">
+      <div className="h-full rounded-[var(--border-radius-ui)] border border-[var(--color-border)] bg-[var(--color-form-text-bg)]">
         <Editor ref={quillRef} defaultValue={deltaData} onTextChange={setCurrentDelta}/>
       </div>
       <input value={currentDelta ? JSON.stringify(currentDelta) : defaultValue} type="hidden" name={name}/>

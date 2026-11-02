@@ -7,6 +7,7 @@ import {
 } from 'react-aria-components/NumberField';
 import { Description, FieldError, FieldGroup, Label, Input } from './Form';
 import { RiArrowUpSLine, RiArrowDownSLine } from '@remixicon/react';
+import { tv } from 'tailwind-variants';
 
 export interface NumberFieldProps extends AriaNumberFieldProps {
   label?: string;
@@ -15,21 +16,31 @@ export interface NumberFieldProps extends AriaNumberFieldProps {
   placeholder?: string
 }
 
+const numberFieldStyle = tv({
+  base: 'bg-[var(--color-form-text-bg)] border-[var(--color-border)] border rounded-[var(--border-radius-ui)] data-[focus-within]:border-[var(--color-primary)] transition-colors duration-300',
+  variants: {
+    isDisabled: {
+      true: 'opacity-60 cursor-default'
+    }
+  }
+});
+
+
 export function NumberField(
   { label, description, errorMessage, placeholder, ...props }: NumberFieldProps
 ) {
   return (
-    <AriaNumberField {...props} className='group flex flex-col gap-1 font-sans'>
-      <Label className="text-base font-semibold">{label}</Label>
-      <FieldGroup className={'bg-[var(--color-form-text-bg)] outline-[var(--color-border)] outline-2 rounded-[var(--border-radius-ui)] data-[focus-within]:outline-[var(--color-primary)] transition-colors duration-300'}>
+    <AriaNumberField {...props} className={`group flex flex-col gap-1 font-sans ${props.className ?? ''}`}>
+      {label && <Label className="text-base">{label}</Label>}
+      <FieldGroup className={numberFieldStyle({isDisabled: props.isDisabled})}>
         <>
-          <Input className="outline-none" placeholder={placeholder} />
+          <Input className="h-[34px] border-none outline-none" placeholder={placeholder} />
           <div className='flex flex-col'>
             <StepperButton slot="increment">
-               <RiArrowUpSLine size={18} /> 
+               <RiArrowUpSLine size={16} /> 
             </StepperButton>
             <StepperButton slot="decrement">
-              <RiArrowDownSLine size={18} />
+              <RiArrowDownSLine size={16} />
             </StepperButton>
           </div>
         </>

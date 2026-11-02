@@ -8,9 +8,10 @@
   height: 100vh;
   background: rgba(0 0 0 / .5);
   z-index: 40;
-  font-family: system-ui;
   padding: 2rem;
-
+  display: flex;
+  align-items: center;
+  justify-content: center;
   &[data-entering] {
     animation: modal-fade 200ms;
   }
@@ -21,25 +22,7 @@
 }
 
 .react-aria-Modal {
-  /* max-height: 90vh; */
-  max-height: 100%;
-  overflow: auto;
-  box-shadow: 0 8px 32px rgba(0 0 0 / 0.2);
-  border-radius: var(--border-radius-ui);
-  background: var(--color-card-bg);
-  border: 1px solid var(--color-border);
-  /* width: fit-content; */
-  min-width: 30rem;
-  margin: auto;
-
-  &[data-entering] {
-    animation: modal-zoom 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-
-  .react-aria-TextField {
-    margin-bottom: 8px;
-  }
-
+  
   .isPending {
     position: absolute; 
     inset: 0;
@@ -58,8 +41,6 @@
 
 .react-aria-Dialog {
   position: relative;
-  box-sizing: border-box;
-  padding: 2rem;
 }
 
 @keyframes modal-fade {
