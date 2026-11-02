@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Switch } from '@components/ui/Switch';
 import { Button } from '@components/form/Button';
 import { Menu, MenuItem, MenuSeparator, MenuTrigger} from '@components/ui/Menu';
+import { getInitialTheme } from '@utils/Utils';
 
 interface NavItem {
   link: string,
@@ -27,17 +28,6 @@ interface SidebarProps {
   logout: () => void;
 }
 
-const getInitialTheme = (): ThemeMode => {
-  if (typeof window === 'undefined') return 'light'
-
-  const storedTheme = window.localStorage.getItem('theme')
-  if (storedTheme === 'light' || storedTheme === 'dark') {
-    return storedTheme
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
-
 export default function Sidebar({ isOpen = true, onClose, userData, activeId, logout }: SidebarProps) {
 	const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme());
 	const appVersion = import.meta.env.VITE_APP_VERSION;
@@ -54,6 +44,17 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 				icon: RiHome2Line,
 			},
 			{
+				link: 'projects',
+				label: 'Mis proyectos',
+				icon: RiPencilRulerLine,
+			}
+			],
+		},
+		{
+			title: 'Inventario',
+			show: true,
+			items: [
+			{
 				link: 'components',
 				label: 'Componentes',
 				icon: RiCpuLine,
@@ -62,12 +63,7 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 				link: 'tools',
 				label: 'Herramientas',
 				icon: RiWrenchLine,
-			},
-			{
-				link: 'projects',
-				label: 'Proyectos',
-				icon: RiPencilRulerLine,
-			},
+			}
 			],
 		},
 		{
@@ -146,7 +142,7 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 
 				<div className='flex gap-2 p-2 items-center justify-between border-y-1 border-[var(--color-border)]'>
 					<div className='flex gap-2 items-center'>
-					<div className="sidebar__header-avatar">{userData.name.substring(0, 2).toUpperCase()}</div>
+						<div className="sidebar__header-avatar">{userData.name.substring(0, 2).toUpperCase()}</div>
 						<div className='flex flex-col overflow-hidden'>
 							<span className="text-sm">{userData.name}</span>
 							<span className="text-xs text-[var(--color-text-muted)]">{userData.role}</span>
@@ -165,8 +161,8 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 							</MenuItem>
 							<MenuItem shouldCloseOnSelect>
 								<Link className='flex gap-2' to='/manager/account'>
-								<RiUserSettingsLine size={20}/>
-								Configuración de la cuenta
+									<RiUserSettingsLine size={20}/>
+									Configuración de la cuenta
 								</Link>
 							</MenuItem>
 							<MenuSeparator/>
@@ -184,35 +180,25 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 						</Menu>
 					</MenuTrigger>
 				</div>
-				<div className="sidebar__group"> 
-					<Link
-						className='w-max p-2 mx-auto flex items-center gap-2 bg-[var(--color-primary)] rounded-[var(--border-radius-ui)]'
-						to='/manager/newProject'
-					>
-						<RiAddLine/>
-						<span className='mr-1'>Nuevo proyecto</span>
-					</Link>
-				</div>
-
 				{navGroups.map((group) => {
 					if(!group.show) return null;
 					return (
 					<div key={group.title} className="sidebar__group">
-					<span className="sidebar__group-title">{group.title}</span>
-					<ul className="sidebar__list" role="list">
-						{group.items.map((item) => (
-						<li key={group.title + '-' + item.link}>
-							<Link
-							className={`sidebar__item ${activeId === item.link ? 'sidebar__item--active' : ''}`}
-							aria-current={activeId === item.link ? 'page' : undefined}
-							to={item.link ? `/manager/${item.link}` : `/manager`}
-							>
-							<item.icon />
-							<span className="sidebar__item-label">{item.label}</span>
-							</Link>
-						</li>
-						))}
-					</ul>
+						{group.title && <span className="sidebar__group-title">{group.title}</span>}
+						<ul className="sidebar__list" role="list">
+							{group.items.map((item) => (
+							<li key={group.title + '-' + item.link}>
+								<Link
+								className={`sidebar__item ${activeId === item.link ? 'sidebar__item--active' : ''}`}
+								aria-current={activeId === item.link ? 'page' : undefined}
+								to={(item.link ? `/manager/${item.link}` : '/manager') as any}
+								>
+								<item.icon />
+								<span className="sidebar__item-label">{item.label}</span>
+								</Link>
+							</li>
+							))}
+						</ul>
 					</div>
 					)}
 				)}
