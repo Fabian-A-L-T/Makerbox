@@ -1,7 +1,4 @@
-import postgres from 'postgres'
-import { loadEnvFile } from 'node:process';
-
-loadEnvFile('.env');
+import postgres from 'postgres';
 
 const sql = postgres({
     host: process.env.DB_HOST,
@@ -9,6 +6,7 @@ const sql = postgres({
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     port: Number(process.env.DB_PORT),
+    onnotice: () => false,
     //debug: (connection, query, params, types) => {
     //    console.log('Connection:', connection);
     //    console.log('Query:', query);
