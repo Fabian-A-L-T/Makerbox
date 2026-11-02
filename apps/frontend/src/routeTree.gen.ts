@@ -19,6 +19,7 @@ import { Route as AuthManagerProjectsRouteImport } from './routes/_auth.manager.
 import { Route as AuthManagerNewProjectRouteImport } from './routes/_auth.manager.newProject'
 import { Route as AuthManagerComponentsRouteImport } from './routes/_auth.manager.components'
 import { Route as AuthManagerAdminRouteImport } from './routes/_auth.manager.admin'
+import { Route as AuthManagerAccountRouteImport } from './routes/_auth.manager.account'
 import { Route as AuthManagerToolsIndexRouteImport } from './routes/_auth.manager.tools.index'
 import { Route as AuthManagerProjectsIndexRouteImport } from './routes/_auth.manager.projects.index'
 import { Route as AuthManagerComponentsIndexRouteImport } from './routes/_auth.manager.components.index'
@@ -83,6 +84,11 @@ const AuthManagerComponentsRoute = AuthManagerComponentsRouteImport.update({
 const AuthManagerAdminRoute = AuthManagerAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthManagerRoute,
+} as any)
+const AuthManagerAccountRoute = AuthManagerAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => AuthManagerRoute,
 } as any)
 const AuthManagerToolsIndexRoute = AuthManagerToolsIndexRouteImport.update({
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/manager': typeof AuthManagerRouteWithChildren
+  '/manager/account': typeof AuthManagerAccountRoute
   '/manager/admin': typeof AuthManagerAdminRouteWithChildren
   '/manager/components': typeof AuthManagerComponentsRouteWithChildren
   '/manager/newProject': typeof AuthManagerNewProjectRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/manager/account': typeof AuthManagerAccountRoute
   '/manager/admin': typeof AuthManagerAdminRouteWithChildren
   '/manager/newProject': typeof AuthManagerNewProjectRoute
   '/manager': typeof AuthManagerIndexRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
   '/_auth/manager': typeof AuthManagerRouteWithChildren
+  '/_auth/manager/account': typeof AuthManagerAccountRoute
   '/_auth/manager/admin': typeof AuthManagerAdminRouteWithChildren
   '/_auth/manager/components': typeof AuthManagerComponentsRouteWithChildren
   '/_auth/manager/newProject': typeof AuthManagerNewProjectRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/manager'
+    | '/manager/account'
     | '/manager/admin'
     | '/manager/components'
     | '/manager/newProject'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/manager/account'
     | '/manager/admin'
     | '/manager/newProject'
     | '/manager'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/login'
     | '/_auth/manager'
+    | '/_auth/manager/account'
     | '/_auth/manager/admin'
     | '/_auth/manager/components'
     | '/_auth/manager/newProject'
@@ -412,6 +424,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/manager/admin'
       preLoaderRoute: typeof AuthManagerAdminRouteImport
+      parentRoute: typeof AuthManagerRoute
+    }
+    '/_auth/manager/account': {
+      id: '/_auth/manager/account'
+      path: '/account'
+      fullPath: '/manager/account'
+      preLoaderRoute: typeof AuthManagerAccountRouteImport
       parentRoute: typeof AuthManagerRoute
     }
     '/_auth/manager/tools/': {
@@ -613,6 +632,7 @@ const AuthManagerToolsRouteWithChildren =
   AuthManagerToolsRoute._addFileChildren(AuthManagerToolsRouteChildren)
 
 interface AuthManagerRouteChildren {
+  AuthManagerAccountRoute: typeof AuthManagerAccountRoute
   AuthManagerAdminRoute: typeof AuthManagerAdminRouteWithChildren
   AuthManagerComponentsRoute: typeof AuthManagerComponentsRouteWithChildren
   AuthManagerNewProjectRoute: typeof AuthManagerNewProjectRoute
@@ -622,6 +642,7 @@ interface AuthManagerRouteChildren {
 }
 
 const AuthManagerRouteChildren: AuthManagerRouteChildren = {
+  AuthManagerAccountRoute: AuthManagerAccountRoute,
   AuthManagerAdminRoute: AuthManagerAdminRouteWithChildren,
   AuthManagerComponentsRoute: AuthManagerComponentsRouteWithChildren,
   AuthManagerNewProjectRoute: AuthManagerNewProjectRoute,
