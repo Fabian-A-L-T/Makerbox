@@ -5,8 +5,8 @@ import ProjectInfo from '@views/ProjectInfo';
 
 export const Route = createFileRoute('/_auth/manager/projects/$id')({
   loader: async ({params: {id}}) => {
-    const project = await fetchData<Project>(`/projects/${id}`);
-    return project.data.content;
+    const project = await fetchData<Project>(`/api/projects/${id}`);
+    return project.content;
   },
   component: ProjectInfo,
 });

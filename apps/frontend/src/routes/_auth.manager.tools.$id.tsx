@@ -11,8 +11,8 @@ export const Route = createFileRoute('/_auth/manager/tools/$id')({
         throw notFound();
       }
 
-      const tools = await fetchData<Tool>(`/tools/${validatedId.output}`);
-      return {data: tools.data.content[0]};
+      const tools = await fetchData<Tool>(`/api/tools/${validatedId.output}`);
+      return {data: tools.content[0]};
   },
   component: ToolInfo,
 });
