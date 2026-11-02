@@ -259,7 +259,6 @@ export default function ToolForm({ target, setImage, isPending, setFile }: ToolF
                 placeholder="Seleccione una ubicación"
                 {...(!locations.items.length && locations.loadingState !== 'loading' ? { isInvalid: true } : {})}
                 validate={(value) => {
-                    console.log(value);
                     if(value) validate(value, 'location_id');
                     else return "Campo requerido";
                 }}

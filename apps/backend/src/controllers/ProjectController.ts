@@ -80,7 +80,6 @@ export default class ProjectController {
                         const compData = await Component.getById(validatedComp.output.id);
 
                         if(validatedComp.output.selectedStock <= compData[0].stock) {
-                            console.log('Comp ' + compData[0].name + ' - ' + validatedComp.output.selectedStock);
                             let remainingSelectedStock = validatedComp.output.selectedStock;
                             const locations = await Component.getAllLocations(compData[0].id);
                             
@@ -88,7 +87,6 @@ export default class ProjectController {
                                 if(remainingSelectedStock > 0){
                                     let retrievedStock = Math.min(location.amount, remainingSelectedStock);
                                     Movement.create({user_id: userId, component_id: comp.id, project_id: project[0].id, stock_type: 'reserve', amount: retrievedStock, origin_location_id: location.location_id });
-                                    console.log(location, remainingSelectedStock, retrievedStock);
                                     remainingSelectedStock -= retrievedStock;
                                 }
                             });

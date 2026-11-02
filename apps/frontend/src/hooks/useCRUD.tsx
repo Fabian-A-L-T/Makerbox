@@ -128,7 +128,6 @@ export function useCRUD<T extends { id: number }>({apiRoute, resourceLabel}: Use
             return handleSubmit(variables.formData);
         },
         onError: (error) => {
-            console.log(error.message)
             queue.add({ title: 'Operación fallida', description: error.message, color: 'error' }, { timeout: 2000 });
         },
         onSuccess: (_data, variables) => {
