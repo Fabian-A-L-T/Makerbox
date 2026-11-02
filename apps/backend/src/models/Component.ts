@@ -1,5 +1,5 @@
 import sql from '../config/database.js';
-import { componentShow, type ComponentFilterData, type PaginationData, type ComponentData } from '../utils/schemas.js';
+import { type ComponentFilterData, type PaginationData, type ComponentData } from '../utils/schemas.js';
 import { NotFoundError } from '../utils/errors.js';
 
 export default class Component {
@@ -16,7 +16,7 @@ export default class Component {
                 data.forEach((value) => categories.push(value['id']));
             }
             return await sql`
-                SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.datasheet_url, comp.image_url, comp.notes, c.path AS category, m.name AS manufacturer FROM components comp
+                SELECT comp.id, comp.unit_cost, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.datasheet_url, comp.image_url, comp.notes, c.path AS category, m.name AS manufacturer FROM components comp
                 JOIN component_categories c ON comp.category_id = c.id
                 JOIN manufacturers m ON comp.manufacturer_id = m.id
                 WHERE comp.name ILIKE ${'%' + (search || '') + '%'} AND comp.deleted_at IS NULL
@@ -28,7 +28,7 @@ export default class Component {
 
     static async getById(id: number) {
         const rows = await sql`
-            SELECT comp.*, c.path AS category, m.name AS manufacturer FROM components comp
+            SELECT comp.id, comp.name, comp.sku, comp.description, comp.category_id, comp.manufacturer_id, comp.stock, comp.stock_min, comp.unit_cost, comp.datasheet_url, comp.image_url, comp.notes, comp.created_at, c.path AS category, m.name AS manufacturer, m.website AS manufacturer_website FROM components comp
             JOIN component_categories c ON comp.category_id = c.id
             JOIN manufacturers m ON comp.manufacturer_id = m.id
             WHERE comp.id = ${id} AND comp.deleted_at IS NULL`;
@@ -40,14 +40,14 @@ export default class Component {
     static async create(data: ComponentData){
         return await sql`
             INSERT INTO components ${sql(data)} 
-            RETURNING ${sql(componentShow)}`;
+            RETURNING id, name, sku, description, category_id, manufacturer_id, stock, stock_min, unit_cost, datasheet_url, image_url, notes`;
     }
 
     static async update(id: number, data: ComponentData){
         const rows = await sql`
             UPDATE components SET ${sql(data)}, updated_at = now() 
             WHERE id = ${id} AND deleted_at IS NULL
-            RETURNING ${sql(componentShow)}`;
+            RETURNING id, name, sku, description, category_id, manufacturer_id, stock, stock_min, unit_cost, datasheet_url, image_url, notes`;
 
         if(!rows.length) throw new NotFoundError();
         return rows;
@@ -58,7 +58,7 @@ export default class Component {
             UPDATE components
             SET deleted_at = null, updated_at = now() 
             WHERE id = ${id} AND deleted_at IS NOT NULL
-            RETURNING id, ${sql(componentShow)}`;
+            RETURNING id, name, sku, description, category_id, manufacturer_id, stock, stock_min, unit_cost, datasheet_url, image_url, notes`;
 
         if(!rows.length) throw new NotFoundError();
         return rows;
@@ -69,28 +69,27 @@ export default class Component {
             UPDATE components 
             SET deleted_at = now(), updated_at = now() 
             WHERE id = ${id} AND deleted_at IS NULL
-            RETURNING ${sql(componentShow)}`;
+            RETURNING id, name, sku, description, category_id, manufacturer_id, stock, stock_min, unit_cost, datasheet_url, image_url, notes`;
 
         if(!rows.length) throw new NotFoundError();
         return rows;
     }
 
     static async getLocations({component_id, location_id}:{component_id: number, location_id?: number}) {
-        const rows = await sql`
-            SELECT cl.*, l.name AS location_name, l.path AS location_route
-            FROM component_location cl
-            JOIN locations l ON cl.location_id = l.id
-            WHERE cl.component_id = ${component_id} ${location_id ? sql` AND cl.location_id = ${location_id}` : sql``}`;
-        if(!rows.length) throw new NotFoundError();
-        return rows;
-    }
-
-    static async getAllLocations(component_id: number) {
         return await sql`
             SELECT cl.*, l.name AS location_name, l.path AS location_route
             FROM component_location cl
             JOIN locations l ON cl.location_id = l.id
-            WHERE cl.component_id = ${component_id}`;
+            WHERE cl.component_id = ${component_id} ${location_id ? sql` AND cl.location_id = ${location_id}` : sql``}`;
+    }
+
+    static async getAllLocations(component_id: number) {
+        return await sql`
+            SELECT cl.*, l.name AS location_name, l.description AS location_description, l.path AS location_route
+            FROM component_location cl
+            JOIN locations l ON cl.location_id = l.id
+            WHERE cl.component_id = ${component_id}
+            ORDER BY cl.amount DESC`;
     }
 
     static async addToLocation(component_id: number, location_id: number, amount: number){

@@ -6,7 +6,7 @@ export default class Location {
 
     static async get({ search, limit, offset, orderBy, desc, exclude}: PaginationData & LocationFilterData){
         return await sql`
-            SELECT * FROM locations
+            SELECT id, name, description, path FROM locations
             WHERE name ILIKE ${'%' + (search ?? '') + '%'} AND deleted_at IS NULL
             ${exclude ? sql`AND id != ${exclude}` : sql``}
             ORDER BY ${sql(orderBy || 'path')} ${desc === 'true' ? sql`DESC` : sql`ASC`}
@@ -15,7 +15,7 @@ export default class Location {
     
     static async getById(id: number){
         const rows = await sql`
-            SELECT * FROM locations 
+            SELECT id, name, description, path FROM locations 
             WHERE id = ${id} AND deleted_at IS NULL`;
         if (!rows.length) throw new NotFoundError();
         return rows;
@@ -24,16 +24,16 @@ export default class Location {
     static async create(data: LocationData) {
         return await sql`
             INSERT INTO locations ${sql(data)} 
-            RETURNING *`;
+            RETURNING id, name, description, path`;
     }
 
     static async update(id: number, data: LocationData) {
         const rows = await sql`
             UPDATE locations SET ${sql(data)}, updated_at = now()
-            WHERE id = ${id} 
-            RETURNING OLD.path as old_path, *`;
+            WHERE id = ${id} AND deleted_at IS NULL
+            RETURNING id, name, description, path, OLD.path as old_path`;
 
-        if(rows && data.path) {
+        if(rows.length && data.path) {
             await sql`
                 UPDATE locations
                 SET path = ${data.path} || subpath(path,nlevel(${rows[0].old_path})), updated_at = now() 
@@ -47,11 +47,26 @@ export default class Location {
         const rows = await sql`
             UPDATE locations SET deleted_at = now(), updated_at = now() 
             WHERE id = ${id} AND deleted_at IS NULL
-            RETURNING *`;
-        if(rows) {
+            RETURNING id, name, description, path`;
+        if(rows.length) {
             await sql`
                 UPDATE locations
                 SET deleted_at = now(), updated_at = now() 
+                where path ~ ${`${rows[0].path}.*{1,}`}`;
+        }
+        if (!rows.length) throw new NotFoundError();
+        return rows;
+    }
+
+    static async restore(id: number) {
+        const rows = await sql`
+            UPDATE locations SET deleted_at = NULL, updated_at = now() 
+            WHERE id = ${id} AND deleted_at IS NOT NULL
+            RETURNING id, name, description, path`;
+        if(rows.length) {
+            await sql`
+                UPDATE locations
+                SET deleted_at = NULL, updated_at = now() 
                 where path ~ ${`${rows[0].path}.*{1,}`}`;
         }
         if (!rows.length) throw new NotFoundError();
@@ -63,6 +78,7 @@ export default class Location {
             SELECT cu.*, c.sku, c.name AS component_name
             FROM component_location cu
             JOIN components c ON cu.component_id = c.id
-            WHERE cu.location_id = ${location_id}`;
+            JOIN locations l ON cu.location_id = l.id
+            WHERE cu.location_id = ${location_id} AND l.deleted_at IS NULL`;
     }
 }

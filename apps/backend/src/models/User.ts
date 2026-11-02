@@ -1,6 +1,6 @@
 import sql from "../config/database.js";
 import { userShow, type PaginationData, type FilterData, type UserData } from "../utils/schemas.js";
-import { NotFoundError } from "../utils/errors.js";
+import { NotFoundError, UserNotFoundError } from "../utils/errors.js";
 import bcrypt from "bcrypt";
 
 export default class User {
@@ -27,9 +27,36 @@ export default class User {
             RETURNING ${sql(userShow)}`;
     }
 
-    static async update(id: number, data: UserData) {
+    static async updateRole(id: number, data: string) {
         const rows = await sql`
-            UPDATE users SET ${sql(data)}
+            UPDATE users SET role = ${data}
+            WHERE id = ${id} AND deleted_at IS NULL
+            RETURNING ${sql(userShow)}`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
+    }
+
+    static async updateName(id: number, name: string) {
+        const rows = await sql`
+            UPDATE users SET name = ${name}
+            WHERE id = ${id} AND deleted_at IS NULL
+            RETURNING ${sql(userShow)}`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
+    }
+
+    static async updateEmail(id: number, email: string) {
+        const rows = await sql`
+            UPDATE users SET email = ${email}
+            WHERE id = ${id} AND deleted_at IS NULL
+            RETURNING ${sql(userShow)}`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
+    }
+
+    static async updatePasswd(id: number, passwd: string) {
+        const rows = await sql`
+            UPDATE users SET passwd = ${passwd}
             WHERE id = ${id} AND deleted_at IS NULL
             RETURNING ${sql(userShow)}`;
         if(!rows.length) throw new NotFoundError();
@@ -48,7 +75,7 @@ export default class User {
     static async delete(id: number) {
         const rows = await sql`
             UPDATE users SET deleted_at = now(), updated_at = now() 
-            WHERE id = ${id} deleted_at IS NULL
+            WHERE id = ${id} AND deleted_at IS NULL
             RETURNING ${sql(userShow)}`;
         
         if(!rows.length) throw new NotFoundError();
@@ -60,7 +87,7 @@ export default class User {
             SELECT id, name, email, role, passwd
             FROM users
             WHERE email = ${email} AND deleted_at IS NULL`;
-        if(!rows.length) throw new NotFoundError();
+        if(!rows.length) throw new UserNotFoundError();
         return rows;
     }
 
@@ -78,7 +105,7 @@ export default class User {
             SELECT id, passwd
             FROM users
             WHERE id = ${id} AND deleted_at IS NULL`;
-        if(!rows.length || !bcrypt.compare(passwd, rows[0].passwd)) return false;
-        return true;
+        if(!rows.length) throw new UserNotFoundError();
+        return bcrypt.compareSync(passwd, rows[0].passwd);
     }
 }
