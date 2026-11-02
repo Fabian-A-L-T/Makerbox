@@ -8,6 +8,7 @@ router.get('/', ToolController.getAll); // GET all tools — optional ?estado= f
 router.get('/:id', ToolController.getByID); // GET single tool by id
 router.post('/', checkAdmin, ToolController.create); // POST create tool
 router.put('/:id', checkAdmin, ToolController.update); // PATCH update tool
-router.delete('/:id', checkAdmin, ToolController.delete); // DELETE tool (hard delete)
+router.delete('/:id', checkAdmin, ToolController.delete); // DELETE tool
+router.patch('/:id/restore', checkAdmin, ToolController.restore); // Restore tool
 
 export default router;
