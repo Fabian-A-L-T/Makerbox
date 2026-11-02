@@ -1,8 +1,8 @@
 import {Modal} from '@components/ReactAria/Modal';
-import {Dialog, Heading} from '@components/ReactAria/Dialog';
+import {Dialog} from '@components/ReactAria/Dialog';
 import {Form} from '@components/form/Form';
 import {Button} from '@components/form/Button';
-import LoadingCircle from '@components/LoadingCircle';
+import ModalHeader from './ui/ModalHeader';
 
 interface CRUDModalProps {
     children?: React.ReactNode;
@@ -20,35 +20,21 @@ export default function CRUDModal({children, title, description, submitText, pro
     return (
         <Modal {...props} isOpen={isOpen} onOpenChange={setOpen}>
             <Dialog>
-                <>
-                <div className='flex flex-col gap-2 mb-8'>
-                    <Heading className='text-2xl font-bold' slot="title">{title}</Heading>
-                    {description && <p className='text-md text-[var(--color-text-muted)]'>{description}</p>}
-                </div>
-                <Form
+                <Form className='flex flex-col max-h-[80dvh]'
                     onSubmit={(e) => {
                         e.preventDefault();
-                        action(new FormData(e.currentTarget));
+                        if(!isPending) action(new FormData(e.currentTarget));
                     }}
-                    className='flex flex-col gap-8'
                 >
-                    {isPending ?
-                        (
-                            <div className='flex flex-col w-full my-20 items-center justify-center gap-2 bg-[var(--color-card-bg)]'>
-                                <LoadingCircle message="Cargando..."/>
-                            </div>
-                        ):
-                        (
-                            <>
-                                {children}
-                                <div className='flex flex-row justify-center gap-2 mt-8'>
-                                    <Button slot="close" variant="secondary">Cancelar</Button>
-                                    <Button type="submit">{submitText}</Button>
-                                </div>
-                            </>
-                        )}
+                    <ModalHeader title={title} description={description} className='flex-none'/>
+                    <div className='flex-initial mb-5 px-5 overflow-y-auto'>
+                        {children}
+                    </div>
+                    <div className='flex justify-center m-5 gap-2'>
+                        <Button slot="close" variant="secondary" isDisabled={isPending}>Cancelar</Button>
+                        <Button type="submit" isDisabled={isPending}>{submitText}</Button>
+                    </div>
                 </Form>
-                </>
             </Dialog>
         </Modal>
     );
