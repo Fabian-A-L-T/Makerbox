@@ -1,9 +1,10 @@
 import { type Request, type Response } from "express";
 import Movement from "../models/Movement.js";
-import { ValidationError, NotFoundError } from "../utils/errors.js";
+import { ValidationError, HttpError } from "../utils/errors.js";
 import { number, safeParse } from "valibot";
 import { movementFilterSchema, movementSchema, paginationSchema } from "../utils/schemas.js";
 import { generatePagination } from "../utils/utils.js";
+import sql from "../config/database.js";
 
 export default class MovementController {
     static async getAll(req: Request, res: Response) {
@@ -26,9 +27,9 @@ export default class MovementController {
                 otherParams: validatedFilters.output
             }));
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al obtener los movimientos de stock', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -42,10 +43,9 @@ export default class MovementController {
             const movement = await Movement.getById(validatedID.output);
             res.json({content: movement});
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al obtener el movimiento', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
     
@@ -57,9 +57,17 @@ export default class MovementController {
             const movement = await Movement.create(validatedData.output);
             res.status(201).json({ message: 'Movimiento registrado exitosamente', data: movement });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al registrar el movimiento', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === 'P0001' || error.code === '23514' 
+                    ? 422
+                    : 500;
+            if(error instanceof sql.PostgresError) {
+                if(error.code === 'P0001') error.message = 'No se puede realizar el movimiento con la cantidad especificada';
+                else if( error.code === '23514') error.message = 'Existen datos faltantes';
+            }
+            res.status(status).json({ message: error.message });
         }
     }
 }

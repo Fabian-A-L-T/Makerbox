@@ -1,9 +1,10 @@
 import { type Request, type Response } from "express";
 import Component from "../models/Component.js";
-import { ValidationError, NotFoundError } from "../utils/errors.js";
+import { ValidationError, HttpError } from "../utils/errors.js";
 import { number, object, optional, safeParse } from "valibot";
 import { componentFilterSchema, componentSchema, paginationSchema } from "../utils/schemas.js";
 import { generatePagination } from "../utils/utils.js";
+import sql from "../config/database.js";
 
 export default class ComponentController {
     static async getAll(req: Request, res: Response) {
@@ -29,9 +30,9 @@ export default class ComponentController {
                 }
             }));
         } 
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener los componentes', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -45,10 +46,10 @@ export default class ComponentController {
             const component = await Component.getById(validatedId.output);
             res.json({content: component});
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener el componente', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -60,9 +61,14 @@ export default class ComponentController {
             const newComponent = await Component.create(validatedData.output);
             res.status(201).json({ message: "Componente creado exitosamente", data: newComponent });
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else res.status(500).json({ message: 'Error al crear el componente', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === '23505' 
+                    ? 409
+                    : 500;
+            res.status(status).json({ message: status === 409 ? 'El SKU debe ser único' : error.message });
         }
     }
 
@@ -79,10 +85,10 @@ export default class ComponentController {
             const updatedComponent = await Component.update(validatedId.output, validatedData.output);
             res.json({ message: "Componente actualizado exitosamente", data: updatedComponent });
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al actualizar el componente', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -96,10 +102,10 @@ export default class ComponentController {
             const component = await Component.restore(validatedId.output);
             res.json({ message: "Componente restaurado exitosamente", data: component });
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al restaurar el componente', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -113,25 +119,31 @@ export default class ComponentController {
             const component = await Component.delete(validatedId.output);
             res.json({ message: "Componente eliminado exitosamente", data: component });
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al eliminar el componente', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
     static async getLocation(req: Request, res: Response) {
         try {
-            const validatedIds = safeParse(object({ component_id: number(), location_id: optional(number()) }), req.params);
+            const validatedIds = safeParse(object({
+                component_id: number(),
+                location_id: optional(number())
+            }), {
+                component_id: parseInt(req.params.component_id),
+                location_id: parseInt(req.params.location_id)
+            });
             if(!validatedIds.success) throw new ValidationError();
 
             const location = await Component.getLocations(validatedIds.output);
             res.json({content: location});
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener stock por ubicación', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -145,10 +157,10 @@ export default class ComponentController {
             const rows = await Component.getAllLocations(validatedId.output);
             res.json({content: rows});
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener stock por ubicación', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
     
@@ -156,7 +168,7 @@ export default class ComponentController {
         try {
             const { component_id } = req.params;
             const { location_id, amount } = req.body;
-            const validatedComponentId = safeParse(number(), component_id);
+            const validatedComponentId = safeParse(number(), parseInt(component_id));
             const validatedLocationId = safeParse(number(), location_id);
             const validatedQuantity = safeParse(number(), amount);
             if(!validatedComponentId.success || !validatedLocationId.success || !validatedQuantity.success) throw new ValidationError();
@@ -164,10 +176,10 @@ export default class ComponentController {
             const nuevo = await Component.addToLocation(validatedComponentId.output, validatedLocationId.output, validatedQuantity.output);
             res.status(201).json({ message: 'Asignación creada exitosamente', data: nuevo });
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al crear la asignación', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -176,18 +188,18 @@ export default class ComponentController {
             const { component_id, location_id } = req.params;
             const { amount } = req.body;
 
-            const validatedComponentId = safeParse(number(), component_id);
-            const validatedLocationId = safeParse(number(), location_id);
+            const validatedComponentId = safeParse(number(), parseInt(component_id));
+            const validatedLocationId = safeParse(number(), parseInt(location_id));
             const validatedAmount = safeParse(number(), amount);
             if(!validatedComponentId.success || !validatedLocationId.success || !validatedAmount.success) throw new ValidationError();
             
             const actualizado = await Component.updateQuantity(validatedComponentId.output, validatedLocationId.output, validatedAmount.output);
             res.json({ message: 'Cantidad actualizada exitosamente', data: actualizado });
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al actualizar la cantidad', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -195,17 +207,17 @@ export default class ComponentController {
         try {
             const { component_id, location_id } = req.params;
 
-            const validatedComponentId = safeParse(number(), component_id);
-            const validatedLocationId = safeParse(number(), location_id);
+            const validatedComponentId = safeParse(number(), parseInt(component_id));
+            const validatedLocationId = safeParse(number(), parseInt(location_id));
             if(!validatedComponentId.success || !validatedLocationId.success) throw new ValidationError();
 
             const eliminado = await Component.removeFromLocation(validatedComponentId.output, validatedLocationId.output);
             res.json({ message: 'Asignación eliminada exitosamente', data: eliminado });
 
-        } catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Componente no encontrado', error: err.message });
-            else res.status(500).json({ message: 'Error al eliminar la asignación', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 }

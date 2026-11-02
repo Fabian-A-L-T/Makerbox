@@ -1,9 +1,10 @@
 import { type Request, type Response } from "express";
 import Tool from "../models/Tool.js";
-import { ValidationError, NotFoundError } from "../utils/errors.js";
+import { ValidationError, HttpError } from "../utils/errors.js";
 import { number, safeParse } from "valibot";
 import { paginationSchema, toolFilterSchema, toolSchema } from "../utils/schemas.js";
 import { generatePagination } from "../utils/utils.js";
+import sql from "../config/database.js";
 
 export default class ToolController {
     static async getAll(req: Request, res: Response){
@@ -29,10 +30,9 @@ export default class ToolController {
                 }
             }));
         }
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Herramienta no encontrada', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener las herramientas', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -45,10 +45,9 @@ export default class ToolController {
             const tool = await Tool.getById(validatedId.output);
             res.json({content: tool});
         }
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Herramienta no encontrada', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener la herramienta', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -58,11 +57,20 @@ export default class ToolController {
             if (!validatedData.success) throw new ValidationError();
 
             const tool = await Tool.create(validatedData.output);
-            res.status(201).json({ message: 'Herramienta creada exitosamente', data: tool });
+            res.status(201).json({ message: 'Herramienta creada exitosamente', data: tool[0] });
         }
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else res.status(500).json({ message: 'Error al crear la herramienta', error: err.message });
+        catch (error: any) {
+            let postgresMessage = '';
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === '23505' 
+                    ? 409
+                    : 500;
+            if(error instanceof sql.PostgresError) {
+                if(error.constraint_name === 'tools_serial_number_key') postgresMessage = 'Numero de serie duplicado';
+                else postgresMessage = 'SKU duplicado';
+            }
+            res.status(status).json({ message: status === 409 ? postgresMessage : error.message });
         }
     }
 
@@ -76,12 +84,19 @@ export default class ToolController {
             if(!validatedData.success) throw new ValidationError();
 
             const tool = await Tool.update(validatedId.output, validatedData.output);
-            res.json({ message: 'Herramienta actualizada exitosamente', data: tool });
+            res.json({ message: 'Herramienta actualizada exitosamente', data: tool[0] });
         }
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Herramienta no encontrada', error: err.message });
-            else res.status(500).json({ message: 'Error al actualizar la herramienta', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === '23505' 
+                    ? 409
+                    : 500;
+            if(error instanceof sql.PostgresError) {
+                if(error.constraint_name === 'tools_serial_number_key') error.message = 'Numero de serie duplicado';
+                else error.message = 'SKU duplicado';
+            }
+            res.status(status).json({ message: error.message });
         }
     }
     
@@ -93,12 +108,28 @@ export default class ToolController {
             if(!validatedId.success) throw new ValidationError();
 
             const tool = await Tool.delete(validatedId.output);
-            res.json({ message: 'Herramienta eliminada exitosamente', data: tool });
+            res.json({ message: 'Herramienta eliminada exitosamente', data: tool[0] });
         }
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error de validacion', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Herramienta no encontrada', error: err.message });
-            else res.status(500).json({ message: 'Error al eliminar la herramienta', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
+
+    static async restore(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+
+            const validatedId = safeParse(number(), parseInt(id));
+            if(!validatedId.success) throw new ValidationError();
+
+            const tool = await Tool.restore(validatedId.output);
+            res.json({ message: "Herramienta restaurado exitosamente", data: tool });
+
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 }

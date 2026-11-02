@@ -1,9 +1,10 @@
 import { type Request, type Response } from "express";
 import Category from "../models/ToolCategory.js";
-import { ValidationError, NotFoundError } from "../utils/errors.js";
+import { ValidationError, HttpError } from "../utils/errors.js";
 import { generatePagination } from "../utils/utils.js";
 import { safeParse, number, string, optional } from 'valibot';
 import { categoryFilterSchema, categorySchema, paginationSchema } from "../utils/schemas.js";
+import sql from "../config/database.js";
 
 export default class ToolCategoryController {
     static async getAll(req: Request, res: Response) {
@@ -26,9 +27,9 @@ export default class ToolCategoryController {
                 otherParams: validatedFilters.output
             }));
         } 
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error al obtener las categorías', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener las categorías', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -42,24 +43,27 @@ export default class ToolCategoryController {
             const category = await Category.getById(validatedId.output);
             res.json({content: category});
         } 
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error al obtener la categoría', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Categoría no encontrada' });
-            else res.status(500).json({ message: 'Error al obtener la categoría', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
     static async create(req: Request, res: Response) {
         try {
             const validatedData = safeParse(categorySchema, req.body);
-            if(!validatedData.success) throw validatedData.issues;
+            if(!validatedData.success) throw new ValidationError();
 
             const category = await Category.create(validatedData.output);
             res.status(201).json({ message: 'Categoría creada exitosamente', data: category });
         } 
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error al crear la categoría', error: err.message });
-            else res.status(500).json({ message: 'Error al crear la categoría', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === '23505' 
+                    ? 409
+                    : 500;
+            res.status(status).json({ message: status === 409 ? 'Esta categoría ya existe' : error.message });
         }
     }
 
@@ -71,15 +75,18 @@ export default class ToolCategoryController {
             if(!validatedId.success) throw new ValidationError();
 
             const validatedData = safeParse(categorySchema, req.body);
-            if(!validatedData.success) throw validatedData.issues;
+            if(!validatedData.success) throw new ValidationError();
 
             const category = await Category.update(validatedId.output, validatedData.output);
             res.json({ message: 'Categoría actualizada exitosamente', data: category });
         } 
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error al actualizar la categoría', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Categoría no encontrada' });
-            else res.status(500).json({ message: 'Error al actualizar la categoría', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === '23505' 
+                    ? 409
+                    : 500;
+            res.status(status).json({ message: status === 409 ? 'Esta categoría ya existe' : error.message });
         }
     }
 
@@ -93,10 +100,9 @@ export default class ToolCategoryController {
             const category = await Category.delete(validatedId.output);
             res.json({ message: 'Categoría eliminada exitosamente', data: category });
         } 
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error al eliminar la categoría', error: err.message });
-            else if(err instanceof NotFoundError) res.status(404).json({ message: 'Categoría no encontrada' });
-            else res.status(500).json({ message: 'Error al eliminar la categoría', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -108,11 +114,11 @@ export default class ToolCategoryController {
             if(!validatedPath.success) throw new ValidationError();
 
             const categories = await Category.getChildren(validatedPath.output);
-            res.json(categories);
+            res.json({content: categories});
         } 
-        catch (err: any) {
-            if(err instanceof ValidationError) res.status(400).json({ message: 'Error al obtener las categorías', error: err.message });
-            else res.status(500).json({ message: 'Error al obtener las categorías', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 }

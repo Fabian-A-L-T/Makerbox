@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
 import Manufacturer from "../models/Manufacturer.js";
-import { ValidationError, NotFoundError } from "../utils/errors.js";
+import { ValidationError, HttpError } from "../utils/errors.js";
 import { number, safeParse } from "valibot";
 import { manufacturerFilterSchema, manufacturerSchema, paginationSchema } from "../utils/schemas.js";
 import { generatePagination } from "../utils/utils.js";
@@ -26,9 +26,9 @@ export default class ManufacturerController {
                 otherParams: validatedFilters.output
             }));
         } 
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al obtener los fabricantes', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -42,10 +42,9 @@ export default class ManufacturerController {
             const manufacturer = await Manufacturer.getById(validatedId.output);
             res.json({content: manufacturer});
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) return res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al obtener el fabricante', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -57,9 +56,9 @@ export default class ManufacturerController {
             const manufacturer = await Manufacturer.create(validatedData.output);
             res.status(201).json({ message: 'Fabricante creado exitosamente', data: manufacturer });
         } 
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al crear el fabricante', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -76,10 +75,9 @@ export default class ManufacturerController {
             const updated = await Manufacturer.update(validatedId.output, validatedData.output);
             res.json({ message: 'Fabricante actualizado exitosamente', data: updated });  
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al actualizar el fabricante', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -93,10 +91,10 @@ export default class ManufacturerController {
             const eliminado = await Manufacturer.delete(validatedId.output);
             res.json({ message: 'Fabricante eliminado exitosamente', data: eliminado });
 
-        } catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al eliminar el fabricante', error: err.message });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 }

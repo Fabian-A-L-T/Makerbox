@@ -1,72 +1,109 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { userLoginSchema, userRegisterSchema } from '../utils/schemas.js';
+import { userLoginSchema } from '../utils/schemas.js';
 import { safeParse } from 'valibot';
-import { ValidationError } from '../utils/errors.js';
+import { HttpError, UnauthorizedError, ValidationError } from '../utils/errors.js';
 import bcrypt from 'bcrypt';
-import { jwtSecret } from '../config/app.js';
+import { accessTTL, jwtSecret } from '../config/app.js';
+import RefreshToken from '../models/RefreshToken';
+import { generateRefreshToken } from '../utils/utils.js';
+import crypto from 'crypto';
 
 export default class AuthController {
-    static async register(req: Request, res: Response) {
-        try {
-            const {name, email, passwd} = req.body;
-
-            const validatedData = safeParse(userRegisterSchema, {name, email, passwd});
-            if(!validatedData.success) throw new ValidationError();
-
-            const userExists = await User.exists(validatedData.output.email);
-            if(userExists) throw new Error('Ya existe un usuario asociado a este correo');
-
-            validatedData.output.passwd = await bcrypt.hash(validatedData.output.passwd, 10);
-            
-            const user = await User.create(validatedData.output);
-            res.status(201).json({ message: 'User registered successfully', data: user });
-        }
-        catch (error) {
-            res.status(500).json({ message: 'Error registering user', error: error });
-        }
-    }
-
     static async login(req: Request, res: Response) {
         try {
-            const validatedData = safeParse(userLoginSchema, req.body);
-            if(!validatedData.success) throw new ValidationError();
+            if(!jwtSecret) throw new Error('JWT_SECRET not defined'); //! [NOTE]: To future me, don't forget to handle this better!!
+            const rememberFlag = req.body.remember === 'true';
+
+            // User validation section
+            const { success: loginDataSuccess, output: loginData } = safeParse(userLoginSchema, req.body);
+            if(!loginDataSuccess) throw new ValidationError();
             
-            const user = await User.login(validatedData.output.email);
-            
-            const validPasswd = await bcrypt.compare(validatedData.output.passwd, user[0].passwd);
+            const user = await User.login(loginData.email);
+
+            const validPasswd = bcrypt.compareSync(loginData.passwd, user[0].passwd);
             if(!validPasswd) throw new ValidationError();
+            //--------------------------------------------
 
-            if(!jwtSecret) throw new Error('JWT_SECRET not defined');
+            // Refresh token section
+            await generateRefreshToken(user[0].id, rememberFlag, res, req.ip || 'desconocido', req.headers["user-agent"] || 'desconocido');
+            //--------------------------------------------
 
+            // Access token section
             const userData = {
                 id: user[0].id,
                 name: user[0].name,
                 email: user[0].email,
                 role: user[0].role
             };
-            const token = jwt.sign(userData, jwtSecret, {expiresIn: '1h'});
-            res.cookie('token', token, {
-                httpOnly: true, 
-                secure: true, 
-                sameSite: 'strict', 
-                maxAge: 1000 * 60 * 60
-            });
-            res.status(200).json({ message: 'User logged in successfully', data: userData });
+            const token = jwt.sign(userData, jwtSecret, {expiresIn: accessTTL});
+            //--------------------------------------------
+
+            res.json({ accessToken: token, userData});
         }
-        catch (error) {
-            res.status(500).json({ message: 'Error logging in user', error: error });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
+
+    static async refresh(req: Request, res: Response) {
+        try {
+            if(!jwtSecret) throw new Error('JWT_SECRET not defined'); //! [NOTE]: To future me, don't forget to handle this better!!
+
+            const refresh_token = req.cookies.refresh_token;
+            if (!refresh_token) throw new UnauthorizedError();
+            
+            // Refresh token validation section
+            const tokenHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+            
+            const record = await RefreshToken.findByToken(tokenHash);
+            if (!record || record[0].expires_at < new Date()) {
+                res.clearCookie('refresh_token', { path: '/api/auth' });
+                throw new UnauthorizedError();
+            }
+            //--------------------------------------------
+
+            // Generate new refresh token section
+            await RefreshToken.deleteByToken(record[0].token_hash);
+            await generateRefreshToken(record[0].user_id, record[0].remember, res, req.ip || 'desconocido', req.headers["user-agent"] || 'desconocido');
+            //--------------------------------------------
+
+            // Access token section
+            const user = await User.getById(record[0].user_id);
+            const userData = {
+                id: user[0].id,
+                name: user[0].name,
+                email: user[0].email,
+                role: user[0].role
+            };
+            const token = jwt.sign(userData, jwtSecret, {expiresIn: accessTTL});
+            //--------------------------------------------
+
+            res.json({ accessToken: token, userData});
+        } 
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
     
-    static async logout(_req: Request, res: Response) {
+    static async logout(req: Request, res: Response) {
         try {
-            res.clearCookie('token');
-            res.status(200).json({ message: 'User logged out successfully' });
+            const refresh_token = req.cookies.refresh_token;
+            if (!refresh_token) throw new UnauthorizedError();
+            else {
+                const tokenHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+                await RefreshToken.deleteByToken(tokenHash);
+
+                res.clearCookie('refresh_token', { path: '/api/auth' });
+                res.status(200).json({ message: 'Logout exitoso' });
+            }
         }
-        catch (error) {
-            res.status(500).json({ message: 'Error logging out user', error: error });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 }

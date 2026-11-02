@@ -1,10 +1,11 @@
 import { type Request, type Response } from "express";
 import User from "../models/User.js";
-import { ValidationError, NotFoundError } from "../utils/errors.js";
-import { filterSchema, paginationSchema, userRegisterSchema, userSchema } from '../utils/schemas.js';
+import { ValidationError, HttpError, PasswordError } from "../utils/errors.js";
+import { filterSchema, paginationSchema, userLoginSchema, userSchema, userUpdateSchema, userUpdatePasswdSchema, userRoleSchema } from '../utils/schemas.js';
 import bcrypt from "bcrypt";
 import { number, safeParse } from "valibot";
 import { generatePagination } from "../utils/utils.js";
+import sql from "../config/database.js";
 
 export default class UserController {
     static async getAll(req: Request, res: Response){
@@ -27,8 +28,9 @@ export default class UserController {
                 otherParams: validatedFilters.output
             }));
         }
-        catch (err: any) {
-            res.status(500).json({ message: 'Internal server error', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -40,12 +42,11 @@ export default class UserController {
             if(!validatedId.success) throw new ValidationError();
 
             const user = await User.getById(validatedId.output);
-            res.json({content: user});
+            res.json({content: user[0]});
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) return res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Internal server error', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -59,49 +60,101 @@ export default class UserController {
             validatedData.output.passwd = await bcrypt.hash(validatedData.output.passwd, 10);
 
             const user = await User.create(validatedData.output);
-            res.status(201).json({ message: "Usuario creado exitosamente", data: user });
+            res.status(201).json({ message: "Usuario creado exitosamente", data: user[0] });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Internal server error', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === '23505' 
+                    ? 409
+                    : 500;
+            res.status(status).json({ message: status === 409 ? 'Este correo ya existe' : error.message });
         }
     }
 
     static async update(req: Request, res: Response) {
         try {
-            const { id } = req.body;
+            const { id } = req.params;
             const validatedId = safeParse(number(), parseInt(id));
             if(!validatedId.success) throw new ValidationError();
             
-            const validatedData = safeParse(userSchema, req.body);
+            const validatedData = safeParse(userRoleSchema, req.body);
             if(!validatedData.success) throw new ValidationError();
 
-            const updatedUser = await User.update(validatedId.output, validatedData.output);
-            res.json({ message: 'Usuario actualizado exitosamente', data: updatedUser });
+            const updatedUser = await User.updateRole(validatedId.output, validatedData.output.role);
+            res.json({ message: 'Usuario actualizado exitosamente', data: updatedUser[0] });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Internal server error', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
-    static async updateProfile(req: Request, res: Response) {
+    static async updateName(req: Request, res: Response) {
         try {
             const { id } = req.body.user;
-            const validatedId = safeParse(number(), parseInt(id));
-            if(!validatedId.success) throw new ValidationError();
+            const { success: idSuccess, output: userId } = safeParse(number(), parseInt(id));
+            if(!idSuccess) throw new ValidationError();
 
-            const validatedData = safeParse(userRegisterSchema, req.body);
-            if(!validatedData.success) throw new ValidationError();
+            const { success: dataSuccess, output: data } = safeParse(userUpdateSchema.entries['name'], req.body.name);
+            if(!dataSuccess) throw new ValidationError();
 
-            validatedData.output.passwd = await bcrypt.hash(validatedData.output.passwd, 10);
-
-            const updatedUser = await User.update(validatedId.output, validatedData.output);
-            res.json({ message: 'Usuario actualizado exitosamente', data: updatedUser });
+            const updatedUser = await User.updateName(userId, data);
+            res.json({ message: 'Usuario actualizado exitosamente', data: updatedUser[0] });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Internal server error', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
+
+    static async updateEmail(req: Request, res: Response) {
+        try {
+            const { id } = req.body.user;
+
+            const { success: idSuccess, output: userId } = safeParse(number(), parseInt(id));
+            if(!idSuccess) throw new ValidationError();
+
+            const { success: dataSuccess, output: data } = safeParse(userLoginSchema, req.body);
+            if(!dataSuccess) throw new ValidationError();
+            
+            const validPasswd = await User.hasEqualPasswd(userId, data.passwd);
+            if(!validPasswd) throw new PasswordError();
+
+            const updatedUser = await User.updateEmail(userId, data.email);
+            res.json({ message: 'Usuario actualizado exitosamente', data: updatedUser[0] });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError 
+                ? error.statusCode 
+                : error instanceof sql.PostgresError && error.code === '23505' 
+                    ? 409
+                    : 500;
+            res.status(status).json({ message: status === 409 ? 'Este correo se encuentra en uso' : error.message });
+        }
+    }
+
+    static async updatePassword(req: Request, res: Response) {
+        try {
+            const { id } = req.body.user;
+
+            const { success: idSuccess, output: userId } = safeParse(number(), parseInt(id));
+            if(!idSuccess) throw new ValidationError();
+            
+            const { success: dataSuccess, output: data } = safeParse(userUpdatePasswdSchema, req.body);
+            if(!dataSuccess) throw new ValidationError();
+            
+            const validPasswd = await User.hasEqualPasswd(userId, data.passwd);
+            if(!validPasswd) throw new PasswordError();
+
+            const hashedPasswd = bcrypt.hashSync(data.new_passwd, 10);
+
+            const updatedUser = await User.updatePasswd(userId, hashedPasswd);
+            res.json({ message: 'Usuario actualizado exitosamente', data: updatedUser[0] });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -113,12 +166,11 @@ export default class UserController {
             if(!validatedId.success) throw new ValidationError();
 
             const restoredUser = await User.restore(validatedId.output);
-            res.json({ message: 'Usuario restaurado exitosamente', data: restoredUser });
+            res.json({ message: 'Usuario restaurado exitosamente', data: restoredUser[0] });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) return res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Internal server error', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -130,12 +182,11 @@ export default class UserController {
             if(!validatedId.success) throw new ValidationError();
 
             const deletedUser = await User.delete(validatedId.output);
-            res.json({ message: 'Usuario eliminado exitosamente', data: deletedUser });
+            res.json({ message: 'Usuario eliminado exitosamente', data: deletedUser[0] });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) return res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) return res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Internal server error', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 }

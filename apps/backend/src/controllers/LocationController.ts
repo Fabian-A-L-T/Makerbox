@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
 import Location from "../models/Location.js";
-import { NotFoundError, ValidationError } from "../utils/errors.js";
+import { HttpError, ValidationError } from "../utils/errors.js";
 import { locationFilterSchema, locationSchema, paginationSchema } from "../utils/schemas.js";
 import { number, safeParse } from "valibot";
 import { generatePagination } from "../utils/utils.js";
@@ -26,9 +26,9 @@ export default class LocationController {
                 otherParams: validatedFilters.output
             }));
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al obtener las ubicaciones', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -42,11 +42,10 @@ export default class LocationController {
             const location = await Location.getById(validatedId.output);
             res.json({content: location});
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al obtener la ubicación', error: err.message });
-        }  
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        } 
     }
 
     static async create(req: Request, res: Response) {
@@ -55,12 +54,13 @@ export default class LocationController {
             if (!validatedData.success) throw new ValidationError();
 
             const location = await Location.create(validatedData.output);
-            res.status(201).json({ message: 'Ubicación creada exitosamente', data: location });
+            res.status(201).json({ message: 'Ubicación creada exitosamente', data: location[0] });
 
-        } catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al crear la ubicación', error: err.message });
-        } 
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
     }
 
     static async update(req: Request, res: Response) {
@@ -73,13 +73,12 @@ export default class LocationController {
             const validatedData = safeParse(locationSchema, req.body);
             if (!validatedData.success) throw new ValidationError();
 
-            const actualizada = await Location.update(validatedId.output, validatedData.output);
-            res.json({ message: 'Ubicación actualizada exitosamente', data: actualizada });
+            const location = await Location.update(validatedId.output, validatedData.output);
+            res.json({ message: 'Ubicación actualizada exitosamente', data: location[0] });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al actualizar la ubicación', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
     
@@ -90,13 +89,12 @@ export default class LocationController {
             const validatedId = safeParse(number(), parseInt(id));
             if (!validatedId.success) throw new ValidationError();
 
-            const eliminada = await Location.delete(validatedId.output);
-            res.json({ message: 'Ubicación eliminada exitosamente', data: eliminada });
+            const location = await Location.delete(validatedId.output);
+            res.json({ message: 'Ubicación eliminada exitosamente', data: location[0] });
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else if (err instanceof NotFoundError) res.status(404).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al eliminar la ubicación', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 
@@ -110,9 +108,9 @@ export default class LocationController {
             const components = await Location.getComponents(validatedId.output);
             res.json({content: components});
         }
-        catch (err: any) {
-            if (err instanceof ValidationError) res.status(400).json({ message: err.message });
-            else res.status(500).json({ message: 'Error al obtener componentes en ubicación', error: err.message });
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
         }
     }
 }
