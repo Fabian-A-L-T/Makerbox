@@ -1,4 +1,8 @@
-import sql from "../config/database.js";
+import sql from "../config/database";
+import crypto from 'crypto';
+import RefreshToken from "../models/RefreshToken";
+import type { Response } from "express";
+import { longRefreshTTL, shortRefreshTTL } from "../config/app";
 
 interface GeneratePaginationData<T> {
     content: Array<T>, 
@@ -39,4 +43,28 @@ export async function generatePagination<T>({content, tableName, hasSoftDelete, 
             ...(next && {next}),
         }
     };
+}
+
+export async function generateRefreshToken(userId: number, remember: boolean, res: Response<any, Record<string, any>>, ip: string, userAgent: string){
+    
+    const refresh_token = crypto.randomBytes(48).toString('hex');
+    const refresh_token_ttl = remember ? longRefreshTTL : shortRefreshTTL;
+    const tokenHash = crypto.createHash('sha256').update(refresh_token).digest('hex');
+
+    await RefreshToken.create({
+        token_hash: tokenHash,
+        user_id: userId,
+        remember: remember,
+        user_agent: userAgent,
+        ip_address: ip,
+        expires_at: new Date(Date.now() + refresh_token_ttl),
+
+    });
+    res.cookie('refresh_token', refresh_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        path: '/api/auth',
+        ...(remember ? { maxAge: refresh_token_ttl } : {}),
+    });
 }
