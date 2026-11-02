@@ -1,5 +1,8 @@
 import * as v from 'valibot';
 
+export const userIDSchema = v.pipe( v.number(), v.minValue(0));
+export type UserIDData = v.InferOutput<typeof userIDSchema>;
+
 // Pagination ----------------------------------------
 export const paginationSchema = v.object({
     limit: v.fallback(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.maxValue(100)),50),
@@ -48,12 +51,16 @@ export const componentSchema = v.object({
     manufacturer_id: v.pipe(v.string(), v.toNumber()),
     stock: v.optional(v.pipe(v.string(), v.toNumber())),
     stock_min: v.optional(v.pipe(v.string(), v.toNumber())),
+    unit_cost: v.optional(v.pipe(v.string(), v.toNumber())),
     datasheet_url: v.optional(v.string()),
     image_url: v.optional(v.string()),
     notes: v.optional(v.string()),
 });
 export type ComponentData = v.InferOutput<typeof componentSchema>;
-export const componentShow = ["id", "sku", "name", "description", "category_id", "manufacturer_id", "stock", "stock_min", "datasheet_url", "image_url", "notes"];
+export const componentShow = ["id", "sku", "name", "description", "category_id", "manufacturer_id", "stock", "stock_min", "unit_cost", "datasheet_url", "image_url", "notes"];
+
+export const componentListSchema = v.object({id: v.number(), selectedStock: v.pipe(v.number(), v.minValue(1), v.maxValue(50))});
+export type ComponentListData = v.InferOutput<typeof componentListSchema>;
 //----------------------------------------------------
 
 // Manufacturers -------------------------------------
@@ -73,7 +80,7 @@ export type ManufacturerData = v.InferOutput<typeof manufacturerSchema>;
 // Tools----------------------------------------------
 export const toolFilterSchema = v.object({
     ...filterSchema.entries,
-    orderBy: v.optional(v.fallback(v.picklist(['name', 'created_at']), 'name')),
+    orderBy: v.optional(v.fallback(v.picklist(['id', 'name', 'created_at']), 'name')),
     category: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number())),
     manufacturer: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number())),
     state: v.optional(v.picklist(['available', 'in_use', 'maintenance', 'disposed', 'lent']))
@@ -93,12 +100,10 @@ export const toolSchema = v.object({
     location_id: v.pipe(v.string(), v.toNumber()),
     state: v.picklist(toolStaus),
     acquisition_date: v.optional(v.string()),
-    calibration_required: v.optional(v.boolean()),
-    next_calibration_date: v.optional(v.string()),
     notes: v.optional(v.string())
 });
 export type ToolData = v.InferOutput<typeof toolSchema>;
-export const toolShow = ["id", "sku", "name", "manufacturer_id", "model", "serial_number", "image_url", "manual_url", "category_id", "location_id", "state", "acquisition_date", "calibration_required", "next_calibration_date", "notes", "active"];
+export const toolShow = ["id", "sku", "name", "manufacturer_id", "model", "serial_number", "image_url", "manual_url", "category_id", "location_id", "state", "acquisition_date", "notes", "active"];
 //----------------------------------------------------
 
 // Location ------------------------------------------
@@ -114,21 +119,48 @@ export const locationSchema = v.object({
     path: v.string(),
 });
 export type LocationData = v.InferOutput<typeof locationSchema>;
+
+export type ComponentLocationData = {
+    component_id: number;
+    location_id: number;
+    amount: number;
+}
 //----------------------------------------------------
 
 // Users ---------------------------------------------
 export const userSchema = v.object({
-    name: v.string(),
+    name: v.pipe(v.string(), v.minLength(2), v.maxLength(80)),
     passwd: v.pipe(v.string(), v.minLength(8), v.maxLength(64)),
-    email: v.pipe(v.string(), v.email()),
+    email: v.pipe(v.string(), v.toLowerCase(), v.normalize('NFKC'), v.email()),
     role: v.optional(v.picklist(['admin', 'technician', 'reader'])),
 });
 export type UserData = v.InferOutput<typeof userSchema>;
-export const userLoginSchema = v.omit(userSchema, ['name','role']);
-export type UserLoginData = v.InferOutput<typeof userLoginSchema>;
 export const userRegisterSchema = v.omit(userSchema, ['role']);
 export type UserRegisterData = v.InferOutput<typeof userRegisterSchema>;
+export const userRoleSchema = v.object({
+    role: v.picklist(['admin', 'technician', 'reader'])
+});
+export type UserRole = v.InferOutput<typeof userRoleSchema>;
+export const userLoginSchema = v.omit(userSchema, ['name','role']);
+export type UserLoginData = v.InferOutput<typeof userLoginSchema>;
+export const userUpdateSchema = v.omit(userSchema, ['role', 'passwd']);
+export type UserUpdateData = v.InferOutput<typeof userUpdateSchema>;
+export const userUpdatePasswdSchema = v.object({
+    ...v.pick(userSchema, ['passwd']).entries,
+    new_passwd: v.pipe(v.string(), v.minLength(8), v.maxLength(64)),
+});
+export type UserUpdatePasswdData = v.InferOutput<typeof userUpdatePasswdSchema>;
 export const userShow = ["id", "name", "email", "role"];
+
+export const refreshTokenSchema = v.object({
+    user_id: v.pipe(v.string(), v.toNumber()),
+    token_hash: v.pipe(v.string(), v.length(64)),
+    remember: v.boolean(),
+    user_agent: v.string(),
+    ip_address: v.string(),
+    expires_at: v.date()
+});
+export type RefreshTokenData = v.InferOutput<typeof refreshTokenSchema>;
 //----------------------------------------------------
 
 // Movements -----------------------------------------
@@ -155,24 +187,38 @@ export type MovementData = v.InferOutput<typeof movementSchema>;
 export const projectFilterSchema = v.object({
     ...filterSchema.entries,
     state: v.optional(v.picklist(['', 'planning', 'active', 'paused', 'completed', 'cancelled'])),
-    orderBy: v.optional(v.picklist(['id', 'name', 'created_at', 'budget'])),
-    userId: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(0), v.toString())),
+    orderBy: v.optional(v.picklist(['id', 'name', 'created_at', 'budget']))
 });
 export type ProjectFilterData = v.InferOutput<typeof projectFilterSchema>;
 
 export const projectSchema = v.object({
     name: v.string(),
     description: v.optional(v.string()),
-    state: v.picklist(['planning', 'active', 'paused', 'completed', 'cancelled']),
-    responsible_id: v.optional(v.pipe(v.string(), v.toNumber())),
+    responsible_id: v.pipe(v.string(), v.toNumber()),
     start_date: v.string(),
-    end_date_estimated: v.optional(v.string()),
     end_date_real: v.optional(v.string()),
-    budget: v.optional(v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(999999999999))),
+    budget: v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(999999999)),
     image_url: v.optional(v.string()),
     repository_url: v.optional(v.string())
 });
 export type ProjectData = v.InferOutput<typeof projectSchema>;
+//---------------------------------------------------
+
+// Project milestones -------------------------------
+export const milestoneSchema = v.object({
+    project_id: v.number(),
+    title: v.pipe(v.string(), v.maxLength(64)),
+    description: v.optional(v.pipe(v.string(), v.maxLength(5000))),
+    is_completed: v.optional(v.pipe(v.string(), v.toBoolean())),
+    completed_at: v.optional(v.string()),
+    order_index: v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(20))
+});
+export type MilestoneData = v.InferOutput<typeof milestoneSchema>;
+export const milestoneListSchema = v.object({
+    title: v.pipe(v.string(), v.maxLength(64)),
+    description: v.optional(v.pipe(v.string(), v.maxLength(5000)))
+});
+export type MilestoneListData = v.InferOutput<typeof milestoneListSchema>;
 //---------------------------------------------------
 
 // Project tools ------------------------------------
@@ -190,8 +236,8 @@ export type ProjectToolData = v.InferOutput<typeof projectToolSchema>;
 export const projectComponentSchema = v.object({
     project_id: v.number(),
     component_id: v.number(),
-    planned_quantity: v.number(),
-    used_quantity: v.number(),
+    planned_amount: v.number(),
+    used_amount: v.number(),
     notes: v.optional(v.string())
 });
 export type ProjectComponentData = v.InferOutput<typeof projectComponentSchema>;
