@@ -11,9 +11,15 @@ router.post('/', checkTechnician, ProjectController.create); // POST create proj
 router.put('/:id', checkAdmin, ProjectController.update); // PATCH update project
 router.delete('/:id', checkAdmin, ProjectController.delete); // DELETE project (hard delete — cascades to pivot tables)
 
+router.patch('/:project_id/state/update', checkTechnician, ProjectController.updateState);
+router.patch('/:project_id/state/revert', checkTechnician, ProjectController.revertState);
+
 router.post('/:project_id/milestones', checkTechnician, ProjectController.createMilestone);
 router.put('/:project_id/milestones/:milestone_id', checkTechnician, ProjectController.updateMilestone);
 router.delete('/:project_id/milestones/:milestone_id', checkTechnician, ProjectController.deleteMilestone);
+
+router.patch('/:project_id/milestones/complete', checkTechnician, ProjectController.completeMilestone);
+router.patch('/:project_id/milestones/revert', checkTechnician, ProjectController.revertMilestone);
 
 router.post('/:project_id/tools', checkAdmin, ProjectController.addTool); // POST assign a tool to a project
 router.patch('/:project_id/tools/:tool_id', checkAdmin, ProjectController.updateTool); // PATCH update a tool assigned to a project

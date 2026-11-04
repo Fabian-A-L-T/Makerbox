@@ -186,7 +186,7 @@ export type MovementData = v.InferOutput<typeof movementSchema>;
 // Projects -----------------------------------------
 export const projectFilterSchema = v.object({
     ...filterSchema.entries,
-    state: v.optional(v.picklist(['', 'planning', 'active', 'paused', 'completed', 'cancelled'])),
+    state: v.optional(v.picklist(['planning', 'active', 'paused', 'completed', 'cancelled'])),
     orderBy: v.optional(v.picklist(['id', 'name', 'created_at', 'budget']))
 });
 export type ProjectFilterData = v.InferOutput<typeof projectFilterSchema>;
@@ -209,7 +209,7 @@ export const milestoneSchema = v.object({
     project_id: v.number(),
     title: v.pipe(v.string(), v.maxLength(64)),
     description: v.optional(v.pipe(v.string(), v.maxLength(5000))),
-    is_completed: v.optional(v.pipe(v.string(), v.toBoolean())),
+    is_completed: v.optional(v.boolean()),
     completed_at: v.optional(v.string()),
     order_index: v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(20))
 });

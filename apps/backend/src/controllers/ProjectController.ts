@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import Project from "../models/Project.js";
 import { ValidationError, HttpError } from "../utils/errors.js";
 import { type ComponentListData, componentListSchema, type MilestoneListData, milestoneListSchema, milestoneSchema, paginationSchema, projectComponentSchema, projectFilterSchema, projectSchema, projectToolSchema, userIDSchema } from "../utils/schemas.js";
-import { number, safeParse } from "valibot";
+import { number, picklist, safeParse } from "valibot";
 import { generatePagination } from "../utils/utils.js";
 import Component from "../models/Component.js";
 import Movement from "../models/Movement.js";
@@ -100,7 +100,7 @@ export default class ProjectController {
                     
                 }));
                 if(iterationSuccess.some((value) => value === false)) throw new ValidationError();
-                if (projectData.end_date_real) await Project.updateState(project[0].id, 'completed');
+                if (projectData.end_date_real) await Project.updateState(project[0].id, validatedData.output.responsible_id, 'completed');
             }
 
             if(milestoneList.length > 0){
@@ -137,6 +137,49 @@ export default class ProjectController {
 
             const actualizado = await Project.update(validatedId.output, validatedData.output);
             res.json({ message: 'Proyecto actualizado exitosamente', data: actualizado });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
+
+    static async updateState(req: Request, res: Response) {
+        try {
+            const { project_id } = req.params;
+            const user_id: number = req.body.user.id;
+
+            const validatedUserId = safeParse(number(), user_id);
+            if (!validatedUserId.success) throw new ValidationError();
+
+            const validatedId = safeParse(number(), parseInt(project_id));
+            if (!validatedId.success) throw new ValidationError();
+
+            const validatedData = safeParse(picklist(['paused', 'completed', 'cancelled']), req.body.state);
+            if (!validatedData.success) {console.log(validatedData.issues); throw new ValidationError();}
+
+            const actualizado = await Project.updateState(validatedId.output, validatedUserId.output, validatedData.output);
+            res.json({ message: 'Estado actualizado exitosamente', data: actualizado });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
+
+    static async revertState(req: Request, res: Response) {
+        try {
+            const { project_id } = req.params;
+            const user_id: number = req.body.user.id;
+
+            const validatedUserId = safeParse(number(), user_id);
+            if (!validatedUserId.success) throw new ValidationError();
+
+            const validatedId = safeParse(number(), parseInt(project_id));
+            if (!validatedId.success) throw new ValidationError();
+
+            const actualizado = await Project.revertState(validatedId.output, validatedUserId.output);
+            res.json({ message: 'Estado actualizado exitosamente', data: actualizado });
         }
         catch (error: any) {
             const status = error instanceof HttpError ? error.statusCode : 500;
@@ -194,7 +237,7 @@ export default class ProjectController {
             if (!validatedMilestoneId.success) throw new ValidationError();
 
             const validatedData = safeParse(milestoneSchema, {...req.body, project_id: parseInt(project_id)});
-            if (!validatedData.success) throw new ValidationError();
+            if (!validatedData.success){console.log(validatedData.issues); throw new ValidationError();}
 
             const milestone = await Project.updateMilestone(validatedUserId.output, validatedMilestoneId.output, validatedData.output);
             res.json({ message: 'Hito actualizado exitosamente', data: milestone });
@@ -221,6 +264,46 @@ export default class ProjectController {
 
             const milestone = await Project.deleteMilestone(validatedUserId.output, validatedProjectId.output, validatedMilestoneId.output);
             res.json({ message: 'Hito eliminado exitosamente', data: milestone });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
+
+    static async completeMilestone(req: Request, res: Response) {
+        try {
+            const {project_id} = req.params;
+            const user_id: number = req.body.user.id;
+
+            const validatedUserId = safeParse(number(), user_id);
+            if (!validatedUserId.success) throw new ValidationError();
+
+            const validatedProjectId = safeParse(number(), parseInt(project_id));
+            if (!validatedProjectId.success) throw new ValidationError();
+
+            const milestone = await Project.completeMilestone(validatedUserId.output, validatedProjectId.output);
+            res.json({ message: 'Hito completado exitosamente', data: milestone });
+        }
+        catch (error: any) {
+            const status = error instanceof HttpError ? error.statusCode : 500;
+            res.status(status).json({ message: error.message });
+        }
+    }
+
+    static async revertMilestone(req: Request, res: Response) {
+        try {
+            const {project_id} = req.params;
+            const user_id: number = req.body.user.id;
+
+            const validatedUserId = safeParse(number(), user_id);
+            if (!validatedUserId.success) throw new ValidationError();
+
+            const validatedProjectId = safeParse(number(), parseInt(project_id));
+            if (!validatedProjectId.success) throw new ValidationError();
+
+            const milestone = await Project.revertMilestone(validatedUserId.output, validatedProjectId.output);
+            res.json({ message: 'Hito completado exitosamente', data: milestone });
         }
         catch (error: any) {
             const status = error instanceof HttpError ? error.statusCode : 500;

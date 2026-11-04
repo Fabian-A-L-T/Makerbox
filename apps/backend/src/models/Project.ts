@@ -46,11 +46,36 @@ export default class Project {
         return rows;
     }
 
-    static async updateState(id: number, state: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'){
+    static async updateState(id: number, user_id: number, state: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled'){
         const rows = await sql`
             UPDATE projects SET state = ${state}
-            WHERE id = ${id} AND deleted_at IS NULL
-            RETURNING id, name, description, responsible_id, state, end_date_estimated, start_date, end_date_real, budget, image_url, repository_url`;
+            WHERE id = ${id} AND responsible_id = ${user_id} AND deleted_at IS NULL
+            RETURNING id, name, responsible_id, state`;
+        if(!rows.length) throw new NotFoundError();
+        return rows;
+    }
+
+    static async revertState(id: number, user_id: number){
+        const project = await sql`
+            SELECT id, responsible_id FROM projects
+            WHERE id = ${id} AND responsible_id = ${user_id} AND deleted_at IS NULL`;
+
+        if(project.length === 0) throw new NotFoundError();
+
+        const project_milestones = await sql`
+            SELECT * FROM project_milestones
+            WHERE project_id = ${id} AND is_completed IS TRUE`;
+
+        const project_component = await sql`
+            SELECT * FROM project_component
+            WHERE project_id = ${id} AND used_amount > 0`;
+
+        const isPlanning = project_milestones.length === 0 && project_component.length === 0;
+
+        const rows = await sql`
+            UPDATE projects SET state = ${isPlanning ? 'planning' : 'active'}
+            WHERE id = ${id} AND responsible_id = ${user_id} AND deleted_at IS NULL
+            RETURNING id, name, responsible_id, state`;
         if(!rows.length) throw new NotFoundError();
         return rows;
     }
@@ -82,7 +107,7 @@ export default class Project {
     static async updateMilestone(user_id: number, milestone_id: number, data: MilestoneData) {
         const project = await sql`
             SELECT id, responsible_id FROM projects
-            WHERE id = ${data.project_id} AND responsible_id = ${user_id}`;
+            WHERE id = ${data.project_id} AND responsible_id = ${user_id} AND deleted_at IS NULL`;
 
         if(project.length === 0) throw new NotFoundError();
         
@@ -97,7 +122,7 @@ export default class Project {
     static async deleteMilestone(user_id: number, project_id: number, milestone_id: number) {
         const project = await sql`
             SELECT id, responsible_id FROM projects
-            WHERE id = ${project_id} AND responsible_id = ${user_id}`;
+            WHERE id = ${project_id} AND responsible_id = ${user_id} AND deleted_at IS NULL`;
 
         if(project.length === 0) throw new NotFoundError();
 
@@ -107,6 +132,52 @@ export default class Project {
             RETURNING *`;
         if(!rows.length) throw new NotFoundError();
         return rows;
+    }
+
+    static async completeMilestone(user_id: number, project_id: number) {
+        const project = await sql`
+            SELECT id, responsible_id FROM projects
+            WHERE id = ${project_id} AND responsible_id = ${user_id} AND deleted_at IS NULL`;
+
+        if(project.length === 0) throw new NotFoundError();
+
+        const rows = await sql`
+            SELECT * FROM project_milestones
+            WHERE project_id = ${project_id} AND is_completed IS FALSE
+            ORDER BY order_index`;
+        if(!rows.length) throw new NotFoundError("No se pueden completar mas hitos");
+        if(rows[0].order_index === 0) {
+            await sql`
+                UPDATE projects SET state = 'active'
+                WHERE id = ${project_id}`;
+        }
+        return await sql`
+            UPDATE project_milestones SET is_completed = TRUE
+            WHERE id = ${rows[0].id} 
+            RETURNING *`;
+    }
+
+    static async revertMilestone(user_id: number, project_id: number) {
+        const project = await sql`
+            SELECT id, responsible_id FROM projects
+            WHERE id = ${project_id} AND responsible_id = ${user_id} AND deleted_at IS NULL`;
+
+        if(project.length === 0) throw new NotFoundError();
+
+        const rows = await sql`
+            SELECT * FROM project_milestones
+            WHERE project_id = ${project_id} AND is_completed IS TRUE
+            ORDER BY order_index DESC`;
+        if(!rows.length) throw new NotFoundError("No se pueden revertir mas hitos");
+        if(rows[0].order_index === 0) {
+            await sql`
+                UPDATE projects SET state = 'planning'
+                WHERE id = ${project_id}`;
+        }
+        return await sql`
+            UPDATE project_milestones SET is_completed = FALSE
+            WHERE id = ${rows[0].id} 
+            RETURNING *`;
     }
 
     static async getTools(project_id: number) {
