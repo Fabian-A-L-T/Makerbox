@@ -20,6 +20,7 @@ import statRoutes from './routes/statRoutes';
 
 import tokenVerification from './middlewares/tokenVerification';
 import { frontUrl } from './config/app';
+import StatController from './controllers/StatController';
 
 const app = express();
 /*
@@ -41,7 +42,6 @@ const authLimiter = rateLimit({
   message: 'Too many requests, please try again later.',
 });
 */
-
 // --- Middleware ---
 app.use(helmet())
 app.use(express.json());
@@ -76,6 +76,8 @@ app.use('/api/movements', tokenVerification,  movementRoutes);
 app.use('/api/files', tokenVerification,  fileRoutes);
 app.use('/api/tool-categories', tokenVerification,  toolCategoryRoutes);
 app.use('/api/stats', tokenVerification, statRoutes);
+
+app.use('/api/refresh-stats', StatController.refreshStats);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

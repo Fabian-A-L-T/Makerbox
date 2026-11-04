@@ -31,4 +31,14 @@ export default class StatController {
             res.status(500).json({ message: 'Error al obtener los datos', error: err.message });
         }
     }
+
+    static async refreshStats(_req: Request, res: Response) {
+        try {
+            await Stats.refreshStats();
+            res.json({message: 'ok'});
+        }
+        catch (err: any) {
+            res.status(500).json({ message: 'Error al actualizar estadisticas', error: err.message });
+        }
+    }
 }
