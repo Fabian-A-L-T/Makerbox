@@ -175,7 +175,7 @@ describe('Project getById', function() {
         expect(res).toHaveProperty("end_date_estimated");
         expect(res).toHaveProperty("image_url");
         expect(res).toHaveProperty("repository_url");
-        expect(res).not.toHaveProperty("created_at");
+        expect(res).toHaveProperty("created_at");
         expect(res).not.toHaveProperty("updated_at");
         expect(res).not.toHaveProperty("deleted_at");
     });
@@ -218,7 +218,7 @@ describe('Project create and update', function() {
 
     it('updates project state', async () => {
         const project = projectData['Project 2'];
-        const res = await Project.updateState(project.id, 'paused');
+        const res = await Project.updateState(project.id, userData['Project Owner'].id, 'paused');
 
         expect(res[0].state).toEqual('paused');
     });
@@ -226,7 +226,7 @@ describe('Project create and update', function() {
     it('throws error when updating a missing project', async () => {
         const data: ProjectData = {name: 'Missing Project', responsible_id: userData['Project Owner'].id, start_date: '2025-01-01', budget: 100};
         await expect(Project.update(123, data)).rejects.toThrow(NotFoundError);
-        await expect(Project.updateState(123, 'active')).rejects.toThrow(NotFoundError);
+        await expect(Project.updateState(123, userData['Project Owner'].id, 'active')).rejects.toThrow(NotFoundError);
     });
 });
 

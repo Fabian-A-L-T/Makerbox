@@ -94,7 +94,6 @@ describe("GET /tools", function() {
         expect(response.body.content[0]).toHaveProperty("category");
         expect(response.body.content[0]).toHaveProperty("category_id");
         expect(response.body.content[0]).toHaveProperty("image_url");
-        expect(response.body.content[0]).toHaveProperty("location");
         expect(response.body.content[0]).toHaveProperty("location_id");
         expect(response.body.content[0]).toHaveProperty("manual_url");
         expect(response.body.content[0]).toHaveProperty("manufacturer");
@@ -196,7 +195,7 @@ describe("GET /tools/:id", function() {
           expect(response.body.content[0]).toHaveProperty("image_url");
           expect(response.body.content[0]).toHaveProperty("manual_url");
           expect(response.body.content[0]).toHaveProperty("notes");
-          expect(response.body.content[0]).not.toHaveProperty("created_at");
+          expect(response.body.content[0]).toHaveProperty("created_at");
           expect(response.body.content[0]).not.toHaveProperty("updated_at");
           expect(response.body.content[0]).not.toHaveProperty("deleted_at");
             done();

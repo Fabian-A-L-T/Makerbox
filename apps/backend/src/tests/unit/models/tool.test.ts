@@ -75,7 +75,6 @@ describe('Tool get', function() {
         expect(res[0]).toHaveProperty("acquisition_date");
         expect(res[0]).toHaveProperty("notes");
         expect(res[0]).toHaveProperty("category");
-        expect(res[0]).toHaveProperty("location");
         expect(res[0]).not.toHaveProperty("created_at");
         expect(res[0]).not.toHaveProperty("updated_at");
         expect(res[0]).not.toHaveProperty("deleted_at");
@@ -138,7 +137,7 @@ describe('Tool getById', function() {
         expect(res[0]).toHaveProperty("state");
         expect(res[0]).toHaveProperty("acquisition_date");
         expect(res[0]).toHaveProperty("notes");
-        expect(res[0]).not.toHaveProperty("created_at");
+        expect(res[0]).toHaveProperty("created_at");
         expect(res[0]).not.toHaveProperty("updated_at");
         expect(res[0]).not.toHaveProperty("deleted_at");
     });
