@@ -98,7 +98,7 @@ export async function handleUpload(fileToUpload: File, type: 'image' | 'document
 	const formImage = new FormData();
 		formImage.append(`${type}s`, fileToUpload);
 		try {
-			let response = await makerboxApi.post(`/files/upload/${type}`, formImage, {
+			let response = await makerboxApi.post(`/api/files/upload/${type}`, formImage, {
 				withCredentials: true,
 				headers: {
 					'Content-Type': 'multipart/form-data',
@@ -113,7 +113,7 @@ export async function handleUpload(fileToUpload: File, type: 'image' | 'document
 
 export async function handleDelete(fileRoute: string) {
 	try {
-		await makerboxApi.post(`/files/delete`, { fileUrl: fileRoute }, {
+		await makerboxApi.post(`/api/files/delete`, { fileUrl: fileRoute }, {
 			withCredentials: true,
 		});
 	} catch (error: any) {
