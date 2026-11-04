@@ -18,11 +18,11 @@ import { Checkbox } from "@components/form/Checkbox";
 import { Modal } from "@components/ReactAria/Modal";
 import { Dialog } from "@components/ReactAria/Dialog";
 import LoadingCircle from "@components/LoadingCircle";
-import { Heading } from "@components/ReactAria/Content";
 import { Form } from "@components/form/Form";
 import CRUDTableActions from "@components/CRUDTableActions";
 import { Cell, Column, Row, TableBody, TableHeader, TableV2 } from "@components/ui/TableV2";
 import ModalHeader from "@components/ui/ModalHeader";
+import { Link } from "@tanstack/react-router";
 
 interface projectData {
     name: string;
@@ -460,7 +460,7 @@ export default function NewProject(){
                 }
                 
             }}>
-                <div className="flex gap-8">
+                <div className="flex gap-8 mb-4">
                     <div className="w-2/7 flex flex-col gap-1">
                         <div className="flex justify-center items-center aspect-square rounded-[var(--border-radius-ui)] border-2 border-[var(--color-border)] overflow-hidden">
                             <AsyncImg className="w-full h-full" src={imgContent} alt='Imagen del nuevo proyecto' notfoundsubtitle="Sin imagen"/>
@@ -490,22 +490,50 @@ export default function NewProject(){
                     </div>
                 </div>
                 <div className="flex flex-col gap-4">
-                    <span className="text-base">Lista de componentes</span>
+                    <span className="text-lg">Lista de componentes</span>
+                    <TableV2 aria-label="Lista de componentes" className='w-full'>
+                        <TableHeader>
+                            <Column id="name" isRowHeader>Nombre</Column>
+                            <Column id="planned_amount">Cantidad seleccionada</Column>
+                            <Column id="unit_cost">Costo</Column>
+                        </TableHeader>
+                        <TableBody renderEmptyState={() => (
+                            <div className="p-10 text-[var(--color-text-muted)] italic text-center">{'Sin registros'}</div>
+                        )}>
+                            {Object.entries(compList).map(([_, comp]) => (
+                                <Row id={comp.id}>
+                                    <Cell>{comp.name}</Cell>
+                                    <Cell>{comp.selectedStock}</Cell>
+                                    <Cell>${comp.cost.toLocaleString()}</Cell>
+                                </Row>
+                            ))}              
+                        </TableBody>
+                    </TableV2>
                     <div>
-                    {Object.entries(compList).map(([_, comp]) => (
-                        <span key={comp.id}>{comp.name}</span>
-                    ))}
+                    
                     </div>
                 </div>
             </StepContent>
-            <Modal isOpen={openUploadModal} onOpenChange={setOpenUploadModal} className={'m-auto makerbox-box w-1/3 text-sans'}>
-                <Dialog className="p-4">
-                    {step3Status === 'loading' && <Heading slot="title" className="text-xl mb-4">Creando proyecto</Heading>}
-                    {step3Status === 'error' && <Heading slot="title" className="text-xl mb-4">Ha ocurrido un error</Heading>}
-                    {step3Status === 'success' && <Heading slot="title" className="text-xl mb-4">Proyecto creado</Heading>}
-                    {step3Status === 'loading' && <LoadingCircle message="Verificando disponibilidad de componentes" orientation="horizontal"/>}
-                    {step3Status === 'error' && <span>Ha ocurrido un error</span>}
-                    {step3Status === 'success' && <span>{step3Res}</span>}
+            <Modal isOpen={openUploadModal} onOpenChange={setOpenUploadModal} className={'w-full max-w-xl'}>
+                <Dialog>
+                    <ModalHeader title={step3Status === 'loading' 
+                        ? 'Creando proyecto' 
+                        : step3Status === 'error' ? 'Ha ocurrido un error' : 'Proyecto creado'}/>
+                    <div className="flex flex-col max-h-[80dvh]">
+                        <div className="flex flex-col gap-5 flex-initial mb-5 px-5 overflow-y-auto">
+                            {step3Status === 'loading' && <LoadingCircle message="Verificando disponibilidad de componentes" orientation="horizontal"/>}
+                            {step3Status === 'error' && <span>Ha ocurrido un error</span>}
+                            {step3Status === 'success' && <span>{step3Res}</span>}
+                        </div>
+                        {(step3Status === 'success' || step3Status === 'error') && <div className="flex justify-center gap-4">
+                            <Link
+                                className='w-max h-max p-2 flex items-center gap-2 bg-[var(--color-primary)] rounded-[var(--border-radius-ui)] text-white'
+                                to='/manager/projects'
+                            >
+                                <span className='mr-1'>Volver a mis proyectos</span>
+                            </Link>
+                        </div>}
+                    </div>
                 </Dialog>
             </Modal>
             <Modal isOpen={openMilestoneModal} onOpenChange={setOpenMilestoneModal} className={'w-full max-w-xl'}>
