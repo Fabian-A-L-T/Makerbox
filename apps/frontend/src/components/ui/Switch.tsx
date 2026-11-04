@@ -40,7 +40,7 @@ const handle = tv({
 
 export function Switch({children, ...props}: SwitchProps) {
   return (
-    <SwitchField {...props} className="w-full flex flex-col gap-1 group">
+    <SwitchField {...props} className="w-auto flex flex-col gap-1 group">
       <SwitchButton
         className={`group relative flex gap-2 items-center text-sm transition [-webkit-tap-highlight-color:transparent] ${props.className || ''}`}>
         {renderProps => (

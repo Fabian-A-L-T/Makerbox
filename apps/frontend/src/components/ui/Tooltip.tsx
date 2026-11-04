@@ -14,13 +14,13 @@ export function Tooltip({children, ...props}: TooltipProps) {
     <AriaTooltip
       {...props}
       offset={10}
-      className={`bg-neutral-700 dark:bg-neutral-600 border border-neutral-800 dark:border-white/10 font-sans text-xs text-white rounded-lg drop-shadow-lg will-change-transform px-3 py-1.5 box-border ${props.className ?? ''}`}>
+      className={`bg-[var(--color-background)] border border-[var(--color-border)] text-xs text-[var(--color-text)] rounded-lg drop-shadow-lg will-change-transform px-3 py-1.5 box-border ${props.className ?? ''}`}>
       <OverlayArrow>
         <svg
           width={8}
           height={8}
           viewBox="0 0 8 8"
-          className="block fill-neutral-700 dark:fill-neutral-600 forced-colors:fill-[Canvas] stroke-neutral-800 dark:stroke-white/10 forced-colors:stroke-[ButtonBorder] group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90">
+          className="block fill-[var(--color-background)] forced-colors:fill-[Canvas] stroke-[var(--color-border)] forced-colors:stroke-[ButtonBorder] group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90">
           <path d="M0 0 L4 4 L8 0" />
         </svg>
       </OverlayArrow>
