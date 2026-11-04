@@ -236,10 +236,11 @@ SELECT
     cc.name AS category_name,
 	cc.path AS category_path,
     SUM(c.stock * c.unit_cost) as category_cost,
-	SUM(c.stock) as category_stock,
+	COUNT(c.id) as category_stock,
 	CASE WHEN SUM(c.stock) > 0 THEN SUM(c.stock * c.unit_cost) / SUM(c.stock) ELSE 0 END AS avg_unit_cost
 FROM components c
 JOIN component_categories cc ON c.category_id = cc.id
+WHERE c.deleted_at IS NULL
 GROUP BY c.category_id, cc.name, cc.path;
 
 CREATE MATERIALIZED VIEW mv_tool_category_stats AS
@@ -252,6 +253,7 @@ SELECT
     CASE WHEN COUNT(t.id) > 0 THEN SUM(t.cost) / COUNT(t.id) ELSE 0 END AS avg_cost
 FROM tools t
 JOIN tool_categories tc ON t.category_id = tc.id
+WHERE t.deleted_at IS NULL
 GROUP BY t.category_id, tc.name, tc.path;
 
 CREATE MATERIALIZED VIEW mv_project_state_stats AS
@@ -261,6 +263,7 @@ SELECT
     SUM(p.budget) AS total_budget,
     CASE WHEN COUNT(p.id) > 0 THEN SUM(p.budget) / COUNT(p.id) ELSE 0 END AS avg_budget
 FROM projects p
+WHERE p.deleted_at IS NULL
 GROUP BY p.state;
 
 -- ============================================================
