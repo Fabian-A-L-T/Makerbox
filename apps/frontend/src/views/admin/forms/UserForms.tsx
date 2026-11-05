@@ -15,7 +15,7 @@ const userSchema = object({
     name: pipe(
         string(),
         nonEmpty('Campo requerido'),
-        minLength(1, 'El nombre debe tener al menos 1 caracter'),
+        minLength(1, 'El nombre debe tener al menos 1 carácter'),
         maxLength(80, 'El nombre debe tener menos de 80 caracteres'),
     ),
     email: pipe(
@@ -66,7 +66,7 @@ export function UserCreateForm({isPending}:{isPending: boolean}){
                 errorMessage='Campo requerido'
                 isDisabled={isPending}
                 validate={(value) => validate(value as string, 'role')}
-                placeholder='Selecione rol'
+                placeholder='Seleccione rol'
             >
                 <SelectItem key="admin" id="admin">
                     Administrador
@@ -102,7 +102,7 @@ export function UserEditForm({user, isPending}: {user: User | null, isPending: b
                 defaultValue={user.role}
                 isDisabled={isPending}
                 validate={(value) => validate(value as string, 'role')}
-                placeholder='Selecione rol'
+                placeholder='Seleccione rol'
                 errorMessage='Campo requerido'
             >
                 <SelectItem key="admin" id="admin">

@@ -85,7 +85,7 @@ describe('Category getById', function() {
         expect(res[0]).not.toHaveProperty("updated_at");
         expect(res[0]).not.toHaveProperty("deleted_at");
     });
-    it('throws error if id doesnt exists', async () => {
+    it("throws error if id doesn't exists", async () => {
         await expect(() => Category.getById(123)).rejects.toThrow(NotFoundError);
     });
     it('throws error if id exists but was soft-deleted', async () => {
@@ -129,7 +129,7 @@ describe('Category getChildren', function() {
         expect(Array.isArray(res)).toBe(true);
         expect(res.length).toEqual(0);
     });
-    it('returns empty array if category doesnt exists', async () => {
+    it("returns empty array if category doesn't exists", async () => {
         const res = await Category.getChildren('qwerty');
 
         expect(Array.isArray(res)).toBe(true);
@@ -188,7 +188,7 @@ describe('Category update', function() {
 
         expect(res[0].path).toContain("New_name");
     });
-    it('throws error if id doesnt exists', async () => {
+    it("throws error if id doesn't exists", async () => {
         const newCategory = {name: 'New name', path: 'New_name'};
         await expect(() => Category.update(123,newCategory)).rejects.toThrow(NotFoundError);
     });
@@ -217,7 +217,7 @@ describe('Category delete', function() {
         const category = categoryData['Test Subcategory 2'];
         await expect(() => Category.getById(category.id)).rejects.toThrow(NotFoundError);
     });
-    it('throws error if id doesnt exists', async () => {
+    it("throws error if id doesn't exists", async () => {
         await expect(() => Category.delete(123)).rejects.toThrow(NotFoundError);
     });
     it('throws error if id exists but is soft-deleted', async () => {
@@ -249,7 +249,7 @@ describe('Category restore', function() {
         expect(res[0].name).toEqual(category.name);
         expect(res[0].path).toEqual(category.path);
     });
-    it('throws error if id doesnt exists', async () => {
+    it("throws error if id doesn't exists", async () => {
         await expect(() => Category.restore(123)).rejects.toThrow(NotFoundError);
     });
     it('throws error if id exists but was not deleted', async () => {

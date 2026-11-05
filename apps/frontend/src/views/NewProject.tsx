@@ -560,7 +560,7 @@ export default function NewProject(){
                                     validate={(value) => {
                                         if(step2DataMode === 'post' || (step2DataMode === 'put' && milestonesList.getItem(value)?.title !== step2DataActive?.title)){
                                             if(milestonesList.getItem(value)){
-                                                return 'Este híto ya existe';
+                                                return 'Este hito ya existe';
                                             }
                                         }
                                         

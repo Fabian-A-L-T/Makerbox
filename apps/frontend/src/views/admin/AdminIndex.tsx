@@ -6,7 +6,7 @@ import InfoCard from "@components/ui/InfoCard"
 export default function AdminIndex({compTotal, toolTotal, projTotal}: {compTotal?: number, toolTotal?: number, projTotal?: number}) {
     const adminPages = [
         {
-            title: 'Categorias', 
+            title: 'Categorías', 
             description: 'Gestión de las categorías de componentes electrónicos y herramientas', 
             icon: RiNodeTree,
             link: '/manager/admin/categories/components'

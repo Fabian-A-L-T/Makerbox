@@ -176,7 +176,7 @@ export default function ComponentForm({ target, isPending, setImage, setFile }: 
                             name="category_id"
                             isRequired
                             errorMessage={({validationErrors}) => {
-                                if(!categories.items.length) return "No se han encontrado categorias registradas en el sistema";
+                                if(!categories.items.length) return "No se han encontrado categorías registradas en el sistema";
                                 else if (validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
                                 return "Ha ocurrido un error";
                             }}

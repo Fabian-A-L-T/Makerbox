@@ -87,7 +87,7 @@ export const toolFilterSchema = v.object({
 });
 export type ToolFilterData = v.InferOutput<typeof toolFilterSchema>;
 
-const toolStaus = ['available', 'in_use', 'maintenance', 'disposed', 'lent'] as const;
+const toolStatus = ['available', 'in_use', 'maintenance', 'disposed', 'lent'] as const;
 export const toolSchema = v.object({
     sku: v.string(),
     name: v.string(),
@@ -98,7 +98,7 @@ export const toolSchema = v.object({
     manual_url: v.optional(v.string()),
     category_id: v.pipe(v.string(), v.toNumber()),
     location_id: v.pipe(v.string(), v.toNumber()),
-    state: v.picklist(toolStaus),
+    state: v.picklist(toolStatus),
     acquisition_date: v.optional(v.string()),
     notes: v.optional(v.string())
 });

@@ -38,7 +38,7 @@ export default class StatController {
             res.json({message: 'ok'});
         }
         catch (err: any) {
-            res.status(500).json({ message: 'Error al actualizar estadisticas', error: err.message });
+            res.status(500).json({ message: 'Error al actualizar estadísticas', error: err.message });
         }
     }
 }

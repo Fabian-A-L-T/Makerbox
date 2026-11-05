@@ -52,7 +52,7 @@ export default function Components() {
 
     return (
         <>
-        <PageHeader title="Componentes" description="Aquí podrás encontrar todos los componentes electronicos disponibles en inventario">
+        <PageHeader title="Componentes" description="Aquí podrás encontrar todos los componentes electrónicos disponibles en inventario">
             <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
             <Breadcrumb>Componentes</Breadcrumb>
         </PageHeader>

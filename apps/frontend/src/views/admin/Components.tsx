@@ -88,7 +88,7 @@ export default function Components() {
     return (
         <CRUDLayout<Component>
             title="Componentes"
-            subtitle="Aquí podrás administrar todos los componentes electronicos registrados en el sistema"
+            subtitle="Aquí podrás administrar todos los componentes electrónicos registrados en el sistema"
             actionText='Nuevo componente'
             breadcrumbs={
                 <>

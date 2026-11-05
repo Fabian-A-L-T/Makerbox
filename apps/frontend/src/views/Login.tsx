@@ -44,7 +44,7 @@ export default function Login() {
             }}
           >
             <div className='flex flex-col'>
-              <span className='text-lg font-semibold'>Bienvenid@ a Makerbox</span>
+              <span className='text-lg font-semibold'>Bienvenido(a) a Makerbox</span>
               <span className='text-[var(--color-text-muted)]'>Iniciar sesión con correo</span>
             </div>
             {isSubmitting ? (

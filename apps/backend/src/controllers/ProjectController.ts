@@ -352,7 +352,7 @@ export default class ProjectController {
             if (!validatedProjectId.success || !validatedToolId.success) throw new ValidationError();
 
             const projectTool = await Project.removeTool(validatedProjectId.output, validatedToolId.output);
-            res.json({ message: 'Herramienta desasignada del proyecto', data: projectTool });
+            res.json({ message: 'Herramienta removida del proyecto', data: projectTool });
         }
         catch (error: any) {
             const status = error instanceof HttpError ? error.statusCode : 500;

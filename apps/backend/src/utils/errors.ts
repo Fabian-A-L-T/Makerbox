@@ -12,7 +12,7 @@ export class NotFoundError extends HttpError {
 }
 
 export class ValidationError extends HttpError {
-    constructor(message: string = 'Datos invalidos') {
+    constructor(message: string = 'Datos inválidos') {
         super(message, 422);
     }
 }

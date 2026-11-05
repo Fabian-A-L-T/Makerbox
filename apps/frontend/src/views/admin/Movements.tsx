@@ -40,7 +40,7 @@ export default function Movements() {
     return (
         <CRUDLayout<Movement>
             title="Movimientos" 
-            subtitle="Aquí podrás administrar los movimientos de inventario de los componentes electronicos"
+            subtitle="Aquí podrás administrar los movimientos de inventario de los componentes electrónicos"
             actionText='Nuevo movimiento'
             breadcrumbs={
                 <>

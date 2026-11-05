@@ -22,7 +22,7 @@ function CategoryView(){
         <div>
             <PageHeader className='!border-none mb-2' title="Categorías" description="Aquí podrás administrar todas las categorías de herramientas y componentes registradas en el sistema">
                 <Breadcrumb href='/manager/'>Dashboard</Breadcrumb>
-                <Breadcrumb href='/manager/admin/categories'>Categorias</Breadcrumb>
+                <Breadcrumb href='/manager/admin/categories'>Categorías</Breadcrumb>
             </PageHeader>
             <div className='m-5 mt-2 flex gap-4 text-[var(--color-text-muted)] font-medium border-b-2 border-b-[var(--color-border)]'>
                 <Link 

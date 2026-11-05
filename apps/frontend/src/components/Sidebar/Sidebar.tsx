@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 					link: 'admin/projects'
 				},
 				{
-					label: 'Categorias', 
+					label: 'Categorías', 
 					icon: RiNodeTree,
 					link: 'admin/categories/components'
 				},

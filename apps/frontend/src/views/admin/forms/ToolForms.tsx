@@ -15,8 +15,8 @@ import { DatePicker } from "@components/form/DatePicker";
 const toolSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
     sku: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(10, 'El SKU debe tener menos de 10 caracteres')),
-    model: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.minLength(3, 'El modelo debe tener almenos 3 caracteres'), v.maxLength(100, 'El modelo debe tener menos de 100 caracteres')),
-    serial_number: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.minLength(3, 'El modelo debe tener almenos 3 caracteres'), v.maxLength(100, 'El modelo debe tener menos de 100 caracteres')),
+    model: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.minLength(3, 'El modelo debe tener al menos 3 caracteres'), v.maxLength(100, 'El modelo debe tener menos de 100 caracteres')),
+    serial_number: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.minLength(3, 'El modelo debe tener al menos 3 caracteres'), v.maxLength(100, 'El modelo debe tener menos de 100 caracteres')),
     category_id: v.number(),
     manufacturer_id: v.number(),
     location_id: v.number(),
@@ -221,7 +221,7 @@ export default function ToolForm({ target, setImage, isPending, setFile }: ToolF
                 {...(target ? {defaultValue: target.category_id}: {})}
                 {...(!categories.items.length && categories.loadingState !== 'loading' ? { isInvalid: true } : {})}
                 errorMessage={({ validationErrors}) => {
-                    if(!categories.items.length) return "No se han encontrado categorias registradas en el sistema. Ir a Categorias > Herramientas para registrar uno";
+                    if(!categories.items.length) return "No se han encontrado categorías registradas en el sistema. Ir a Categorías > Herramientas para registrar uno";
                     else if (validationErrors && validationErrors.length > 0) return validationErrors.flat().join(', ');
                     return "Campo requerido";
                 }}
