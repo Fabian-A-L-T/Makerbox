@@ -118,6 +118,7 @@ CREATE TABLE tools (
     location_id          INT REFERENCES locations(id),
     state                state_tool NOT NULL DEFAULT 'available',
     acquisition_date     DATE,
+    description          TEXT,
     notes                TEXT,
     created_at           TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at           TIMESTAMPTZ DEFAULT NULL,
@@ -265,6 +266,20 @@ SELECT
 FROM projects p
 WHERE p.deleted_at IS NULL
 GROUP BY p.state;
+
+CREATE MATERIALIZED VIEW mv_user_project_state_stats AS
+SELECT
+	p.responsible_id,
+    COUNT(CASE WHEN p.state = 'planning' THEN 1 ELSE null END) AS planning_count,
+    COUNT(CASE WHEN p.state = 'active' THEN 1 ELSE null END) AS active_count,
+    COUNT(CASE WHEN p.state = 'paused' THEN 1 ELSE null END) AS paused_count,
+    COUNT(CASE WHEN p.state = 'completed' THEN 1 ELSE null END) AS completed_count,
+    COUNT(CASE WHEN p.state = 'cancelled' THEN 1 ELSE null END) AS cancelled_count,
+    SUM(p.budget) AS total_budget,
+    CASE WHEN COUNT(p.id) > 0 THEN SUM(p.budget) / COUNT(p.id) ELSE 0 END AS avg_budget
+FROM projects p
+WHERE p.deleted_at IS NULL
+GROUP BY p.responsible_id;
 
 -- ============================================================
 -- ÍNDICES DE RENDIMIENTO
