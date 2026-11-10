@@ -1,40 +1,34 @@
 import * as v from 'valibot';
 
-export const userIDSchema = v.pipe( v.number(), v.minValue(0));
-export type UserIDData = v.InferOutput<typeof userIDSchema>;
-
 // Pagination ----------------------------------------
+export type PaginationData = {
+    limit: number;
+    offset: number;
+}
 export const paginationSchema = v.object({
     limit: v.fallback(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.maxValue(100)),50),
     offset: v.fallback(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(0)),0),
 })
-export type PaginationData = v.InferOutput<typeof paginationSchema>;
 //----------------------------------------------------
 
 // Filters -------------------------------------------
+export type FilterData = {
+    search?: string | undefined;
+    orderBy?: "id" | "name" | "created_at" | undefined;
+    desc?: string | undefined;
+}
 export const filterSchema = v.object({
     search: v.optional(v.string()),
     orderBy: v.optional(v.fallback(v.picklist(['id','name', 'created_at']), 'id')),
     desc: v.optional(v.string()),
 });
-export type FilterData = v.InferOutput<typeof filterSchema>;
-//----------------------------------------------------
 
-// Component categories ------------------------------
 export const categoryFilterSchema = v.object({
     ...filterSchema.entries,
     exclude: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.toString())),
 });
 export type CategoryFilterData = v.InferOutput<typeof categoryFilterSchema>;
 
-export const categorySchema = v.object({
-    name: v.string(),
-    path: v.string(),
-});
-export type CategoryData = v.InferOutput<typeof categorySchema>;
-//----------------------------------------------------
-
-// Components ----------------------------------------
 export const componentFilterSchema = v.object({
     ...filterSchema.entries,
     orderBy: v.optional(v.fallback(v.picklist(['name', 'stock', 'created_at']), 'name')),
@@ -43,41 +37,12 @@ export const componentFilterSchema = v.object({
 });
 export type ComponentFilterData = v.InferOutput<typeof componentFilterSchema>;
 
-export const componentSchema = v.object({
-    sku: v.string(),
-    name: v.string(),
-    description: v.optional(v.string()),
-    category_id: v.pipe(v.string(), v.toNumber()),
-    manufacturer_id: v.pipe(v.string(), v.toNumber()),
-    stock: v.optional(v.pipe(v.string(), v.toNumber())),
-    stock_min: v.optional(v.pipe(v.string(), v.toNumber())),
-    unit_cost: v.optional(v.pipe(v.string(), v.toNumber())),
-    datasheet_url: v.optional(v.string()),
-    image_url: v.optional(v.string()),
-    notes: v.optional(v.string()),
-});
-export type ComponentData = v.InferOutput<typeof componentSchema>;
-export const componentShow = ["id", "sku", "name", "description", "category_id", "manufacturer_id", "stock", "stock_min", "unit_cost", "datasheet_url", "image_url", "notes"];
-
-export const componentListSchema = v.object({id: v.number(), selectedStock: v.pipe(v.number(), v.minValue(1), v.maxValue(50))});
-export type ComponentListData = v.InferOutput<typeof componentListSchema>;
-//----------------------------------------------------
-
-// Manufacturers -------------------------------------
 export const manufacturerFilterSchema = v.object({
     ...filterSchema.entries,
     exclude: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.toString())),
 });
 export type ManufacturerFilterData = v.InferOutput<typeof manufacturerFilterSchema>;
 
-export const manufacturerSchema = v.object({
-    name: v.string(),
-    website: v.optional(v.string())
-});
-export type ManufacturerData = v.InferOutput<typeof manufacturerSchema>;
-//----------------------------------------------------
-
-// Tools----------------------------------------------
 export const toolFilterSchema = v.object({
     ...filterSchema.entries,
     orderBy: v.optional(v.fallback(v.picklist(['id', 'name', 'created_at']), 'name')),
@@ -87,56 +52,150 @@ export const toolFilterSchema = v.object({
 });
 export type ToolFilterData = v.InferOutput<typeof toolFilterSchema>;
 
-const toolStatus = ['available', 'in_use', 'maintenance', 'disposed', 'lent'] as const;
-export const toolSchema = v.object({
-    sku: v.string(),
-    name: v.string(),
-    manufacturer_id: v.pipe(v.string(), v.toNumber()),
-    model: v.string(),
-    serial_number: v.optional(v.string()),
-    image_url: v.optional(v.string()),
-    manual_url: v.optional(v.string()),
-    category_id: v.pipe(v.string(), v.toNumber()),
-    location_id: v.pipe(v.string(), v.toNumber()),
-    state: v.picklist(toolStatus),
-    acquisition_date: v.optional(v.string()),
-    notes: v.optional(v.string())
-});
-export type ToolData = v.InferOutput<typeof toolSchema>;
-export const toolShow = ["id", "sku", "name", "manufacturer_id", "model", "serial_number", "image_url", "manual_url", "category_id", "location_id", "state", "acquisition_date", "notes", "active"];
-//----------------------------------------------------
-
-// Location ------------------------------------------
 export const locationFilterSchema = v.object({
     ...filterSchema.entries,
     exclude: v.optional(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.toString())),
 });
 export type LocationFilterData = v.InferOutput<typeof locationFilterSchema>;
 
-export const locationSchema = v.object({
+export const movementFilterSchema = v.object({
+    ...filterSchema.entries,
+    orderBy: v.optional(v.fallback(v.picklist(['created_at']), 'created_at')),
+});
+export type MovementFilterData = v.InferOutput<typeof movementFilterSchema>;
+
+export const projectFilterSchema = v.object({
+    ...filterSchema.entries,
+    state: v.optional(v.picklist(['planning', 'active', 'paused', 'completed', 'cancelled'])),
+    orderBy: v.optional(v.picklist(['id', 'name', 'created_at', 'budget']))
+});
+export type ProjectFilterData = v.InferOutput<typeof projectFilterSchema>;
+//----------------------------------------------------
+
+// Component and tool categories ------------------------------
+export type CategoryData = {
+    name: string;
+    path: string;
+}
+export const categorySchema = v.object({
     name: v.string(),
-    description: v.optional(v.string()),
     path: v.string(),
 });
-export type LocationData = v.InferOutput<typeof locationSchema>;
+//----------------------------------------------------
 
+// Components ----------------------------------------
+export type ComponentData = {
+    sku: string;
+    name: string;
+    description?: string | null;
+    category_id: number;
+    manufacturer_id: number;
+    stock?: number;
+    stock_min?: number;
+    unit_cost?: number;
+    datasheet_url?: string | null;
+    image_url?: string | null;
+    notes?: string | null;
+}
+export type ComponentListData = {
+    id: number;
+    selectedStock: number;
+}
+export const componentSchema = v.object({
+    sku: v.string(),
+    name: v.string(),
+    description: v.nullish(v.string(), null),
+    category_id: v.pipe(v.string(), v.toNumber()),
+    manufacturer_id: v.pipe(v.string(), v.toNumber()),
+    stock: v.optional(v.pipe(v.string(), v.toNumber())),
+    stock_min: v.optional(v.pipe(v.string(), v.toNumber())),
+    unit_cost: v.optional(v.pipe(v.string(), v.toNumber())),
+    datasheet_url: v.nullish(v.string(), null),
+    image_url: v.nullish(v.string(), null),
+    notes: v.nullish(v.string(), null),
+});
+export const componentListSchema = v.object({
+    id: v.number(), 
+    selectedStock: v.pipe(v.number(), v.minValue(1), v.maxValue(50))
+});
+//----------------------------------------------------
+
+// Manufacturers -------------------------------------
+export type ManufacturerData = {
+    name: string;
+    website?: string | null;
+}
+export const manufacturerSchema = v.object({
+    name: v.string(),
+    website: v.nullish(v.string(), null)
+});
+//----------------------------------------------------
+
+// Tools----------------------------------------------
+export type ToolData = {
+    sku: string;
+    name: string;
+    manufacturer_id: number;
+    model: string;
+    serial_number?: string | null;
+    image_url?: string | null;
+    manual_url?: string | null;
+    category_id: number;
+    location_id: number;
+    state: "available" | "in_use" | "maintenance" | "disposed" | "lent";
+    acquisition_date?: string;
+    description?: string | null;
+    notes?: string | null;
+}
+export const toolSchema = v.object({
+    sku: v.string(),
+    name: v.string(),
+    manufacturer_id: v.pipe(v.string(), v.toNumber()),
+    model: v.string(),
+    serial_number: v.nullish(v.string(), null),
+    image_url: v.nullish(v.string(), null),
+    manual_url: v.nullish(v.string(), null),
+    category_id: v.pipe(v.string(), v.toNumber()),
+    location_id: v.pipe(v.string(), v.toNumber()),
+    state: v.picklist(['available', 'in_use', 'maintenance', 'disposed', 'lent']),
+    acquisition_date: v.optional(v.string()),
+    description: v.nullish(v.string(), null),
+    notes: v.nullish(v.string(), null)
+});
+//----------------------------------------------------
+
+// Location ------------------------------------------
+export type LocationData = {
+    name: string;
+    description?: string | null;
+    path: string;
+}
 export type ComponentLocationData = {
     component_id: number;
     location_id: number;
     amount: number;
 }
+export const locationSchema = v.object({
+    name: v.string(),
+    description: v.nullish(v.string(), null),
+    path: v.string(),
+});
 //----------------------------------------------------
 
 // Users ---------------------------------------------
+export type UserData = {
+    name: string;
+    passwd: string;
+    email: string;
+    role?: "admin" | "technician" | "reader" | undefined;
+}
 export const userSchema = v.object({
     name: v.pipe(v.string(), v.minLength(2), v.maxLength(80)),
     passwd: v.pipe(v.string(), v.minLength(8), v.maxLength(64)),
     email: v.pipe(v.string(), v.toLowerCase(), v.normalize('NFKC'), v.email()),
     role: v.optional(v.picklist(['admin', 'technician', 'reader'])),
 });
-export type UserData = v.InferOutput<typeof userSchema>;
-export const userRegisterSchema = v.omit(userSchema, ['role']);
-export type UserRegisterData = v.InferOutput<typeof userRegisterSchema>;
+
 export const userRoleSchema = v.object({
     role: v.picklist(['admin', 'technician', 'reader'])
 });
@@ -151,7 +210,17 @@ export const userUpdatePasswdSchema = v.object({
 });
 export type UserUpdatePasswdData = v.InferOutput<typeof userUpdatePasswdSchema>;
 export const userShow = ["id", "name", "email", "role"];
+//----------------------------------------------------
 
+// Refresh Tokens ------------------------------------
+export type RefreshTokenData = {
+    user_id: number;
+    token_hash: string;
+    remember: boolean;
+    user_agent: string;
+    ip_address: string;
+    expires_at: Date;
+}
 export const refreshTokenSchema = v.object({
     user_id: v.pipe(v.string(), v.toNumber()),
     token_hash: v.pipe(v.string(), v.length(64)),
@@ -160,68 +229,89 @@ export const refreshTokenSchema = v.object({
     ip_address: v.string(),
     expires_at: v.date()
 });
-export type RefreshTokenData = v.InferOutput<typeof refreshTokenSchema>;
 //----------------------------------------------------
 
 // Movements -----------------------------------------
-export const movementFilterSchema = v.object({
-    ...filterSchema.entries,
-    orderBy: v.optional(v.fallback(v.picklist(['created_at']), 'created_at')),
-});
-export type MovementFilterData = v.InferOutput<typeof movementFilterSchema>;
-
+export type MovementData = {
+    component_id: number;
+    stock_type: "entry" | "reserve" | "return" | "transfer" | "disposal";
+    amount: number;
+    origin_location_id?: number | null;
+    destination_location_id?: number | null;
+    project_id?: number | null;
+    user_id: number;
+    notes?: string | null;
+}
 export const movementSchema = v.object({
     component_id: v.pipe(v.string(), v.toNumber()),
     stock_type: v.picklist(['entry', 'reserve', 'return', 'transfer', 'disposal']),
     amount: v.pipe(v.string(), v.toNumber()),
-    origin_location_id: v.optional(v.pipe(v.string(), v.toNumber())),
-    destination_location_id: v.optional(v.pipe(v.string(), v.toNumber())),
-    project_id: v.optional(v.pipe(v.string(), v.toNumber())),
+    origin_location_id: v.nullish(v.pipe(v.string(), v.toNumber()),null),
+    destination_location_id: v.nullish(v.pipe(v.string(), v.toNumber()),null),
+    project_id: v.nullish(v.pipe(v.string(), v.toNumber()),null),
     user_id: v.pipe(v.string(), v.toNumber()),
-    notes: v.optional(v.string())
+    notes: v.nullish(v.string(), null)
 });
-export type MovementData = v.InferOutput<typeof movementSchema>;
 //----------------------------------------------------
 
 // Projects -----------------------------------------
-export const projectFilterSchema = v.object({
-    ...filterSchema.entries,
-    state: v.optional(v.picklist(['planning', 'active', 'paused', 'completed', 'cancelled'])),
-    orderBy: v.optional(v.picklist(['id', 'name', 'created_at', 'budget']))
-});
-export type ProjectFilterData = v.InferOutput<typeof projectFilterSchema>;
-
+export type ProjectData = {
+    name: string;
+    description?: string | null;
+    responsible_id: number;
+    start_date: string;
+    end_date_real?: string | null;
+    budget?: number;
+    image_url?: string | null;
+    repository_url?: string | null;
+}
 export const projectSchema = v.object({
     name: v.string(),
-    description: v.optional(v.string()),
+    description: v.nullish(v.string(), null),
     responsible_id: v.pipe(v.string(), v.toNumber()),
     start_date: v.string(),
     end_date_real: v.optional(v.string()),
-    budget: v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(999999999)),
-    image_url: v.optional(v.string()),
-    repository_url: v.optional(v.string())
+    budget: v.optional(v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(999999999))),
+    image_url: v.nullish(v.string(), null),
+    repository_url: v.nullish(v.string(), null)
 });
-export type ProjectData = v.InferOutput<typeof projectSchema>;
 //---------------------------------------------------
 
 // Project milestones -------------------------------
+export type MilestoneData = {
+    project_id: number;
+    title: string;
+    description?: string | null;
+    is_completed?: boolean;
+    completed_at?: string;
+    order_index: number;
+}
+export type MilestoneListData = {
+    title: string;
+    description: string | null;
+}
 export const milestoneSchema = v.object({
     project_id: v.number(),
     title: v.pipe(v.string(), v.maxLength(64)),
-    description: v.optional(v.pipe(v.string(), v.maxLength(5000))),
+    description: v.nullish(v.pipe(v.string(), v.maxLength(500)), null),
     is_completed: v.optional(v.boolean()),
     completed_at: v.optional(v.string()),
     order_index: v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(20))
 });
-export type MilestoneData = v.InferOutput<typeof milestoneSchema>;
 export const milestoneListSchema = v.object({
     title: v.pipe(v.string(), v.maxLength(64)),
-    description: v.optional(v.pipe(v.string(), v.maxLength(5000)))
+    description: v.nullish(v.pipe(v.string(), v.maxLength(500)), null)
 });
-export type MilestoneListData = v.InferOutput<typeof milestoneListSchema>;
 //---------------------------------------------------
 
 // Project tools ------------------------------------
+export type ProjectToolData = {
+    project_id: number;
+    tool_id: number;
+    loan_date?: Date | undefined;
+    return_date?: Date | undefined;
+    user_id: number;
+}
 export const projectToolSchema = v.object({
     project_id: v.number(),
     tool_id: v.number(),
@@ -229,16 +319,21 @@ export const projectToolSchema = v.object({
     return_date: v.optional(v.date()),
     user_id: v.number()
 });
-export type ProjectToolData = v.InferOutput<typeof projectToolSchema>;
 //---------------------------------------------------
 
 // Project components -------------------------------
+export type ProjectComponentData = {
+    project_id: number;
+    component_id: number;
+    planned_amount: number;
+    used_amount: number;
+    notes?: string | null;
+}
 export const projectComponentSchema = v.object({
     project_id: v.number(),
     component_id: v.number(),
     planned_amount: v.number(),
     used_amount: v.number(),
-    notes: v.optional(v.string())
+    notes: v.nullish(v.string(), null)
 });
-export type ProjectComponentData = v.InferOutput<typeof projectComponentSchema>;
 //---------------------------------------------------
