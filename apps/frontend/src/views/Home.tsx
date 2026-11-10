@@ -1,6 +1,6 @@
 import { getRouteApi } from "@tanstack/react-router";
 import type {ComponentStats, Project, ProjectStats, ToolStats} from "../interfaces/schemas";
-import { RiCheckboxCircleLine, RiCloseCircleLine, RiCpuLine, RiFileListLine, RiHistoryLine, RiPauseCircleLine, RiPencilRuler2Line, RiPencilRulerLine, RiStairsLine, RiTimeLine, RiWrenchLine } from "@remixicon/react";
+import { RiCheckboxCircleLine, RiCloseCircleLine, RiCpuLine, RiFileListLine, RiHistoryLine, RiPauseCircleLine, RiPencilRuler2Line, RiStairsLine, RiTimeLine, RiWrenchLine } from "@remixicon/react";
 import InfoCard from "@components/ui/InfoCard";
 import Table, { type ColumnDef } from "@components/ui/Table";
 import { fetchData } from "@utils/Utils";
@@ -17,32 +17,16 @@ export default function Home(){
 
     const compStats = useQuery({queryKey:['/stats/components'], queryFn: () => fetchData<ComponentStats>('/api/stats/components')});
     const toolStats = useQuery({queryKey:['/stats/tools'], queryFn: () => fetchData<ToolStats>('/api/stats/tools')});
-    const projStats = useQuery({queryKey:['/stats/projects'], queryFn: () => fetchData<ProjectStats>('/api/stats/projects')});
+    const projStats = useQuery({queryKey:['/stats/projects/user'], queryFn: () => fetchData<ProjectStats>('/api/stats/projects/user')});
 
     const projTotal = useMemo(() => {
         let planning, active, paused, completed, cancelled, total;
-        if(projStats.status === 'success' && projStats.data.content) {
-            planning = 0; active = 0, paused = 0, completed = 0, cancelled = 0, total = 0;
-
-            projStats.data.content.forEach((item) => {
-                switch (item.state) {
-                    case 'planning':
-                        planning = parseInt(item.project_count);
-                        break;
-                    case 'active':
-                        active = parseInt(item.project_count);
-                        break;
-                    case 'paused':
-                        paused = parseInt(item.project_count);
-                        break;
-                    case 'completed':
-                        completed = parseInt(item.project_count);
-                        break;
-                    case 'cancelled':
-                        cancelled = parseInt(item.project_count);
-                        break;
-                }
-            });
+        if(projStats.status === 'success' && projStats.data.content[0]) {
+            planning = parseInt(projStats.data.content[0].planning_count);
+            active = parseInt(projStats.data.content[0].active_count);
+            paused = parseInt(projStats.data.content[0].paused_count);
+            completed = parseInt(projStats.data.content[0].completed_count);
+            cancelled = parseInt(projStats.data.content[0].cancelled_count);
             return {
                 total: planning + active + paused + completed + cancelled,
                 planning, active, paused, completed, cancelled
@@ -106,16 +90,15 @@ export default function Home(){
         <>
             <PageHeader title="Dashboard"/>
             <div className="p-5 flex flex-col gap-5">
-                <h2 className="makerbox-box-title">Sistema</h2>
+                <h2 className="makerbox-box-title">Inventario</h2>
                 <div className="makerbox-box w-full flex flex-col gap-5 !pb-1">
                     <div className="makerbox-box-title flex items-center gap-2 w-max">
                         <RiFileListLine size={24}/>
                         <span>Resumen</span>
                     </div>
-                    <div className="flex justify-between gap-5 overflow-x-auto pb-4">
+                    <div className="flex justify-center gap-5 overflow-x-auto pb-4">
                         <InfoCard title={'Componentes'} value={compTotal} Icon={RiCpuLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
                         <InfoCard title={'Herramientas'} value={toolTotal} Icon={RiWrenchLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
-                        <InfoCard title={'Proyectos'} value={projTotal.total} Icon={RiPencilRulerLine} className="!border-[var(--color-text-muted)]" color="var(--color-text-muted)"/>
                     </div>
                 </div>
             </div>
@@ -130,8 +113,8 @@ export default function Home(){
                         <InfoCard title={'En planificación'} value={projTotal.planning} color="#3273FF" className="!border-[#3273FF]" Icon={RiTimeLine} tooltipText="Proyectos que aun no tienen una lista de componentes definida"/>
                         <InfoCard title={'En desarrollo'} value={projTotal.active} color="#23A5C2" className="!border-[#23A5C2]" Icon={RiPencilRuler2Line}/>
                         <InfoCard title={'Pausado'} value={projTotal.paused} color="#DD6D28" className="!border-[#DD6D28]" Icon={RiPauseCircleLine}/>
-                        <InfoCard title={'Completado'} value={projTotal.completed} color="#1CA130" className="!border-[#1CA130]" Icon={RiCheckboxCircleLine}/>
-                        <InfoCard title={'Finalizado'} value={projTotal.cancelled} color="#EE3232" className="!border-[#EE3232]" Icon={RiCloseCircleLine}/>
+                        <InfoCard title={'Finalizado'} value={projTotal.completed} color="#1CA130" className="!border-[#1CA130]" Icon={RiCheckboxCircleLine}/>
+                        <InfoCard title={'Cancelado'} value={projTotal.cancelled} color="#EE3232" className="!border-[#EE3232]" Icon={RiCloseCircleLine}/>
                     </div>
                 </div>
                 <div className="flex md:flex-col lg:flex-row gap-5">
