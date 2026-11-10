@@ -112,6 +112,7 @@ export interface Tool {
     location_id: number
     state: 'available' | 'in_use' | 'maintenance' | 'disposed' | 'lent'
     acquisition_date: string
+    description: string
     notes: string
     created_at: string
 }
@@ -176,8 +177,12 @@ export interface ToolStats {
 }
 
 export interface ProjectStats {
-    state: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled',
-    project_count: string,
+    responsible_id: number,
+    planning_count: string,
+    active_count: string,
+    paused_count: string,
+    completed_count: string,
+    cancelled_count: string,
     total_budget: string,
     avg_budget: string
 }
