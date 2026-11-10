@@ -1,5 +1,5 @@
 import { parseAbsoluteToLocal } from '@internationalized/date';
-import { RiArrowLeftLine, RiArrowRightLine, RiCheckLine, RiEditLine, RiGitRepositoryLine, RiTimeLine } from '@remixicon/react';
+import { RiArrowGoBackLine, RiArrowLeftLine, RiArrowRightLine, RiCheckLine, RiCloseLine, RiEditLine, RiGitRepositoryLine, RiPauseLine, RiTimeLine } from '@remixicon/react';
 import { getRouteApi, useRouter } from '@tanstack/react-router';
 import { useState } from 'react';
 import { makerboxApi } from '../api/makerbox.api';
@@ -12,6 +12,15 @@ import TextField from '@components/form/TextField';
 import CRUDModal from '@components/CRUDModal';
 import { TooltipTrigger } from 'react-aria-components';
 import { Tooltip } from '@components/ui/Tooltip';
+import { handleDelete, handleUpload, quillGetHTML } from '@utils/Utils';
+import { Delta } from 'quill/core';
+import { Modal } from '@components/ReactAria/Modal';
+import { Dialog } from '@components/ReactAria/Dialog';
+import { Form } from '@components/form/Form';
+import ModalHeader from '@components/ui/ModalHeader';
+import ProjectForm from './admin/forms/ProjectForms';
+import { queue, StatusToast } from '@components/ReactAria/Toast';
+import { AxiosError } from 'axios';
 
 export default function ProjectInfo() {
     
@@ -22,6 +31,22 @@ export default function ProjectInfo() {
     const [isMilestonePending, setIsMilestonePending] = useState(false);
     const [milestoneError, setMilestoneError] = useState<string | null>(null);
     const [milestoneEditMode, setMilestoneEditMode] = useState<boolean>(false);
+    const [isOpen, setOpen] = useState(false);
+    const [isPending, setIsPending] = useState(false);
+    const [image, setImage] = useState<File | null>(null);
+
+    let deltaData: Delta;
+    let descHTML: string = '';
+
+    try {
+        deltaData = project.description ? JSON.parse(project.description) : new Delta();
+    } 
+    catch (error) {
+        deltaData = new Delta();
+    }
+    if(deltaData.ops && deltaData.ops.length > 0 && deltaData.ops[0].insert !== '\n') { 
+        descHTML = quillGetHTML(deltaData);
+    }
 
     async function saveMilestone(formData: FormData) {
         if (!editingMilestone) return;
@@ -139,7 +164,7 @@ export default function ProjectInfo() {
         {name: project.name},
     ];
     const tabs = [
-        {id: 'desc', name: 'Descripción', content: project.description ? <p>{project.description}</p> : <p>No hay descripción disponible.</p>},
+        {id: 'desc', name: 'Descripción', content: descHTML ? <div className='w-full' dangerouslySetInnerHTML={{ __html: descHTML }} /> : <p>No hay descripción disponible.</p>},
         {id: 'component_list', name: 'Lista de componentes', content: 
             <TableV2
                 aria-label="Tabla de hitos"
@@ -168,16 +193,18 @@ export default function ProjectInfo() {
             </TableV2>
         }
     ];
-    const infoData = [
+    let infoData = [
         {title: 'Autor', value: project.user_name},
         {title: 'Fecha de inicio', value: startDate},
-        {title: 'Fecha de termino', value: endDate},
         {title: 'Presupuesto', value: '$' + Number(project.budget).toLocaleString()}
     ];
+
+    if(project.end_date_estimated) infoData.push({title: 'Fecha estimada de finalización', value: endDate});
 
 
 
     return (
+        <>
         <InfoLayout title={project.name}
             status={statusColor}
             buttonUrl={project.repository_url}
@@ -186,25 +213,43 @@ export default function ProjectInfo() {
             publishedDate={publishedDate}
             breadcrumbData={breadcrumbData}
             locationData ={
-                <div className='p-4 flex gap-2 justify-center'>
-                    {project.state === 'paused' || project.state === 'cancelled' || project.state === 'completed' ?
-                    <Button onPress={() => revertState()} variant='primary'>
-                        Revertir estado
-                    </Button>
-                    :
-                    <>
-                    {milestoneCursor === -1 && <Button onPress={() => updateState('completed')} className={"bg-[var(--color-success)]"} variant='custom'>
-                        Finalizar proyecto
-                    </Button>}
-                    <Button onPress={() => updateState('paused')} variant='warning'>
-                        Pausar proyecto
-                    </Button>
-                    <Button onPress={() => updateState('cancelled')} variant='danger'>
-                        Cancelar proyecto
-                    </Button>
-                    </>
-                    }
-                </div>}
+                <div className='flex justify-between gap-2'>
+                    <div className='p-4 flex gap-2 justify-center'>
+                        {project.state === 'paused' || project.state === 'cancelled' || project.state === 'completed' ?
+                        <Button aria-label='Revertir' className="size-[30px] p-1" onPress={() => revertState()} variant='primary'>
+                            <span title={"Revertir"} data-toggle="tooltip">
+                                <RiArrowGoBackLine size={20}/>
+                            </span>
+                        </Button>
+                        :
+                        <>
+                        {milestoneCursor === -1 && <Button aria-label='Finalizar' className="size-[30px] p-1 bg-[var(--color-success)] hover:bg-[var(--color-success)]/80" onPress={() => updateState('completed')} variant='custom'>
+                            <span title={"Finalizar"} data-toggle="tooltip">
+                                <RiCheckLine size={20}/>
+                            </span>
+                        </Button>}
+                        <Button aria-label='Pausar' className="size-[30px] p-1" onPress={() => updateState('paused')} variant='warning'>
+                            <span title={"Pausar"} data-toggle="tooltip">
+                                <RiPauseLine size={20}/>
+                            </span>
+                        </Button>
+                        <Button aria-label='Cancelar' className="size-[30px] p-1" onPress={() => updateState('cancelled')} variant='danger'>
+                            <span title={"Cancelar"} data-toggle="tooltip">
+                                <RiCloseLine size={20}/>
+                            </span>
+                        </Button>
+                        </>
+                        }
+                    </div>
+                    <div className='p-4 flex gap-2 justify-center'>
+                        <Button className="size-[30px] p-1" onPress={() => setOpen(true)} variant='quiet'>
+                            <span title={"Editar"} data-toggle="tooltip">
+                                <RiEditLine size={20}/>
+                            </span>
+                        </Button>
+                    </div>
+                </div>
+            }
             tabData={tabs}
             infoData={infoData}
         >
@@ -341,5 +386,60 @@ export default function ProjectInfo() {
                 </div>
             </CRUDModal>
         </InfoLayout>
+        <Modal isOpen={isOpen} onOpenChange={setOpen}>
+            <Dialog>
+                <Form className='flex flex-col max-h-[80dvh]'
+                    action={async (formData) => {
+                        if(!isPending) {
+                                setIsPending(true);
+                                if(image){
+                                    let newImageRoute: string | undefined;
+                                    const imageUrl = formData.get('image_url');
+                                    newImageRoute = await handleUpload(image, 'image');
+                                    if (imageUrl) {
+                                        await handleDelete(imageUrl.toString());
+                                    }
+                                    formData?.append('image_url', newImageRoute!);
+                                    setImage(null);
+                                }
+                                const data: Record<string,FormDataEntryValue> = {};
+                                formData.forEach((value, key) => {
+                                    if(value && value !== '') data[key] = value;
+                                });
+                                const route = `/api/projects/${project.id}`;
+
+                                await makerboxApi.put(route, data, {withCredentials: true})
+                                .then(async () => {
+                                    setOpen(false);
+                                    await router.invalidate();
+                                     queue.add({
+                                        title: 'Operación exitosa',
+                                        description: `proyecto actualizado exitosamente.`,
+                                        color: 'success',
+                                    }, { timeout: 2000 });
+                                })
+                                .catch((error) => {
+                                    const message = error instanceof AxiosError ? error.response?.data.message : error.message;
+                                    queue.add({ title: 'Operación fallida', description: message, color: 'error' }, { timeout: 2000 });
+                                })
+                                .finally(() => {
+                                    setIsPending(false);
+                                });
+                        }
+                    }}
+                >
+                    <ModalHeader title={"Editar proyecto"} className='flex-none'/>
+                    <div className='flex-initial mb-5 px-5 overflow-y-auto'>
+                        <ProjectForm target={project} isPending={isPending} setImage={setImage} />
+                    </div>
+                    <div className='flex justify-center m-5 gap-2'>
+                        <Button slot="close" variant="secondary" isDisabled={isPending}>Cancelar</Button>
+                        <Button type="submit" isDisabled={isPending}>Guardar</Button>
+                    </div>
+                </Form>
+            </Dialog>
+        </Modal>
+        <StatusToast/>
+        </>
     );
 }
