@@ -5,7 +5,7 @@ import type { PaginationData, ToolData, ToolFilterData } from "../utils/schemas.
 export default class Tool {
     static async get({ search, limit, offset, orderBy, desc, category, manufacturer, state }: PaginationData & ToolFilterData) {
         return await sql`
-            SELECT t.id, t.sku, t.name, t.manufacturer_id, t.model, t.serial_number, t.image_url, t.manual_url, t.category_id, t.location_id, t.state, t.acquisition_date, t.notes, m.name AS manufacturer, c.path AS category, l.path AS location_route FROM tools t
+            SELECT t.id, t.sku, t.name, t.manufacturer_id, t.model, t.serial_number, t.image_url, t.manual_url, t.category_id, t.location_id, t.state, t.acquisition_date, t.description, t.notes, m.name AS manufacturer, c.path AS category, l.path AS location_route FROM tools t
             LEFT JOIN manufacturers m ON t.manufacturer_id = m.id
             LEFT JOIN tool_categories c ON t.category_id = c.id
             LEFT JOIN locations l ON t.location_id = l.id
@@ -19,7 +19,7 @@ export default class Tool {
 
     static async getById(id: number) {
         const rows = await sql`
-            SELECT t.id, t.sku, t.name, t.manufacturer_id, t.model, t.serial_number, t.image_url, t.manual_url, t.category_id, t.location_id, t.state, t.acquisition_date, t.notes, t.created_at, m.name AS manufacturer, c.path AS category, l.name AS location_name, l.path AS location_route, l.description AS location_description FROM tools t
+            SELECT t.id, t.sku, t.name, t.manufacturer_id, t.model, t.serial_number, t.image_url, t.manual_url, t.category_id, t.location_id, t.state, t.acquisition_date, t.description, t.notes, t.created_at, m.name AS manufacturer, c.path AS category, l.name AS location_name, l.path AS location_route, l.description AS location_description FROM tools t
             LEFT JOIN manufacturers m ON t.manufacturer_id = m.id
             LEFT JOIN tool_categories c ON t.category_id = c.id
             LEFT JOIN locations l ON t.location_id = l.id
@@ -31,14 +31,14 @@ export default class Tool {
     static async create(data: ToolData) {
         return await sql`
             INSERT INTO tools ${sql(data)} 
-            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, notes`;
+            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, description, notes`;
     }
 
     static async update(id: number, data: ToolData) {
         const rows = await sql`
             UPDATE tools SET ${sql(data)}, updated_at = now() 
             WHERE id = ${id} AND deleted_at IS NULL
-            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, notes`;
+            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, description, notes`;
         if(!rows.length) throw new NotFoundError();
         return rows;
     }
@@ -48,7 +48,7 @@ export default class Tool {
             UPDATE tools 
             SET deleted_at = now(), updated_at = now() 
             WHERE id = ${id} AND deleted_at IS NULL
-            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, notes`;
+            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, description, notes`;
         if(!rows.length) throw new NotFoundError();
         return rows;
     }
@@ -58,7 +58,7 @@ export default class Tool {
             UPDATE tools 
             SET deleted_at = NULL, updated_at = now() 
             WHERE id = ${id} AND deleted_at IS NOT NULL
-            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, notes`;
+            RETURNING id, sku, name, manufacturer_id, model, serial_number, image_url, manual_url, category_id, location_id, state, acquisition_date, description, notes`;
         if(!rows.length) throw new NotFoundError();
         return rows;
     }

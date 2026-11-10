@@ -9,8 +9,14 @@ export default class Stats {
         return await sql`SELECT * FROM mv_tool_category_stats`;
     }
 
-    static async getProjectStats(){
+    static async getGlobalProjectStats(){
         return await sql`SELECT * FROM mv_project_state_stats`;
+    }
+
+    static async getUserProjectStats(user_id: number){
+        return await sql`
+            SELECT * FROM mv_user_project_state_stats
+            WHERE responsible_id = ${user_id}`;
     }
 
     static async refreshStats(){

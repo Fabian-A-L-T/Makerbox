@@ -1,9 +1,9 @@
 import sql from "../config/database.js";
 import { NotFoundError } from "../utils/errors.js";
-import type { PaginationData, ProjectFilterData, ProjectData, ProjectToolData, ProjectComponentData, UserIDData, MilestoneData } from "../utils/schemas.js";
+import type { PaginationData, ProjectFilterData, ProjectData, ProjectToolData, ProjectComponentData, MilestoneData } from "../utils/schemas.js";
 
 export default class Project {
-    static async get({ search, limit, offset, orderBy, desc, state, responsible_id}: PaginationData & ProjectFilterData & {responsible_id: UserIDData}) {
+    static async get({ search, limit, offset, orderBy, desc, state, responsible_id}: PaginationData & ProjectFilterData & {responsible_id: number}) {
         return await sql`
             SELECT p.id, p.name, p.description, p.responsible_id, p.state, p.end_date_estimated, p.start_date, p.end_date_real, p.budget, p.image_url, p.repository_url, u.name AS user_name
             FROM projects p
@@ -38,9 +38,10 @@ export default class Project {
     }
 
     static async update(id: number, data: ProjectData) {
+        const {responsible_id, ...projData} = data;
         const rows = await sql`
-            UPDATE projects SET ${sql(data)} 
-            WHERE id = ${id} AND deleted_at IS NULL
+            UPDATE projects SET ${sql(projData)} 
+            WHERE id = ${id} AND responsible_id = ${responsible_id} AND deleted_at IS NULL
             RETURNING id, name, description, responsible_id, state, end_date_estimated, start_date, end_date_real, budget, image_url, repository_url`;
         if(!rows.length) throw new NotFoundError();
         return rows;
