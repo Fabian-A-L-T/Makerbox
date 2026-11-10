@@ -214,7 +214,7 @@ export function StepContent({
       }
     }>
       <span className="pb-1 text-2xl border-b-2 border-[var(--color-border)]">{steps[currentStep].description}</span>
-      <div className={`overflow-y-auto h-full flex flex-col gap-4 ${className}`}>
+      <div className={`overflow-y-auto pr-3 h-full flex flex-col gap-4 ${className}`}>
         {children}
       </div>
       <StepperNavigation type="submit" disableNextBtn={disableNextBtn}/>

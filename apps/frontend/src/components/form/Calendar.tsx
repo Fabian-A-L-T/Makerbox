@@ -20,11 +20,11 @@ const cellStyles = tv({
   variants: {
     isSelected: {
       false:
-        'text-neutral-900 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 pressed:bg-neutral-300 dark:pressed:bg-neutral-600',
-      true: 'bg-blue-600 invalid:bg-red-600 text-white forced-colors:bg-[Highlight] forced-colors:invalid:bg-[Mark] forced-colors:text-[HighlightText]'
+        'text-[var(--color-text)] hover:bg-[var(--color-secondary)]/50',
+      true: 'bg-[var(--color-primary)] invalid:bg-[var(--color-danger)] text-white forced-colors:bg-[Highlight] forced-colors:invalid:bg-[Mark] forced-colors:text-[HighlightText]'
     },
     isDisabled: {
-      true: 'text-neutral-300 dark:text-neutral-600 forced-colors:text-[GrayText]'
+      true: 'text-[var(--color-text-muted)]/60 forced-colors:text-[GrayText]'
     }
   }
 });

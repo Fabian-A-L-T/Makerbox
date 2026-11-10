@@ -13,7 +13,7 @@ interface ButtonProps extends RACButtonProps {
 }
 
 const buttonStyles = tv({
-  base: 'h-[36px] px-3 py-2 rounded-[var(--border-radius-ui)] cursor-pointer flex items-center justify-between',
+  base: 'h-[36px] px-3 py-2 rounded-[var(--border-radius-ui)] cursor-pointer flex items-center justify-center gap-2',
   variants: {
     variant: {
       primary: 'bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/60 text-white',
