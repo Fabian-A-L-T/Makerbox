@@ -11,6 +11,7 @@ import { getInitialTheme } from '@utils/Utils';
 interface NavItem {
   link: string,
   label: string,
+  show: boolean,
   icon: RemixiconComponentType
 }
 
@@ -41,11 +42,13 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 			{
 				link: '',
 				label: 'Inicio',
+				show: true,
 				icon: RiHome2Line,
 			},
 			{
 				link: 'projects',
 				label: 'Mis proyectos',
+				show: userData.role !== 'reader',
 				icon: RiPencilRulerLine,
 			}
 			],
@@ -57,11 +60,13 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 			{
 				link: 'components',
 				label: 'Componentes',
+				show: true,
 				icon: RiCpuLine,
 			},
 			{
 				link: 'tools',
 				label: 'Herramientas',
+				show: true,
 				icon: RiWrenchLine,
 			}
 			],
@@ -73,41 +78,49 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 				{
 					label: 'Componentes',
 					icon: RiCpuLine,
+					show: true,
 					link: 'admin/components'
 				},
 				{
 					label: 'Herramientas', 
 					icon: RiWrenchLine,
+					show: true,
 					link: 'admin/tools'
 				},
 				{
 					label: 'Proyectos',
 					icon: RiPencilRulerLine,
+					show: true,
 					link: 'admin/projects'
 				},
 				{
 					label: 'Categorías', 
 					icon: RiNodeTree,
+					show: true,
 					link: 'admin/categories/components'
 				},
 				{
 					label: 'Fabricantes',
 					icon: RiBuilding3Line,
+					show: true,
 					link: 'admin/manufacturers'
 				},
 				{
 					label: 'Ubicaciones',
 					icon: RiMapPinLine,
+					show: true,
 					link: 'admin/locations'
 				},
 				{
 					label: 'Usuarios', 
 					icon: RiGroupLine,
+					show: true,
 					link: 'admin/users'
 				},
 				{
 					label: 'Movimientos',
 					icon: RiSwap2Line,
+					show: true,
 					link: 'admin/movements'
 				}
 			]
@@ -153,12 +166,12 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 							<RiMore2Line size={16}/>
 						</Button>
 						<Menu shouldCloseOnSelect={false}>
-							<MenuItem shouldCloseOnSelect>
+							{userData.role !== 'reader' && <MenuItem shouldCloseOnSelect>
 								<Link className='flex gap-2' to='/manager/newProject'>
 									<RiAddLine size={20}/>
 									Nuevo proyecto
 								</Link>
-							</MenuItem>
+							</MenuItem>}
 							<MenuItem shouldCloseOnSelect>
 								<Link className='flex gap-2' to='/manager/account'>
 									<RiUserSettingsLine size={20}/>
@@ -186,18 +199,20 @@ export default function Sidebar({ isOpen = true, onClose, userData, activeId, lo
 					<div key={group.title} className="sidebar__group">
 						{group.title && <span className="sidebar__group-title">{group.title}</span>}
 						<ul className="sidebar__list" role="list">
-							{group.items.map((item) => (
-							<li key={group.title + '-' + item.link}>
-								<Link
-								className={`sidebar__item ${activeId === item.link ? 'sidebar__item--active' : ''}`}
-								aria-current={activeId === item.link ? 'page' : undefined}
-								to={(item.link ? `/manager/${item.link}` : '/manager') as any}
-								>
-								<item.icon />
-								<span className="sidebar__item-label">{item.label}</span>
-								</Link>
-							</li>
-							))}
+							{group.items.map((item) => {
+								if(!item.show) return null;
+								return (
+									<li key={group.title + '-' + item.link}>
+										<Link
+										className={`sidebar__item ${activeId === item.link ? 'sidebar__item--active' : ''}`}
+										aria-current={activeId === item.link ? 'page' : undefined}
+										to={(item.link ? `/manager/${item.link}` : '/manager') as any}
+										>
+										<item.icon />
+										<span className="sidebar__item-label">{item.label}</span>
+										</Link>
+									</li>
+							)})}
 						</ul>
 					</div>
 					)}
