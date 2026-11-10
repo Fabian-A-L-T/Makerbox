@@ -14,6 +14,8 @@ const usersData: {[x: string]: UserDataTest} = {
 };
 
 beforeAll(async () => {
+  await clearUsers()
+  
   await updateStatViews();
   await seedUsers(usersData);
   const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
@@ -39,13 +41,27 @@ describe("GET /stats/components", function() {
       })
       .catch(done);
   });
+  it("should accept technician users", function(done) {
+    request(app)
+      .get("/api/stats/components")
+      .set(technicianToken)
+      .expect("Content-Type", /json/)
+      .expect(200, done);
+  });
+  it("should accept reader users", function(done) {
+    request(app)
+      .get("/api/stats/components")
+      .set(readerToken)
+      .expect("Content-Type", /json/)
+      .expect(200, done);
+  });
 });
 
 describe("GET /stats/tools", function() {
   it("should return tool statistics", function(done) {
     request(app)
       .get("/api/stats/tools")
-      .set(readerToken)
+      .set(adminToken)
       .expect("Content-Type", /json/)
       .expect(200)
       .then(function(response) {
@@ -54,13 +70,27 @@ describe("GET /stats/tools", function() {
       })
       .catch(done);
   });
+  it("should accept technician users", function(done) {
+    request(app)
+      .get("/api/stats/tools")
+      .set(technicianToken)
+      .expect("Content-Type", /json/)
+      .expect(200,done);
+  });
+  it("should accept reader users", function(done) {
+    request(app)
+      .get("/api/stats/tools")
+      .set(readerToken)
+      .expect("Content-Type", /json/)
+      .expect(200,done);
+  });
 });
 
-describe("GET /stats/projects", function() {
-  it("should return project statistics", function(done) {
+describe("GET /stats/projects/global", function() {
+  it("should return global project statistics", function(done) {
     request(app)
-      .get("/api/stats/projects")
-      .set(technicianToken)
+      .get("/api/stats/projects/global")
+      .set(adminToken)
       .expect("Content-Type", /json/)
       .expect(200)
       .then(function(response) {
@@ -68,13 +98,71 @@ describe("GET /stats/projects", function() {
         done();
       })
       .catch(done);
+  });
+  it("should reject technician users", function(done) {
+    request(app)
+      .get("/api/stats/projects/global")
+      .set(technicianToken)
+      .expect("Content-Type", /json/)
+      .expect(403, done);
+  });
+  it("should reject reader users", function(done) {
+    request(app)
+      .get("/api/stats/projects/global")
+      .set(readerToken)
+      .expect("Content-Type", /json/)
+      .expect(403, done);
+  });
+});
+
+describe("GET /stats/projects/user", function() {
+  it("should return user project statistics", function(done) {
+    request(app)
+      .get("/api/stats/projects/user")
+      .set(adminToken)
+      .expect("Content-Type", /json/)
+      .expect(200)
+      .then(function(response) {
+        expect(Array.isArray(response.body.content)).toBe(true);
+        done();
+      })
+      .catch(done);
+  });
+  it("should accept technician users", function(done) {
+    request(app)
+      .get("/api/stats/projects/user")
+      .set(technicianToken)
+      .expect("Content-Type", /json/)
+      .expect(200, done);
+  });
+  it("should reject reader users", function(done) {
+    request(app)
+      .get("/api/stats/projects/user")
+      .set(readerToken)
+      .expect("Content-Type", /json/)
+      .expect(403, done);
   });
 });
 
 describe("stats route authentication", function() {
-  it("should reject requests without an authorization token", function(done) {
+  it("should reject requests without an authorization token (component stats)", function(done) {
     request(app)
       .get("/api/stats/components")
+      .expect(401, done);
+  });
+  it("should reject requests without an authorization token (tool stats)", function(done) {
+    request(app)
+      .get("/api/stats/tools")
+      .expect(401, done);
+  });
+  it("should reject requests without an authorization token (global project stats)", function(done) {
+    request(app)
+      .get("/api/stats/projects/global")
+      .expect(401, done);
+  });
+  it("should reject requests without an authorization token (user project stats)", function(done) {
+    request(app)
+      .get("/api/stats/projects/user")
       .expect(401, done);
   });
 });

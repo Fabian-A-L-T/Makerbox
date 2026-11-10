@@ -33,33 +33,39 @@ const usersData: {[x: string]: UserData & TestData & {role: "admin" | "technicia
 };
 
 beforeAll(async () => {
-    await seedData('locations', locationsData);
-    await seedData('tool_categories', toolCategoryData);
-    await seedData('manufacturers', manufacturerData);
-    await seedData('users', usersData);
-    
-    Object.entries(toolData).forEach(([key, _]) => {
-      toolData[key].manufacturer_id =  manufacturerData['Test Manufacturer'].id;
-      toolData[key].category_id =  toolCategoryData['Test Category'].id;
-      toolData[key].location_id =  locationsData['Test Location'].id;
-    })
+  await clearTools();
+  await clearManufacturers();
+  await clearLocations();
+  await clearToolCategories();
+  await clearUsers();
 
-    await seedData<ToolData & TestData>('tools', toolData);
+  await seedData('locations', locationsData);
+  await seedData('tool_categories', toolCategoryData);
+  await seedData('manufacturers', manufacturerData);
+  await seedData('users', usersData);
+  
+  Object.entries(toolData).forEach(([key, _]) => {
+    toolData[key].manufacturer_id =  manufacturerData['Test Manufacturer'].id;
+    toolData[key].category_id =  toolCategoryData['Test Category'].id;
+    toolData[key].location_id =  locationsData['Test Location'].id;
+  })
 
-    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
-    const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
-    const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+  await seedData<ToolData & TestData>('tools', toolData);
 
-    adminToken = generateAuthHeader(adminData);
-    readerToken = generateAuthHeader(readerData);
-    technicianToken = generateAuthHeader(technicianData);
+  const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+  const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
+  const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+
+  adminToken = generateAuthHeader(adminData);
+  readerToken = generateAuthHeader(readerData);
+  technicianToken = generateAuthHeader(technicianData);
 });
 afterAll(async () => {
-    await clearTools();
-    await clearManufacturers();
-    await clearLocations();
-    await clearToolCategories();
-    await clearUsers();
+  await clearTools();
+  await clearManufacturers();
+  await clearLocations();
+  await clearToolCategories();
+  await clearUsers();
 });
 
 describe('admin-only route protection', function() {

@@ -21,19 +21,22 @@ const usersData: {[x: string]: UserDataTest} = {
 };
 
 beforeAll(async () => {
-    await seedData('component_categories', categoryData);
-    await seedUsers(usersData);
-    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
-    const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
-    const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+  await clearCategories();
+  await clearUsers();
 
-    adminToken = generateAuthHeader(adminData);
-    readerToken = generateAuthHeader(readerData);
-    technicianToken = generateAuthHeader(technicianData);
+  await seedData('component_categories', categoryData);
+  await seedUsers(usersData);
+  const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+  const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
+  const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+
+  adminToken = generateAuthHeader(adminData);
+  readerToken = generateAuthHeader(readerData);
+  technicianToken = generateAuthHeader(technicianData);
 });
 afterAll(async () => {
-    await clearCategories();
-    await clearUsers();
+  await clearCategories();
+  await clearUsers();
 });
 
 describe('admin-only route protection', function() {

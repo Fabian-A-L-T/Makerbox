@@ -38,49 +38,55 @@ const componentLocationData: {[x: string]: ComponentLocationData} = {
     'CL5': {component_id: 0, location_id: 0, amount: 20}
 };
 beforeAll(async () => {
-    await seedData('component_categories', categoryData);
-    await seedData('locations', locationsData);
-    await seedData('manufacturers', manufacturersData);
-    await seedUsers(usersData);
+  await clearComponents();
+  await clearCategories();
+  await clearManufacturers();
+  await clearLocations();
+  await clearUsers();
 
-    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
-    const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
-    const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+  await seedData('component_categories', categoryData);
+  await seedData('locations', locationsData);
+  await seedData('manufacturers', manufacturersData);
+  await seedUsers(usersData);
 
-    adminToken = generateAuthHeader(adminData);
-    readerToken = generateAuthHeader(readerData);
-    technicianToken = generateAuthHeader(technicianData);
+  const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+  const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
+  const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
 
-    componentsData['Test Component 1'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component 1'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    componentsData['Test Component 2'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component 2'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    componentsData['Test Component 3'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component 3'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    componentsData['Deleted Component'].category_id = categoryData['Test Category'].id;
-    componentsData['Deleted Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    await seedData('components', componentsData);
+  adminToken = generateAuthHeader(adminData);
+  readerToken = generateAuthHeader(readerData);
+  technicianToken = generateAuthHeader(technicianData);
 
-    componentLocationData['CL1'].component_id = componentsData['Test Component 1'].id;
-    componentLocationData['CL1'].location_id = locationsData['Test Location 1'].id;
-    componentLocationData['CL2'].component_id = componentsData['Test Component 2'].id;
-    componentLocationData['CL2'].location_id = locationsData['Test Location 1'].id;
-    componentLocationData['CL3'].component_id = componentsData['Test Component 2'].id;
-    componentLocationData['CL3'].location_id = locationsData['Test Location 2'].id;
+  componentsData['Test Component 1'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component 1'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  componentsData['Test Component 2'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component 2'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  componentsData['Test Component 3'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component 3'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  componentsData['Deleted Component'].category_id = categoryData['Test Category'].id;
+  componentsData['Deleted Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  await seedData('components', componentsData);
 
-    componentLocationData['CL4'].component_id = componentsData['Test Component 3'].id;
-    componentLocationData['CL4'].location_id = locationsData['Test Location 3'].id;
+  componentLocationData['CL1'].component_id = componentsData['Test Component 1'].id;
+  componentLocationData['CL1'].location_id = locationsData['Test Location 1'].id;
+  componentLocationData['CL2'].component_id = componentsData['Test Component 2'].id;
+  componentLocationData['CL2'].location_id = locationsData['Test Location 1'].id;
+  componentLocationData['CL3'].component_id = componentsData['Test Component 2'].id;
+  componentLocationData['CL3'].location_id = locationsData['Test Location 2'].id;
 
-    componentLocationData['CL5'].component_id = componentsData['Deleted Component'].id;
-    componentLocationData['CL5'].location_id = locationsData['Test Location 1'].id;
-    await seedComponentLocations(componentLocationData);
+  componentLocationData['CL4'].component_id = componentsData['Test Component 3'].id;
+  componentLocationData['CL4'].location_id = locationsData['Test Location 3'].id;
+
+  componentLocationData['CL5'].component_id = componentsData['Deleted Component'].id;
+  componentLocationData['CL5'].location_id = locationsData['Test Location 1'].id;
+  await seedComponentLocations(componentLocationData);
 });
 afterAll(async () => {
-    await clearComponents();
-    await clearCategories();
-    await clearManufacturers();
-    await clearLocations();
-    await clearUsers();
+  await clearComponents();
+  await clearCategories();
+  await clearManufacturers();
+  await clearLocations();
+  await clearUsers();
 });
 
 describe('admin-only route protection', function() {

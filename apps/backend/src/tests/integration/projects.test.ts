@@ -44,43 +44,44 @@ const usersData: {[x: string]: UserDataTest} = {
 };
 
 beforeAll(async () => {
-    await seedUsers(usersData);
-    await seedData('component_categories', categoryData);
-    await seedData('tool_categories', toolCategoryData);
-    await seedData('manufacturers', manufacturersData);
-    await seedData('locations', locationsData);
+  await sql`TRUNCATE projects, tools, components, manufacturers, locations, tool_categories, component_categories, users RESTART IDENTITY CASCADE`;
+  
+  await seedUsers(usersData);
+  await seedData('component_categories', categoryData);
+  await seedData('tool_categories', toolCategoryData);
+  await seedData('manufacturers', manufacturersData);
+  await seedData('locations', locationsData);
 
-    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
-    const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
-    const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
-    adminToken = generateAuthHeader(adminData);
-    readerToken = generateAuthHeader(readerData);
-    technicianToken = generateAuthHeader(technicianData);
+  const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+  const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
+  const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+  adminToken = generateAuthHeader(adminData);
+  readerToken = generateAuthHeader(readerData);
+  technicianToken = generateAuthHeader(technicianData);
 
-    componentsData['Test Component'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    await seedData('components', componentsData);
+  componentsData['Test Component'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  await seedData('components', componentsData);
 
-    projectsData['Test Project 1'].responsible_id = adminData.id;
-    projectsData['Test Project 2'].responsible_id = adminData.id;
-    projectsData['Test Project 3'].responsible_id = adminData.id;
-    projectsData['Test Project 4'].responsible_id = technicianData.id;
-    projectsData['Deleted Project'].responsible_id = technicianData.id;
-    await seedData('projects', projectsData);
-    
-    projectMilestonesData['Test Milestone 1'].project_id = projectsData['Test Project 1'].id;
-    projectMilestonesData['Test Milestone 2'].project_id = projectsData['Test Project 1'].id;
-    projectMilestonesData['Test Milestone 3'].project_id = projectsData['Test Project 2'].id;
-    projectMilestonesData['Test Milestone 4'].project_id = projectsData['Test Project 2'].id;
-    await seedData('project_milestones', projectMilestonesData);
+  projectsData['Test Project 1'].responsible_id = adminData.id;
+  projectsData['Test Project 2'].responsible_id = adminData.id;
+  projectsData['Test Project 3'].responsible_id = adminData.id;
+  projectsData['Test Project 4'].responsible_id = technicianData.id;
+  projectsData['Deleted Project'].responsible_id = technicianData.id;
+  await seedData('projects', projectsData);
+  
+  projectMilestonesData['Test Milestone 1'].project_id = projectsData['Test Project 1'].id;
+  projectMilestonesData['Test Milestone 2'].project_id = projectsData['Test Project 1'].id;
+  projectMilestonesData['Test Milestone 3'].project_id = projectsData['Test Project 2'].id;
+  projectMilestonesData['Test Milestone 4'].project_id = projectsData['Test Project 2'].id;
+  await seedData('project_milestones', projectMilestonesData);
 });
 afterAll(async () => {
-    await sql`TRUNCATE projects, tools, components, manufacturers, locations, tool_categories, component_categories, users RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE projects, tools, components, manufacturers, locations, tool_categories, component_categories, users RESTART IDENTITY CASCADE`;
 });
 
 describe('admin-only route protection', function() {
   const adminOnlyTestCases: {method: string, path: string}[] = [
-    {method: 'put', path: '/api/projects/:id'},
     {method: 'delete', path: '/api/projects/:id'},
     {method: 'post', path: '/api/projects/:project_id/tools'},
     {method: 'patch', path: '/api/projects/:project_id/tools/:tool_id'},
@@ -99,6 +100,7 @@ describe('admin-only route protection', function() {
 
 describe('technician-only route protection', function() {
   const technicianOnlyTestCases: {method: string, path: string}[] = [
+    {method: 'put', path: '/api/projects/:id'},
     {method: 'get', path: '/api/projects'},
     {method: 'get', path: '/api/projects/:id'},
     {method: 'post', path: '/api/projects'},

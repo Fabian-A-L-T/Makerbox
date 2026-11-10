@@ -167,7 +167,7 @@ describe('Project getById', function() {
         const project = projectData['Project 1'];
         const res = await Project.getById(project.id, userData['Project Owner'].id);
 
-        expect(res).toMatchObject({...project, user_name: userData['Project Owner'].name, budget: project.budget.toString(), start_date: new Date(project.start_date)});
+        expect(res).toMatchObject({...project, user_name: userData['Project Owner'].name, budget: project.budget?.toString(), start_date: new Date(project.start_date)});
         expect(res.components[0]).toMatchObject(projectComponentsData['PC1']);
         expect(res.tools[0]).toMatchObject(projectToolsData['PT1']);
         expect(res.milestones).toMatchObject([projectMilestonesData['Milestone 1'], projectMilestonesData['Milestone 2']]);
@@ -191,7 +191,7 @@ describe('Project create and update', function() {
         const data: ProjectData = {name: 'New Project', description: 'Created for tests', responsible_id: userData['Project Owner'].id, start_date: '2025-06-01', budget: 500};
         const res = await Project.create(data);
 
-        expect(res[0]).toMatchObject({...data, budget: data.budget.toString(), start_date: new Date(data.start_date)});
+        expect(res[0]).toMatchObject({...data, budget: data.budget?.toString(), start_date: new Date(data.start_date)});
         expect(res[0]).toHaveProperty("id");
         expect(res[0]).toHaveProperty("end_date_estimated");
         expect(res[0]).toHaveProperty("image_url");
@@ -206,7 +206,7 @@ describe('Project create and update', function() {
         const updated: ProjectData = {...project, name: 'Updated Project', budget: 2500};
         const res = await Project.update(project.id, updated);
 
-        expect(res[0]).toMatchObject({...updated, budget: updated.budget.toString(), start_date: new Date(updated.start_date)});
+        expect(res[0]).toMatchObject({...updated, budget: updated.budget?.toString(), start_date: new Date(updated.start_date)});
         expect(res[0]).toHaveProperty("id");
         expect(res[0]).toHaveProperty("end_date_estimated");
         expect(res[0]).toHaveProperty("image_url");
@@ -235,7 +235,7 @@ describe('Project delete', function() {
         const project = projectData['Project 3'];
         const res = await Project.delete(project.id);
 
-        expect(res[0]).toMatchObject({...project, budget: project.budget.toString(), start_date: new Date(project.start_date)});
+        expect(res[0]).toMatchObject({...project, budget: project.budget?.toString(), start_date: new Date(project.start_date)});
         expect(res[0]).toHaveProperty("id");
         expect(res[0]).toHaveProperty("end_date_estimated");
         expect(res[0]).toHaveProperty("image_url");

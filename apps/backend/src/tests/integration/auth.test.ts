@@ -12,13 +12,14 @@ const usersData: {[x: string]: UserData & TestData & {role: "admin" | "technicia
 const refreshCookie = (response: request.Response) => response.headers['set-cookie'][0].split(';')[0];
 
 beforeAll(async () => {
-    await seedUsers(usersData);
-    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+  await clearUsers();
+  await seedUsers(usersData);
+  const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
 
-    adminToken = generateAuthHeader(adminData);
+  adminToken = generateAuthHeader(adminData);
 });
 afterAll(async () => {
-    await clearUsers();
+  await clearUsers();
 });
 
 describe("POST /auth/login", function() {

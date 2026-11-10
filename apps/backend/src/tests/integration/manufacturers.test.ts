@@ -20,6 +20,9 @@ const usersData: {[x: string]: UserDataTest} = {
 };
 
 beforeAll(async () => {
+  await clearManufacturers();
+  await clearUsers();
+
   await seedData('manufacturers', manufacturersData);
   await seedUsers(usersData);
   const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
@@ -31,8 +34,8 @@ beforeAll(async () => {
   technicianToken = generateAuthHeader(technicianData);
 });
 afterAll(async () => {
-    await clearManufacturers();
-    await clearUsers();
+  await clearManufacturers();
+  await clearUsers();
 });
 
 describe('admin-only route protection', function() {

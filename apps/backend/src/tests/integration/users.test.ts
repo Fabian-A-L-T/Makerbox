@@ -17,6 +17,8 @@ const usersData: {[x: string]: UserDataTest} = {
 };
 
 beforeAll(async () => {
+  await clearUsers();
+  
   await seedUsers(usersData);
   const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
   const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];

@@ -50,71 +50,79 @@ const returnMovementData: {[x: string]: MovementData & TestData} = {
     'Return movement': {id: 0, component_id: 0, stock_type: 'return', amount: 1, origin_location_id: 0,  user_id: 0, project_id: 0}
 };
 beforeAll(async () => {
-    await seedData('component_categories', categoryData);
-    await seedData('locations', locationsData);
-    await seedData('manufacturers', manufacturersData);
-    await seedUsers(usersData);
+  await clearCategories();
+  await clearLocations();
+  await clearManufacturers();
+  await clearProjects();
+  await clearComponents();
+  await clearUsers();
+  await clearStockMovements();
 
-    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
-    const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
-    const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+  await seedData('component_categories', categoryData);
+  await seedData('locations', locationsData);
+  await seedData('manufacturers', manufacturersData);
+  await seedUsers(usersData);
 
-    adminToken = generateAuthHeader(adminData);
-    readerToken = generateAuthHeader(readerData);
-    technicianToken = generateAuthHeader(technicianData);
+  const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+  const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
+  const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
 
-    projectsData['Test Project 1'].responsible_id = adminData.id;
-    projectsData['Deleted Project'].responsible_id = technicianData.id;
-    await seedData('projects', projectsData);
+  adminToken = generateAuthHeader(adminData);
+  readerToken = generateAuthHeader(readerData);
+  technicianToken = generateAuthHeader(technicianData);
 
-    componentsData['Test Component 1'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component 1'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    componentsData['Test Component 2'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component 2'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    componentsData['Test Component 3'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component 3'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    componentsData['Deleted Component'].category_id = categoryData['Test Category'].id;
-    componentsData['Deleted Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    await seedData('components', componentsData);
+  projectsData['Test Project 1'].responsible_id = adminData.id;
+  projectsData['Deleted Project'].responsible_id = technicianData.id;
+  await seedData('projects', projectsData);
 
-    componentLocationData['CL1'].component_id = componentsData['Test Component 1'].id;
-    componentLocationData['CL1'].location_id = locationsData['Test Location 1'].id;
-    componentLocationData['CL2'].component_id = componentsData['Test Component 2'].id;
-    componentLocationData['CL2'].location_id = locationsData['Test Location 1'].id;
-    componentLocationData['CL3'].component_id = componentsData['Test Component 2'].id;
-    componentLocationData['CL3'].location_id = locationsData['Test Location 2'].id;
+  componentsData['Test Component 1'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component 1'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  componentsData['Test Component 2'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component 2'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  componentsData['Test Component 3'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component 3'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  componentsData['Deleted Component'].category_id = categoryData['Test Category'].id;
+  componentsData['Deleted Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  await seedData('components', componentsData);
 
-    componentLocationData['CL4'].component_id = componentsData['Test Component 3'].id;
-    componentLocationData['CL4'].location_id = locationsData['Test Location 3'].id;
+  componentLocationData['CL1'].component_id = componentsData['Test Component 1'].id;
+  componentLocationData['CL1'].location_id = locationsData['Test Location 1'].id;
+  componentLocationData['CL2'].component_id = componentsData['Test Component 2'].id;
+  componentLocationData['CL2'].location_id = locationsData['Test Location 1'].id;
+  componentLocationData['CL3'].component_id = componentsData['Test Component 2'].id;
+  componentLocationData['CL3'].location_id = locationsData['Test Location 2'].id;
 
-    componentLocationData['CL5'].component_id = componentsData['Deleted Component'].id;
-    componentLocationData['CL5'].location_id = locationsData['Test Location 1'].id;
-    await seedComponentLocations(componentLocationData);
+  componentLocationData['CL4'].component_id = componentsData['Test Component 3'].id;
+  componentLocationData['CL4'].location_id = locationsData['Test Location 3'].id;
 
-    stockMovementData['Entry movement'].component_id = componentsData['Test Component 1'].id;
-    stockMovementData['Entry movement'].origin_location_id = locationsData['Test Location 1'].id;
-    stockMovementData['Entry movement'].user_id = usersData['admin@test.com'].id;
+  componentLocationData['CL5'].component_id = componentsData['Deleted Component'].id;
+  componentLocationData['CL5'].location_id = locationsData['Test Location 1'].id;
+  await seedComponentLocations(componentLocationData);
 
-    stockMovementData['Disposal movement'].component_id = componentsData['Test Component 2'].id;
-    stockMovementData['Disposal movement'].origin_location_id = locationsData['Test Location 1'].id;
-    stockMovementData['Disposal movement'].user_id = usersData['admin@test.com'].id;
+  stockMovementData['Entry movement'].component_id = componentsData['Test Component 1'].id;
+  stockMovementData['Entry movement'].origin_location_id = locationsData['Test Location 1'].id;
+  stockMovementData['Entry movement'].user_id = usersData['admin@test.com'].id;
 
-    stockMovementData['Reserve movement'].component_id = componentsData['Test Component 2'].id;
-    stockMovementData['Reserve movement'].origin_location_id = locationsData['Test Location 1'].id;
-    stockMovementData['Reserve movement'].project_id = projectsData['Test Project 1'].id;
-    stockMovementData['Reserve movement'].user_id = usersData['admin@test.com'].id;
+  stockMovementData['Disposal movement'].component_id = componentsData['Test Component 2'].id;
+  stockMovementData['Disposal movement'].origin_location_id = locationsData['Test Location 1'].id;
+  stockMovementData['Disposal movement'].user_id = usersData['admin@test.com'].id;
 
-    stockMovementData['Transfer movement'].component_id = componentsData['Test Component 1'].id;
-    stockMovementData['Transfer movement'].origin_location_id = locationsData['Test Location 1'].id;
-    stockMovementData['Transfer movement'].destination_location_id = locationsData['Test Location 2'].id;
-    stockMovementData['Transfer movement'].user_id = usersData['admin@test.com'].id;
-    await seedData('stock_movements', stockMovementData);
+  stockMovementData['Reserve movement'].component_id = componentsData['Test Component 2'].id;
+  stockMovementData['Reserve movement'].origin_location_id = locationsData['Test Location 1'].id;
+  stockMovementData['Reserve movement'].project_id = projectsData['Test Project 1'].id;
+  stockMovementData['Reserve movement'].user_id = usersData['admin@test.com'].id;
 
-    returnMovementData['Return movement'].component_id = componentsData['Test Component 2'].id;
-    returnMovementData['Return movement'].origin_location_id = locationsData['Test Location 1'].id;
-    returnMovementData['Return movement'].project_id = projectsData['Test Project 1'].id;
-    returnMovementData['Return movement'].user_id = usersData['admin@test.com'].id;
-    await seedData('stock_movements', returnMovementData);
+  stockMovementData['Transfer movement'].component_id = componentsData['Test Component 1'].id;
+  stockMovementData['Transfer movement'].origin_location_id = locationsData['Test Location 1'].id;
+  stockMovementData['Transfer movement'].destination_location_id = locationsData['Test Location 2'].id;
+  stockMovementData['Transfer movement'].user_id = usersData['admin@test.com'].id;
+  await seedData('stock_movements', stockMovementData);
+
+  returnMovementData['Return movement'].component_id = componentsData['Test Component 2'].id;
+  returnMovementData['Return movement'].origin_location_id = locationsData['Test Location 1'].id;
+  returnMovementData['Return movement'].project_id = projectsData['Test Project 1'].id;
+  returnMovementData['Return movement'].user_id = usersData['admin@test.com'].id;
+  await seedData('stock_movements', returnMovementData);
 });
 afterAll(async () => {
   await clearCategories();

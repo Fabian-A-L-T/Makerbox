@@ -1,5 +1,6 @@
 import Stats from "../../../models/Stats";
-import { clearCategories, clearComponents, clearProjects, clearToolCategories, clearTools, seedData, updateStatViews } from "../../db/seeder";
+import type { ProjectData } from "../../../utils/schemas";
+import { clearCategories, clearComponents, clearProjects, clearToolCategories, clearTools, seedData, seedUsers, updateStatViews, type TestData, type UserDataTest } from "../../db/seeder";
 
 const componentCategoryData = {
     'Stats Components': {id: 0, name: 'Stats Components', path: 'Stats_Components'}
@@ -15,9 +16,14 @@ const toolData = {
     'Stats Tool 1': {id: 0, sku: 'STAT-TOL-1', name: 'Stats Tool 1', category_id: 0, state: 'available', cost: 100},
     'Stats Tool 2': {id: 0, sku: 'STAT-TOL-2', name: 'Stats Tool 2', category_id: 0, state: 'maintenance', cost: 200}
 };
-const projectData = {
-    'Stats Project 1': {id: 0, name: 'Stats Project 1', state: 'active', budget: 1000},
-    'Stats Project 2': {id: 0, name: 'Stats Project 2', state: 'active', budget: 3000}
+const projectData: {[x: string]: ProjectData & TestData & {state: 'planning' | 'active'}} = {
+    'Stats Project 1': {id: 0, responsible_id: 0, start_date: Date(), name: 'Stats Project 1', state: 'active', budget: 1000},
+    'Stats Project 2': {id: 0, responsible_id: 0, start_date: Date(), name: 'Stats Project 2', state: 'active', budget: 3000}
+};
+
+const userData: {[x: string]: UserDataTest} = {
+    'Project Owner': {id: 0, name: 'Project Owner', email: 'project-owner@test.com', passwd: 'project-owner-password', role: 'technician'},
+    'Other Owner': {id: 0, name: 'Other Owner', email: 'other-owner@test.com', passwd: 'other-owner-password', role: 'reader'}
 };
 
 beforeAll(async () => {
@@ -27,8 +33,13 @@ beforeAll(async () => {
     await clearToolCategories();
     await clearProjects();
 
+    await seedUsers(userData);
     await seedData('component_categories', componentCategoryData);
     await seedData('tool_categories', toolCategoryData);
+
+    projectData['Stats Project 1'].responsible_id = userData['Project Owner'].id;
+    projectData['Stats Project 2'].responsible_id = userData['Other Owner'].id;
+
     componentData['Stats Component 1'].category_id = componentCategoryData['Stats Components'].id;
     componentData['Stats Component 2'].category_id = componentCategoryData['Stats Components'].id;
     toolData['Stats Tool 1'].category_id = toolCategoryData['Stats Tools'].id;
@@ -52,7 +63,7 @@ describe('Stats getComponentStats', function() {
         const res = await Stats.getComponentStats();
 
         expect(Array.isArray(res)).toBe(true);
-        expect(Number(res[0].category_stock)).toBe(30);
+        expect(Number(res[0].category_stock)).toBe(2);
         expect(Number(res[0].category_cost)).toBe(110);
         expect(Number(res[0].avg_unit_cost)).toBeCloseTo(110 / 30);
     });
@@ -69,13 +80,29 @@ describe('Stats getToolStats', function() {
     });
 });
 
-describe('Stats getProjectStats', function() {
+describe('Stats getGlobalProjectStats', function() {
     it('returns aggregated project statistics by state', async () => {
-        const res = await Stats.getProjectStats();
+        const res = await Stats.getGlobalProjectStats();
 
         expect(Array.isArray(res)).toBe(true);
         expect(Number(res[0].project_count)).toBe(2);
         expect(Number(res[0].total_budget)).toBe(4000);
         expect(Number(res[0].avg_budget)).toBe(2000);
+    });
+});
+
+describe('Stats getUserProjectStats', function() {
+    it('returns aggregated project statistics by state', async () => {
+        const user_id = userData['Project Owner'].id;
+        const res = await Stats.getUserProjectStats(user_id);
+
+        expect(Array.isArray(res)).toBe(true);
+        expect(Number(res[0].planning_count)).toBe(0);
+        expect(Number(res[0].active_count)).toBe(1);
+        expect(Number(res[0].paused_count)).toBe(0);
+        expect(Number(res[0].completed_count)).toBe(0);
+        expect(Number(res[0].cancelled_count)).toBe(0);
+        expect(Number(res[0].total_budget)).toBe(1000);
+        expect(Number(res[0].avg_budget)).toBe(1000);
     });
 });

@@ -34,36 +34,42 @@ const usersData: {[x: string]: UserDataTest} = {
 };
 
 beforeAll(async () => {
-    await seedData('locations', locationsData);
-    await seedData('component_categories', categoryData);
-    await seedData('manufacturers', manufacturersData);
+  await clearLocations();
+  await clearManufacturers();
+  await clearCategories();
+  await clearComponents();
+  await clearUsers();
 
-    componentsData['Test Component'].category_id = categoryData['Test Category'].id;
-    componentsData['Test Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
-    await seedData('components', componentsData);
+  await seedData('locations', locationsData);
+  await seedData('component_categories', categoryData);
+  await seedData('manufacturers', manufacturersData);
 
-    componentLocationData['CL1'].component_id = componentsData['Test Component'].id;
-    componentLocationData['CL1'].location_id = locationsData['Test Location'].id;
+  componentsData['Test Component'].category_id = categoryData['Test Category'].id;
+  componentsData['Test Component'].manufacturer_id = manufacturersData['Test Manufacturer'].id;
+  await seedData('components', componentsData);
 
-    componentLocationData['CL2'].component_id = componentsData['Test Component'].id;
-    componentLocationData['CL2'].location_id = locationsData['Deleted Location'].id;
-    await seedComponentLocations(componentLocationData);
+  componentLocationData['CL1'].component_id = componentsData['Test Component'].id;
+  componentLocationData['CL1'].location_id = locationsData['Test Location'].id;
 
-    await seedUsers(usersData);
-    const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
-    const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
-    const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
-  
-    adminToken = generateAuthHeader(adminData);
-    readerToken = generateAuthHeader(readerData);
-    technicianToken = generateAuthHeader(technicianData);
+  componentLocationData['CL2'].component_id = componentsData['Test Component'].id;
+  componentLocationData['CL2'].location_id = locationsData['Deleted Location'].id;
+  await seedComponentLocations(componentLocationData);
+
+  await seedUsers(usersData);
+  const {passwd: passwdA, deleted_at: deleted_atA, ...adminData} = usersData['admin@test.com'];
+  const {passwd: passwdR, deleted_at: deleted_atR, ...readerData} = usersData['reader@test.com'];
+  const {passwd: passwdT, deleted_at: deleted_atT, ...technicianData} = usersData['technician@test.com'];
+
+  adminToken = generateAuthHeader(adminData);
+  readerToken = generateAuthHeader(readerData);
+  technicianToken = generateAuthHeader(technicianData);
 });
 afterAll(async () => {
-    await clearLocations();
-    await clearManufacturers();
-    await clearCategories();
-    await clearComponents();
-    await clearUsers();
+  await clearLocations();
+  await clearManufacturers();
+  await clearCategories();
+  await clearComponents();
+  await clearUsers();
 });
 
 describe('admin-only route protection', function() {
