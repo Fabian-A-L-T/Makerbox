@@ -8,7 +8,7 @@ const router: Router = express.Router();
 router.get('/', checkTechnician, ProjectController.getAll); // GET all projects — optional ?estado= filter
 router.get('/:id', checkTechnician, ProjectController.getByID); // GET single project by id (with components and tools)
 router.post('/', checkTechnician, ProjectController.create); // POST create project
-router.put('/:id', checkAdmin, ProjectController.update); // PATCH update project
+router.put('/:id', checkTechnician, ProjectController.update); // PATCH update project
 router.delete('/:id', checkAdmin, ProjectController.delete); // DELETE project (hard delete — cascades to pivot tables)
 
 router.patch('/:project_id/state/update', checkTechnician, ProjectController.updateState);
