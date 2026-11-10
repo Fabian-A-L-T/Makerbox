@@ -7,7 +7,7 @@ import ComponentCard from "@components/ui/ComponentCard";
 import { StepContent, Stepper, type Step } from "@components/ui/Stepper";
 import { CalendarDate, getLocalTimeZone, parseDate, today } from "@internationalized/date";
 import { RiAddLine, RiDeleteBinLine, RiImageLine, RiSearchLine, RiSortAlphabetAsc, RiSortAlphabetDesc, RiSortNumberAsc, RiSortNumberDesc } from "@remixicon/react";
-import { AsyncImg, fetchData, handleUpload, paginationLimit, validateImgSize } from "@utils/Utils";
+import { AsyncImg, fetchData, handleUpload, paginationLimit, quillGetHTML, validateImgSize } from "@utils/Utils";
 import { useRef, useState } from "react";
 import type { Category, Component, Manufacturer } from "../interfaces/schemas";
 import { Collection, DropIndicator, GridListLoadMoreItem, useAsyncList, useDragAndDrop, useListData } from "react-aria-components";
@@ -23,6 +23,8 @@ import CRUDTableActions from "@components/CRUDTableActions";
 import { Cell, Column, Row, TableBody, TableHeader, TableV2 } from "@components/ui/TableV2";
 import ModalHeader from "@components/ui/ModalHeader";
 import { Link } from "@tanstack/react-router";
+import QuillTextEditor from "@components/form/QuillTextEditor";
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@components/ui/Tabs";
 
 interface projectData {
     name: string;
@@ -249,12 +251,14 @@ export default function NewProject(){
                             minLength={3}
                             maxLength={200}
                             defaultValue={step1Data.repository_url} />
-                        <TextField label="Descripción"
-                            name="description"
-                            type="textarea"
-                            maxLength={1000}
-                            defaultValue={step1Data.description} />
                     </div>
+                </div>
+                <div className="flex-auto">
+                    <QuillTextEditor
+                        label="Descripción"
+                        name="description"
+                        defaultValue={step1Data.description || ''}
+                    />
                 </div>
             </StepContent>
             <StepContent step={1}>
@@ -483,36 +487,41 @@ export default function NewProject(){
                             <span className="text-base border-b-1 border-[var(--color-border)]">URL del repositorio</span>
                             <span className="text-[var(--color-text-muted)]">{step1Data.repository_url}</span>
                         </div>}
-                        {step1Data.description && <div className="flex flex-col gap-2">
-                            <span className="text-base border-b-1 border-[var(--color-border)]">Descripción</span>
-                            <span className="text-[var(--color-text-muted)]">{step1Data.description}</span>
-                        </div>}
                     </div>
                 </div>
-                <div className="flex flex-col gap-4">
-                    <span className="text-lg">Lista de componentes</span>
-                    <TableV2 aria-label="Lista de componentes" className='w-full'>
-                        <TableHeader>
-                            <Column id="name" isRowHeader>Nombre</Column>
-                            <Column id="planned_amount">Cantidad seleccionada</Column>
-                            <Column id="unit_cost">Costo</Column>
-                        </TableHeader>
-                        <TableBody renderEmptyState={() => (
-                            <div className="p-10 text-[var(--color-text-muted)] italic text-center">{'Sin registros'}</div>
-                        )}>
-                            {Object.entries(compList).map(([_, comp]) => (
-                                <Row id={comp.id}>
-                                    <Cell>{comp.name}</Cell>
-                                    <Cell>{comp.selectedStock}</Cell>
-                                    <Cell>${comp.cost.toLocaleString()}</Cell>
-                                </Row>
-                            ))}              
-                        </TableBody>
-                    </TableV2>
-                    <div>
-                    
-                    </div>
-                </div>
+                <Tabs className={"m-5"}>
+                    <TabList>
+                        <Tab id="desc">Descripción</Tab>
+                        <Tab id="compList">Lista de componentes</Tab>
+                    </TabList>
+                    <TabPanels>
+                        <TabPanel id="desc" className="flex flex-col gap-4 p-4">
+                            <div className="flex flex-col gap-2">
+                                {step1Data.description ? <div className='w-full' dangerouslySetInnerHTML={{ __html: quillGetHTML(JSON.parse(step1Data.description))}} /> : <p>Sin descripción</p>}
+                            </div>
+                        </TabPanel>
+                        <TabPanel id="compList" className="flex flex-col gap-4 p-4">
+                            <TableV2 aria-label="Lista de componentes" className='w-full'>
+                                <TableHeader>
+                                    <Column id="name" isRowHeader>Nombre</Column>
+                                    <Column id="planned_amount">Cantidad seleccionada</Column>
+                                    <Column id="unit_cost">Costo</Column>
+                                </TableHeader>
+                                <TableBody renderEmptyState={() => (
+                                    <div className="p-10 text-[var(--color-text-muted)] italic text-center">{'Sin registros'}</div>
+                                )}>
+                                    {Object.entries(compList).map(([_, comp]) => (
+                                        <Row id={comp.id}>
+                                            <Cell>{comp.name}</Cell>
+                                            <Cell>{comp.selectedStock}</Cell>
+                                            <Cell>${comp.cost.toLocaleString()}</Cell>
+                                        </Row>
+                                    ))}              
+                                </TableBody>
+                            </TableV2>
+                        </TabPanel>
+                    </TabPanels>
+                </Tabs>
             </StepContent>
             <Modal isOpen={openUploadModal} onOpenChange={setOpenUploadModal} className={'w-full max-w-xl'}>
                 <Dialog>
