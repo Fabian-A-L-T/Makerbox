@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import Project from "../models/Project.js";
 import { ValidationError, HttpError } from "../utils/errors.js";
-import { type ComponentListData, componentListSchema, type MilestoneListData, milestoneListSchema, milestoneSchema, paginationSchema, projectComponentSchema, projectFilterSchema, projectSchema, projectToolSchema, userIDSchema } from "../utils/schemas.js";
+import { type ComponentListData, componentListSchema, type MilestoneListData, milestoneListSchema, milestoneSchema, paginationSchema, projectComponentSchema, projectFilterSchema, projectSchema, projectToolSchema } from "../utils/schemas.js";
 import { number, picklist, safeParse } from "valibot";
 import { generatePagination } from "../utils/utils.js";
 import Component from "../models/Component.js";
@@ -18,7 +18,7 @@ export default class ProjectController {
             const validatedFilters = safeParse(projectFilterSchema, {search, orderBy, desc, userId: req.body.user.id, state});
             if(!validatedFilters.success) throw new ValidationError();
 
-            const validatedUserID = safeParse(userIDSchema, req.body.user.id);
+            const validatedUserID = safeParse(number(), req.body.user.id);
             if(!validatedUserID.success) throw new ValidationError();
 
             const projects = await Project.get({...validatedPagination.output, ...validatedFilters.output, responsible_id: validatedUserID.output});
@@ -156,7 +156,7 @@ export default class ProjectController {
             if (!validatedId.success) throw new ValidationError();
 
             const validatedData = safeParse(picklist(['paused', 'completed', 'cancelled']), req.body.state);
-            if (!validatedData.success) {console.log(validatedData.issues); throw new ValidationError();}
+            if (!validatedData.success) throw new ValidationError();
 
             const actualizado = await Project.updateState(validatedId.output, validatedUserId.output, validatedData.output);
             res.json({ message: 'Estado actualizado exitosamente', data: actualizado });
@@ -237,7 +237,7 @@ export default class ProjectController {
             if (!validatedMilestoneId.success) throw new ValidationError();
 
             const validatedData = safeParse(milestoneSchema, {...req.body, project_id: parseInt(project_id)});
-            if (!validatedData.success){console.log(validatedData.issues); throw new ValidationError();}
+            if (!validatedData.success) throw new ValidationError();
 
             const milestone = await Project.updateMilestone(validatedUserId.output, validatedMilestoneId.output, validatedData.output);
             res.json({ message: 'Hito actualizado exitosamente', data: milestone });
