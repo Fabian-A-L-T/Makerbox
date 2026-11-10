@@ -392,6 +392,11 @@ export default function ProjectInfo() {
                     action={async (formData) => {
                         if(!isPending) {
                                 setIsPending(true);
+                                const deletedImageUrl = formData.get('deleted_image_url') as string | null;
+                                if (deletedImageUrl) {
+                                    await handleDelete(deletedImageUrl);
+                                    formData.delete('deleted_image_url');
+                                }
                                 if(image){
                                     let newImageRoute: string | undefined;
                                     const imageUrl = formData.get('image_url');

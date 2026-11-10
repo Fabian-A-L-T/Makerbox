@@ -66,6 +66,16 @@ export default function Components() {
         let newFileRoute: string | undefined;
 
         if (formData && crud.modalMode !== 'delete') {
+            const deletedImageUrl = formData.get('deleted_image_url') as string | null;
+            if (deletedImageUrl) {
+                await handleDelete(deletedImageUrl);
+                formData.delete('deleted_image_url');
+            }
+            const deletedDatasheetUrl = formData.get('deleted_datasheet_url') as string | null;
+            if (deletedDatasheetUrl) {
+                await handleDelete(deletedDatasheetUrl);
+                formData.delete('deleted_datasheet_url');
+            }
             if(image){
                 newImageRoute = await handleUpload(image, 'image');
                 if (crud.targetData?.image_url) {

@@ -78,6 +78,16 @@ export default function Tools() {
 
         try {
             if (formData && crud.modalMode !== 'delete') {
+                const deletedImageUrl = formData.get('deleted_image_url') as string | null;
+                if (deletedImageUrl) {
+                    await handleDelete(deletedImageUrl);
+                    formData.delete('deleted_image_url');
+                }
+                const deletedManualUrl = formData.get('deleted_manual_url') as string | null;
+                if (deletedManualUrl) {
+                    await handleDelete(deletedManualUrl);
+                    formData.delete('deleted_manual_url');
+                }
                 if(image){
                     newImageRoute = await handleUpload(image, 'image');
                     if (crud.targetData?.image_url) {
