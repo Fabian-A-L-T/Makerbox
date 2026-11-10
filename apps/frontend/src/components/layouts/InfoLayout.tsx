@@ -2,6 +2,8 @@ import { Breadcrumb, Breadcrumbs } from "@components/ui/Breadcrumbs";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@components/ui/Tabs";
 import { RiCircleFill } from "@remixicon/react";
 import { AsyncImg } from "@utils/Utils";
+import { useEffect, useState } from "react";
+import { makerboxApi } from "../../api/makerbox.api";
 
 interface InfoLayoutProps {
     title: string,
@@ -20,6 +22,23 @@ interface InfoLayoutProps {
 }
 
 export default function InfoLayout({title, subtitle, stock, locationData, status, buttonUrl, buttonText, imgUrl, publishedDate, breadcrumbData, infoData, tabData, children}:InfoLayoutProps) {
+
+    const [fileURL, setFileURL] = useState<string | null>(null);
+
+    useEffect(() => {
+        if(buttonUrl){
+            if(buttonUrl.startsWith('/')){
+                makerboxApi.get(buttonUrl, { responseType: 'blob'})
+                .then((response) => {
+                    setFileURL(URL.createObjectURL(response.data))
+                })
+            }
+            else {
+                setFileURL(buttonUrl)
+            }
+        }
+    }, [buttonUrl]);
+
     return (
         <>
         <div className="m-5 flex gap-5 lg:flex-row md:flex-col">
@@ -63,7 +82,7 @@ export default function InfoLayout({title, subtitle, stock, locationData, status
                     </div>
                 </div>
                 {buttonUrl && 
-                    <a href={buttonUrl} 
+                    <a href={fileURL || '#'} 
                         target='_blank' 
                         className='h-[36px] px-3 py-2 rounded-[var(--border-radius-ui)] cursor-pointer flex gap-1 items-center justify-center bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/60 text-white'
                     >
