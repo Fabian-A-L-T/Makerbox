@@ -3,6 +3,8 @@ import InfoTooltip from '@components/ui/InfoTooltip';
 import { parseAbsoluteToLocal } from '@internationalized/date';
 import { RiFileDownloadLine } from '@remixicon/react';
 import { getRouteApi } from '@tanstack/react-router';
+import { quillGetHTML } from '@utils/Utils';
+import { Delta } from 'quill/core';
 
 export default function ToolInfo() {
     
@@ -13,6 +15,20 @@ export default function ToolInfo() {
 
     const categoryRoute = tool.category.replaceAll('_', ' ').split('.');
     const category = categoryRoute.at(-1) || '';
+
+    let deltaData: Delta;
+    let descHTML: string = '';
+
+    try {
+        deltaData = tool.description ? JSON.parse(tool.description) : new Delta();
+    } 
+    catch (error) {
+        console.error('Error parsing defaultValue:', error);
+        deltaData = new Delta();
+    }
+    if(deltaData.ops && deltaData.ops.length > 0 && deltaData.ops[0].insert !== '\n') { 
+        descHTML = quillGetHTML(deltaData);
+    }
 
     let statusColor;
     
@@ -43,6 +59,7 @@ export default function ToolInfo() {
         {name: tool.name},
     ];
     const tabs = [
+        {id: 'desc', name: 'Descripción', content: descHTML ? <div className='w-full' dangerouslySetInnerHTML={{ __html: descHTML }} /> : <p>No hay descripción disponible.</p>},
         {id: 'notes', name: 'Notas', content: tool.notes ? <p>{tool.notes}</p> : <p>No hay notas disponibles.</p>}
     ];
     const infoData = [
