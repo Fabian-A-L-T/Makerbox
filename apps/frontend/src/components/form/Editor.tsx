@@ -37,7 +37,6 @@ const Editor = ({ readOnly, defaultValue, onTextChange, onSelectionChange, ref }
                         [{ 'size': ['small', false, 'large', 'huge'] },{ 'header': [1, 2, 3, 4, 5, 6, false] }],
                         ['bold', 'italic', 'underline', 'strike'],
                         ['blockquote', 'code-block'],
-                        ['link', 'image'],
                         [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
                         [{ 'align': [] }, { 'indent': '-1'}, { 'indent': '+1' }],   
                         [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],

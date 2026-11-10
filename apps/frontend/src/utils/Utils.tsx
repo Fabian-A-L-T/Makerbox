@@ -3,6 +3,9 @@ import type { ApiResponse } from "../interfaces/schemas";
 import { makerboxApi } from "../api/makerbox.api";
 import { RiImageLine, RiLoader5Line } from "@remixicon/react";
 import { useEffect, useState, type DetailedHTMLProps, type ImgHTMLAttributes } from "react";
+import type { Delta } from "quill/core";
+import { QuillDeltaToHtmlConverter } from "quill-delta-to-html/dist/commonjs/QuillDeltaToHtmlConverter";
+import DOMPurify from 'dompurify';
 
 export const paginationLimit = 60;
 export const paginationMaxPages = 5;
@@ -11,6 +14,23 @@ export const elementsPerPage = ~~(paginationLimit / paginationMaxPages);
 export const paginationParams = {
 	limit: paginationLimit,
 	maxPages: paginationMaxPages
+}
+
+export const quillCustomStyles = (op: any) => {
+	if(op.isHeader()) {
+		if(op.attributes['header'] === 1) return  'font-size: 2em;';
+		if(op.attributes['header'] === 2) return  'font-size: 1.5em;';
+		if(op.attributes['header'] === 3) return  'font-size: 1.17em;';
+		if(op.attributes['header'] === 4) return  'font-size: 1em;';
+		if(op.attributes['header'] === 5) return  'font-size: 0.83em;';
+		if(op.attributes['header'] === 6) return  'font-size: 0.67em;';
+	}
+	else if(op.isCodeBlock()) {
+		return 'background-color: var(--color-form-text-bg); padding: 0.5em; border-radius: var(--border-radius-ui);';
+	}
+	else if(op.isBlockquote()) {
+		return 'border-left: 4px solid var(--color-border); padding-left: 1em; color: var(--color-text-muted);';
+	}
 }
 
 export const quillInlineStyles = {
@@ -36,6 +56,21 @@ export const quillInlineStyles = {
 		}
 	}
 };
+
+export function quillGetHTML(inputDelta: Delta): string {
+    const converter = new QuillDeltaToHtmlConverter(inputDelta.ops ?? [], {
+        paragraphTag: 'p',
+        encodeHtml: true,
+        inlineStyles: quillInlineStyles,
+        customCssStyles: quillCustomStyles,
+        urlSanitizer: (url: string) => {
+            const sanitizedUrl = DOMPurify.sanitize(url);
+            return sanitizedUrl;
+        }
+    });
+
+    return converter.convert();
+}
 
 interface ResourceFilter {
 	cursor: number;
@@ -156,12 +191,18 @@ export function AsyncImg(props: AsyncImgProps): React.ReactNode{
 
     useEffect(() => {
         if(props.src){
-			makerboxApi.get(props.src, { responseType: 'blob'})
-			.then((response) => {
-				setImgURL(URL.createObjectURL(response.data))
+			if(props.src.startsWith('/')){
+				makerboxApi.get(props.src, { responseType: 'blob'})
+				.then((response) => {
+					setImgURL(URL.createObjectURL(response.data))
+					setTimeout( () => setLoaded(true),200);
+				})
+				.catch(() => setError(true));
+			}
+			else {
+				setImgURL(props.src);
 				setTimeout( () => setLoaded(true),200);
-			})
-			.catch(() => setError(true));
+			}
         }
         else {
             setError(true);
