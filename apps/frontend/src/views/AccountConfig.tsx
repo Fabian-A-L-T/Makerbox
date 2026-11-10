@@ -60,7 +60,7 @@ function ProfileSettings({ userData }: { userData: User | null }) {
                         const message = error instanceof AxiosError ? error.response?.data.message : error.message;
                         queue.add({
                             title: 'Ha ocurrido un error',
-                            description: error.message,
+                            description: message,
                             color: 'error',
                         }, { timeout: 2000 });
                     });
@@ -149,6 +149,7 @@ function SecuritySettings({ userData }: { userData: User | null }) {
                                     description: 'El correo ha sido actualizado correctamente.',
                                     color: 'success',
                                 }, { timeout: 2000 });
+                                router.navigate({ to: '/manager/account', reloadDocument: true });
                             }
                         })
                         .catch((error) => {
@@ -212,6 +213,7 @@ function SecuritySettings({ userData }: { userData: User | null }) {
                                     description: 'La contraseña ha sido actualizada correctamente.',
                                     color: 'success',
                                 }, { timeout: 2000 });
+                                router.navigate({ to: '/manager/account', reloadDocument: true });
                             }
                         })
                         .catch((error) => {
