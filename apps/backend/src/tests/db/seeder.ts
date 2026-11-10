@@ -44,6 +44,7 @@ export async function updateStatViews(){
         await sql`REFRESH MATERIALIZED VIEW mv_component_category_stats`,
         await sql`REFRESH MATERIALIZED VIEW mv_tool_category_stats`,
         await sql`REFRESH MATERIALIZED VIEW mv_project_state_stats`,
+        await sql`REFRESH MATERIALIZED VIEW mv_user_project_state_stats`,
     ])
 }
 
