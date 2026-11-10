@@ -2,27 +2,12 @@ import { parseAbsoluteToLocal } from '@internationalized/date';
 import { RiFileDownloadLine } from '@remixicon/react';
 import { getRouteApi } from '@tanstack/react-router';
 import type { Component, ComponentLocation } from '../interfaces/schemas';
-import { quillInlineStyles } from '@utils/Utils';
-import DOMPurify from 'dompurify';
 import { Delta } from 'quill/core';
-import { QuillDeltaToHtmlConverter } from 'quill-delta-to-html';
 import 'quill/dist/quill.core.css';
 import InfoTooltip from '@components/ui/InfoTooltip';
 import InfoLayout from '@components/layouts/InfoLayout';
+import { quillGetHTML } from '@utils/Utils';
 
-function quillGetHTML(inputDelta: Delta): string {
-    const converter = new QuillDeltaToHtmlConverter(inputDelta.ops ?? [], {
-        paragraphTag: 'p',
-        encodeHtml: true,
-        inlineStyles: quillInlineStyles,
-        urlSanitizer: (url: string) => {
-            const sanitizedUrl = DOMPurify.sanitize(url);
-            return sanitizedUrl;
-        }
-    });
-
-    return converter.convert();
-}
 export default function ComponentInfo() {
     
     const route = getRouteApi('/_auth/manager/components/$id');
@@ -35,10 +20,9 @@ export default function ComponentInfo() {
         deltaData = components.description ? JSON.parse(components.description) : new Delta();
     } 
     catch (error) {
-        console.error('Error parsing defaultValue:', error);
         deltaData = new Delta();
     }
-    if(deltaData.ops.length > 0) { 
+    if(deltaData.ops && deltaData.ops.length > 0 && deltaData.ops[0].insert !== '\n') { 
         descHTML = quillGetHTML(deltaData);
     }
 
