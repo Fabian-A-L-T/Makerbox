@@ -4,7 +4,7 @@ import TextField from "@components/form/TextField";
 import { Select, SelectItem } from "@components/form/Select";
 import { DropZone, Text, type DropEvent } from "@components/ReactAria/DropZone";
 import * as v from 'valibot';
-import { RiImageLine, RiFileTextLine, RiFileWord2Line } from "@remixicon/react";
+import { RiImageLine, RiFileTextLine, RiFileWord2Line, RiCloseLine } from "@remixicon/react";
 import { NumberField } from "@components/form/NumberField";
 import QuillTextEditor from "@components/form/QuillTextEditor";
 import { last, split } from "lodash";
@@ -12,11 +12,12 @@ import { fetchData, paginationLimit, validateImgSize } from "@utils/Utils";
 import { useAsyncList } from "react-aria-components";
 import { AsyncImg } from "@utils/Utils";
 import { Separator } from "@components/ui/Separator";
+import { Button } from "@components/form/Button";
 
 const componentSchema = v.object({
     name: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(64, 'El nombre debe tener menos de 64 caracteres')),
     sku: v.pipe(v.string(), v.nonEmpty('Campo requerido'), v.maxLength(10, 'El SKU debe tener menos de 10 caracteres')),
-    description: v.optional(v.pipe(v.string(), v.maxLength(512, 'La descripción debe tener menos de 512 caracteres'))),
+    description: v.optional(v.pipe(v.string(), v.maxLength(5000, 'La descripción debe tener menos de 5000 caracteres'))),
     category_id: v.number(),
     manufacturer_id: v.number(),
     stock: v.pipe(v.number('Debe ser un número valido'), v.minValue(0, 'El stock debe ser un número positivo'), v.maxValue(9999, 'El stock debe ser un número menor a 9999')),
@@ -24,7 +25,7 @@ const componentSchema = v.object({
     unit_cost: v.pipe(v.number('Debe ser un número valido'), v.minValue(0, 'El stock mínimo debe ser un número positivo'), v.maxValue(999999999, 'El stock mínimo debe ser un número menor a 9998')),
     datasheet_url: v.union([v.pipe(v.string(), v.domain('URL inválida')), v.literal('')]),
     image_url: v.union([v.pipe(v.string(), v.domain('URL inválida')), v.literal('')]),
-    notes: v.optional(v.pipe(v.string(), v.maxLength(512, 'Las notas deben tener menos de 512 caracteres')))
+    notes: v.optional(v.pipe(v.string(), v.maxLength(500, 'Las notas deben tener menos de 500 caracteres')))
 })
 
 const validate = (value: string | number | undefined, key: 'name' | 'sku' | 'description' | 'category_id' | 'manufacturer_id' | 'stock' | 'stock_min' | 'unit_cost' |'datasheet_url' | 'image_url' | 'notes') => {
@@ -41,7 +42,11 @@ interface ComponentFormProps {
 
 export default function ComponentForm({ target, isPending, setImage, setFile }: ComponentFormProps) {
     const [imgContent, setImgContent] = useState<string | null>(null);
+    const [imageUrl, setImageUrl] = useState(target?.image_url || '');
+    const [deletedImageUrl, setDeletedImageUrl] = useState('');
     const [fileContent, setFileContent] = useState<{name: string, type: string} | null>(null);
+    const [datasheetUrl, setDatasheetUrl] = useState(target?.datasheet_url || '');
+    const [deletedDatasheetUrl, setDeletedDatasheetUrl] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [fileErrorMsg, setFileErrorMsg] = useState<string | null>(null);
     const [targetCategoryFlag, setTargetCategoryFlag] = useState(false);
@@ -87,6 +92,7 @@ export default function ComponentForm({ target, isPending, setImage, setFile }: 
             try {
                 let file = await item.getFile();
                 setFileErrorMsg(null);
+                setDeletedDatasheetUrl('');
                 setFileContent({name: item.name, type: item.type});
                 setFile(file);
             }
@@ -110,6 +116,7 @@ export default function ComponentForm({ target, isPending, setImage, setFile }: 
                 await validateImgSize(file);
                 setErrorMessage(null);
                 let url = URL.createObjectURL(file);
+                setDeletedImageUrl('');
                 setImgContent(url);
                 setImage(file);
             }
@@ -139,8 +146,22 @@ export default function ComponentForm({ target, isPending, setImage, setFile }: 
                             onDrop={imageDropHandler}
                         >
                             <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
-                                {imgContent || target?.image_url 
-                                    ? <AsyncImg className="w-full h-full !bg-transparent" src={imgContent || ('/' + target?.image_url)} alt=""/>
+                                {imgContent || imageUrl
+                                    ? <div className="relative">
+                                        <div className="absolute top-2 right-2">
+                                            <Button className="p-1 size-[30px]" onPress={() => {
+                                                if(imageUrl) {
+                                                    setDeletedImageUrl(imageUrl);
+                                                    setImageUrl('');
+                                                }
+                                                setImgContent(null);
+                                                setImage(null);
+                                            }}>
+                                                <RiCloseLine />
+                                            </Button>
+                                        </div>
+                                        <AsyncImg className="w-full h-full !bg-transparent" src={imgContent || ('/' + imageUrl)} alt="Imagen del componente"/>
+                                    </div>
                                     :(
                                         <>
                                             <RiImageLine className="mx-auto" size={64} color="var(--color-text-muted)"/>
@@ -148,6 +169,8 @@ export default function ComponentForm({ target, isPending, setImage, setFile }: 
                                         </>
                                     )}
                             </Text>
+                            <TextField isDisabled={isPending} name="image_url" value={imageUrl} hidden/>
+                            <TextField isDisabled={isPending} name="deleted_image_url" value={deletedImageUrl} hidden/>
                         </DropZone>
                         {errorMessage && <span className="text-[var(--color-danger)] text-xs">{errorMessage}</span>}
                     </div>
@@ -247,12 +270,24 @@ export default function ComponentForm({ target, isPending, setImage, setFile }: 
                         onDrop={fileDropHandler}
                     >
                         <Text slot="label" className="text-sm text-center text-[var(--color-text-muted)]">
-                            {fileContent || target?.datasheet_url
-                                ? <div className="p-4">
-                                    {fileContent?.type === 'application/pdf' || (target?.datasheet_url.endsWith('.pdf') || target?.datasheet_url.endsWith('.PDF') )
+                            {fileContent || datasheetUrl
+                                ? <div className="relative p-4">
+                                    <div className="absolute top-2 right-2">
+                                        <Button className="p-1 size-[30px]" onPress={() => {
+                                            if(datasheetUrl) {
+                                                setDeletedDatasheetUrl(datasheetUrl);
+                                                setDatasheetUrl('');
+                                            }
+                                            setFileContent(null);
+                                            setFile(null);
+                                        }}>
+                                            <RiCloseLine />
+                                        </Button>
+                                    </div>
+                                    {fileContent?.type === 'application/pdf' || (datasheetUrl.endsWith('.pdf') || datasheetUrl.endsWith('.PDF') )
                                         ? <RiFileTextLine className="mx-auto mb-2" size={64} color="var(--color-success)"/>
                                         : <RiFileWord2Line className="mx-auto mb-2" size={64} color="var(--color-success)"/>}
-                                    <span className="font-semibold italic text-[var(--color-success)]">{fileContent ? fileContent.name : last(split(target?.datasheet_url ,'\\'))}</span>
+                                    <span className="font-semibold italic text-[var(--color-success)]">{fileContent ? fileContent.name : last(split(datasheetUrl ,'\\'))}</span>
                                     </div>
                                 : 
                                     <div className="p-4">
@@ -261,6 +296,8 @@ export default function ComponentForm({ target, isPending, setImage, setFile }: 
                                     </div>
                             }
                         </Text>
+                        <TextField isDisabled={isPending} name="datasheet_url" value={datasheetUrl} hidden/>
+                        <TextField isDisabled={isPending} name="deleted_datasheet_url" value={deletedDatasheetUrl} hidden/>
                     </DropZone>
                     {fileErrorMsg && <span className="text-[var(--color-danger)] text-xs">{fileErrorMsg}</span>}
                 </div>
