@@ -13,6 +13,7 @@ import { Modal } from "@components/ReactAria/Modal";
 import { Dialog } from "@components/ReactAria/Dialog";
 import PageHeader from "@components/ui/PageHeader";
 import ModalHeader from "@components/ui/ModalHeader";
+import { AxiosError } from "axios";
 
 function ProfileSettings({ userData }: { userData: User | null }) {
 
@@ -56,6 +57,7 @@ function ProfileSettings({ userData }: { userData: User | null }) {
                     })
                     .catch((error) => {
                         setIsSubmitting(false);
+                        const message = error instanceof AxiosError ? error.response?.data.message : error.message;
                         queue.add({
                             title: 'Ha ocurrido un error',
                             description: error.message,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { queue } from '@components/ReactAria/Toast';
 import { makerboxApi } from '../api/makerbox.api';
-import type { AxiosResponse } from 'axios';
+import { AxiosError, type AxiosResponse } from 'axios';
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 
 type CRUDMode = 'post' | 'put' | 'delete';
@@ -128,7 +128,8 @@ export function useCRUD<T extends { id: number }>({apiRoute, resourceLabel}: Use
             return handleSubmit(variables.formData);
         },
         onError: (error) => {
-            queue.add({ title: 'Operación fallida', description: error.message, color: 'error' }, { timeout: 2000 });
+            const message = error instanceof AxiosError ? error.response?.data.message : error.message;
+            queue.add({ title: 'Operación fallida', description: message, color: 'error' }, { timeout: 2000 });
         },
         onSuccess: (_data, variables) => {
             setIsModalOpen(false);
