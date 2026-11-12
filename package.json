@@ -2,11 +2,13 @@
   "name": "makerbox-monorepo",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter frontend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
     "dev:backend": "pnpm --filter backend dev",
     "dev:all": "pnpm -r --filter frontend --filter backend dev",
     "test:backend": "pnpm -r --filter backend test",
     "type-check:backend": "pnpm -r --filter backend type-check",
-    "build": "pnpm --filter frontend build"
+    "build:frontend": "pnpm --filter frontend build",
+    "build:backend": "pnpm --filter backend build",
+    "build:all": "pnpm -r --filter frontend --filter backend build"
   }
 }
