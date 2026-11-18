@@ -136,6 +136,8 @@ afterAll(async () => {
 
 describe('admin-only route protection', function() {
   const adminOnlyTestCases: {method: string, path: string}[] = [
+    {method: 'get', path: '/api/movements'},
+    {method: 'get', path: '/api/movements/:id'},
     {method: 'post', path: '/api/movements'}
   ];
   it.each(adminOnlyTestCases)('%s rejects reader users', ({method, path}, done: any) => {
@@ -169,7 +171,7 @@ describe("GET /movements", function() {
     it("should return three movements in first page", function(done) {
       request(app)
         .get("/api/movements?offset=0&limit=3")
-        .set(readerToken)
+        .set(adminToken)
         .expect(200)
         .then(function(response) {
           expect(response.body.content.length).toEqual(3);
@@ -183,7 +185,7 @@ describe("GET /movements", function() {
     it("should return two movements in last page", function(done) {
       request(app)
         .get("/api/movements?offset=3&limit=3")
-        .set(readerToken)
+        .set(adminToken)
         .expect(200)
         .then(function(response) {
           expect(response.body.content.length).toEqual(2);

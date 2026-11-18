@@ -9,12 +9,12 @@ import sql from "../config/database.js";
 export default class MovementController {
     static async getAll(req: Request, res: Response) {
         try {
-            const { limit, offset, orderBy, search, desc} = req.query;
+            const { limit, offset, orderBy, desc} = req.query;
 
             const validatedPagination = safeParse(paginationSchema, {limit, offset});
             if(!validatedPagination.success) throw new ValidationError();
 
-            const validatedFilters = safeParse(movementFilterSchema, {search, orderBy, desc});
+            const validatedFilters = safeParse(movementFilterSchema, {orderBy, desc});
             if(!validatedFilters.success) throw new ValidationError();
 
             const movements = await Movement.get({...validatedPagination.output, ...validatedFilters.output});
