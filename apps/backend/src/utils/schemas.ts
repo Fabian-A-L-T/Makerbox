@@ -1,14 +1,57 @@
 import * as v from 'valibot';
 
+export const messageSchema = v.object({
+    message: v.string()
+});
+
+export const fileSchemas = new WeakSet<object>();
+
+export function uploadedFile(opts: { mimeTypes?: string[]; maxBytes?: number } = {}) {
+  const schema = v.object({
+    fieldname: v.string(),
+    originalname: v.string(),
+    mimetype: opts.mimeTypes ? v.picklist(opts.mimeTypes) : v.string(),
+    size: opts.maxBytes ? v.pipe(v.number(), v.maxValue(opts.maxBytes)) : v.number(),
+    buffer: v.optional(v.instance(Buffer)), // memoryStorage
+    path: v.optional(v.string()),           // diskStorage
+  });
+  fileSchemas.add(schema);
+  return schema;
+}
+
 // Pagination ----------------------------------------
 export type PaginationData = {
     limit: number;
     offset: number;
 }
+export type PaginationResponse = {
+    content: any,
+    pagination: {
+        limit: number;
+        offset: number;
+    },
+    links: {
+        start: string,
+        next?: string,
+        prev?: string
+    }
+}
 export const paginationSchema = v.object({
     limit: v.fallback(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(1), v.maxValue(100)),50),
     offset: v.fallback(v.pipe(v.string(), v.transform(parseInt), v.number(), v.minValue(0)),0),
-})
+});
+export const paginationResponse = v.object({
+    content: v.any(),
+    pagination: v.object({
+        limit: v.number(),
+        offset: v.number(),
+    }),
+    links: v.object({
+        start: v.string(),
+        next: v.optional(v.string()),
+        prev: v.optional(v.string())
+    })
+});
 //----------------------------------------------------
 
 // Filters -------------------------------------------
@@ -59,7 +102,7 @@ export const locationFilterSchema = v.object({
 export type LocationFilterData = v.InferOutput<typeof locationFilterSchema>;
 
 export const movementFilterSchema = v.object({
-    ...filterSchema.entries,
+    ...v.omit(filterSchema, ['search']).entries,
     orderBy: v.optional(v.fallback(v.picklist(['created_at']), 'created_at')),
 });
 export type MovementFilterData = v.InferOutput<typeof movementFilterSchema>;
@@ -80,6 +123,10 @@ export type CategoryData = {
 export const categorySchema = v.object({
     name: v.string(),
     path: v.string(),
+});
+export const categoryDataSchema = v.object({
+    ...categorySchema.entries,
+    id: v.number(),
 });
 //----------------------------------------------------
 
@@ -114,6 +161,14 @@ export const componentSchema = v.object({
     image_url: v.nullish(v.string(), null),
     notes: v.nullish(v.string(), null),
 });
+export const componentDataSchema = v.object({
+    ...componentSchema.entries,
+    category_id: v.number(),
+    manufacturer_id: v.number(),
+    stock: v.number(),
+    stock_min: v.number(),
+    id: v.number()
+});
 export const componentListSchema = v.object({
     id: v.number(), 
     selectedStock: v.pipe(v.number(), v.minValue(1), v.maxValue(50))
@@ -128,6 +183,10 @@ export type ManufacturerData = {
 export const manufacturerSchema = v.object({
     name: v.string(),
     website: v.nullish(v.string(), null)
+});
+export const manufacturerDataSchema = v.object({
+    ...manufacturerSchema.entries,
+    id: v.number()
 });
 //----------------------------------------------------
 
@@ -162,6 +221,14 @@ export const toolSchema = v.object({
     description: v.nullish(v.string(), null),
     notes: v.nullish(v.string(), null)
 });
+export const toolDataSchema = v.object({
+    ...toolSchema.entries,
+    manufacturer_id: v.number(),
+    category_id: v.number(),
+    location_id: v.number(),
+    acquisition_date: v.nullish(v.string()),
+    id: v.number()
+});
 //----------------------------------------------------
 
 // Location ------------------------------------------
@@ -175,10 +242,23 @@ export type ComponentLocationData = {
     location_id: number;
     amount: number;
 }
+export const componentLocationSchema = v.object({
+    component_id: v.number(),
+    location_id: v.number(),
+    amount: v.number(),
+});
+export const componentLocationDataSchema = v.object({
+    ...componentLocationSchema.entries,
+    id: v.number()
+});
 export const locationSchema = v.object({
     name: v.string(),
     description: v.nullish(v.string(), null),
     path: v.string(),
+});
+export const locationDataSchema = v.object({
+    ...locationSchema.entries,
+    id: v.number()
 });
 //----------------------------------------------------
 
@@ -194,6 +274,12 @@ export const userSchema = v.object({
     passwd: v.pipe(v.string(), v.minLength(8), v.maxLength(64)),
     email: v.pipe(v.string(), v.toLowerCase(), v.normalize('NFKC'), v.email()),
     role: v.optional(v.picklist(['admin', 'technician', 'reader'])),
+});
+export const userDataSchema = v.object({
+    id: v.number(),
+    name: v.string(),
+    email: v.string(),
+    role: v.string()
 });
 
 export const userRoleSchema = v.object({
@@ -252,6 +338,16 @@ export const movementSchema = v.object({
     user_id: v.pipe(v.string(), v.toNumber()),
     notes: v.nullish(v.string(), null)
 });
+export const movementDataSchema = v.object({
+    ...movementSchema.entries,
+    component_id: v.number(),
+    amount: v.number(),
+    origin_location_id: v.nullable(v.number()),
+    destination_location_id: v.nullable(v.number()),
+    project_id: v.nullable(v.number()),
+    user_id: v.nullable(v.number()),
+    id: v.number(),
+});
 //----------------------------------------------------
 
 // Projects -----------------------------------------
@@ -274,6 +370,16 @@ export const projectSchema = v.object({
     budget: v.optional(v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(999999999))),
     image_url: v.nullish(v.string(), null),
     repository_url: v.nullish(v.string(), null)
+});
+export const projectDataSchema = v.object({
+    ...projectSchema.entries,
+    state: v.string(),
+    responsible_id: v.number(),
+    start_date: v.nullable(v.string()),
+    end_date_real: v.nullable(v.string()),
+    end_date_estimated: v.nullable(v.string()),
+    created_at: v.string(),
+    id: v.number()
 });
 //---------------------------------------------------
 
@@ -298,6 +404,13 @@ export const milestoneSchema = v.object({
     completed_at: v.optional(v.string()),
     order_index: v.pipe(v.string(), v.toNumber(), v.minValue(0), v.maxValue(20))
 });
+export const milestoneDataSchema = v.object({
+    ...milestoneSchema.entries,
+    order_index: v.number(),
+    completed_at: v.nullable(v.string()),
+    created_at: v.string(),
+    id: v.number()
+});
 export const milestoneListSchema = v.object({
     title: v.pipe(v.string(), v.maxLength(64)),
     description: v.nullish(v.pipe(v.string(), v.maxLength(500)), null)
@@ -308,16 +421,16 @@ export const milestoneListSchema = v.object({
 export type ProjectToolData = {
     project_id: number;
     tool_id: number;
-    loan_date?: Date | undefined;
-    return_date?: Date | undefined;
-    user_id: number;
+    loan_date?: Date | null | undefined;
+    return_date?: Date | null | undefined;
+    user_id: number | null;
 }
 export const projectToolSchema = v.object({
     project_id: v.number(),
     tool_id: v.number(),
-    loan_date: v.optional(v.date()),
-    return_date: v.optional(v.date()),
-    user_id: v.number()
+    loan_date: v.nullish(v.date()),
+    return_date: v.nullish(v.date()),
+    user_id: v.nullable(v.number()),
 });
 //---------------------------------------------------
 
@@ -335,5 +448,40 @@ export const projectComponentSchema = v.object({
     planned_amount: v.number(),
     used_amount: v.number(),
     notes: v.nullish(v.string(), null)
+});
+//---------------------------------------------------
+
+// Stats --------------------------------------------
+export const componentStatsSchema = v.object({
+    category_id: v.number(),
+    category_name: v.string(),
+    category_path: v.string(),
+    category_cost: v.string(),
+    category_stock: v.number(),
+    avg_unit_cost: v.string(),
+});
+export const toolStatsSchema = v.object({
+    category_id: v.number(),
+    category_name: v.string(),
+    category_path: v.string(),
+    category_cost: v.string(),
+    category_stock: v.number(),
+    avg_cost: v.string(),
+});
+export const globalProjectStatsSchema = v.object({
+    state: v.string(),
+    project_count: v.number(),
+    total_budget: v.string(),
+    avg_budget: v.string()
+});
+export const userProjectStatsSchema = v.object({
+    responsible_id: v.number(),
+    planning_count: v.number(),
+    active_count: v.number(),
+    paused_count: v.number(),
+    completed_count: v.number(),
+    cancelled_count: v.number(),
+    total_budget: v.string(),
+    avg_budget: v.string()
 });
 //---------------------------------------------------

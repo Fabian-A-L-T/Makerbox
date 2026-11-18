@@ -13,10 +13,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@scalar/express-api-reference": "^0.10.36",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.1.0",
+    "@valibot/to-json-schema": "^1.8.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

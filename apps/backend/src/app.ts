@@ -2,9 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import crypto from 'crypto';
 //import slowDown from 'express-slow-down';
 //import rateLimit from 'express-rate-limit'
 //Endpoints
+import otherRoutes from './routes/otherRoutes';
 import userRoutes from './routes/userRoutes';
 import componentRoutes from './routes/componentRoutes';
 import categoryRoutes from './routes/categoryRoutes';
@@ -20,7 +22,8 @@ import statRoutes from './routes/statRoutes';
 
 import tokenVerification from './middlewares/tokenVerification';
 import { frontUrl } from './config/app';
-import StatController from './controllers/StatController';
+import { buildSpec } from './openapi/registry';
+import { apiReference } from '@scalar/express-api-reference';
 
 const app = express();
 /*
@@ -60,11 +63,8 @@ app.use('/uploads', tokenVerification, express.static('uploads'));
 // - Then we validate the data if needed
 // - Then we select/insert/update/delete the data from the database using a SQL query
 // - Finally we return as response a message and the result of the query
-// - If there is no result, we return a 404 status code and a message indicating that the data was not found
-// - If something goes wrong, we return a 500 error with the error message
+app.use('', otherRoutes);
 app.use('/api/auth', authRoutes);
-
-//app.use(limiter);
 app.use('/api/users', tokenVerification,  userRoutes);
 app.use('/api/components', tokenVerification,  componentRoutes);
 app.use('/api/component-categories', tokenVerification,  categoryRoutes);
@@ -77,10 +77,22 @@ app.use('/api/files', tokenVerification,  fileRoutes);
 app.use('/api/tool-categories', tokenVerification,  toolCategoryRoutes);
 app.use('/api/stats', tokenVerification, statRoutes);
 
-app.use('/api/refresh-stats', StatController.refreshStats);
+app.get('/openapi.json', (_req, res) => res.json(buildSpec()));
 
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+const nonce = crypto.randomBytes(16).toString('base64');
+
+app.use('/docs',  
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'unsafe-inline'"],
+      scriptSrc: [`'nonce-${nonce}'`],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'https:'],
+      connectSrc: ["'self'", 'https:'],
+    },
+  }),
+  apiReference({url: '/openapi.json', pageTitle: 'Documentación de Makerbox API', nonce})
+);
 
 export default app;
