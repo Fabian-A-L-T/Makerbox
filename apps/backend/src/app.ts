@@ -92,7 +92,7 @@ app.use('/docs',
       connectSrc: ["'self'", 'https:'],
     },
   }),
-  apiReference({url: '/openapi.json', pageTitle: 'Documentación de Makerbox API', nonce})
+  apiReference({url: '/openapi.json', localization: {locale: 'es'}, pageTitle: 'Documentación de Makerbox API', nonce})
 );
 
 export default app;
