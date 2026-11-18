@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client';
 import { useEffect, StrictMode } from 'react';
 import { RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import AuthProvider from './providers/AuthProvider';
 import '@styles/main.css';
 import { router } from '@utils/router';
@@ -30,7 +30,7 @@ if (!rootElement.innerHTML) {
 				<QueryClientProvider client={queryClient}>
 					<ProgressProvider>
 						<InnerApp />
-						<ReactQueryDevtools initialIsOpen={false} />
+						{/* <ReactQueryDevtools initialIsOpen={false} /> */}
 					</ProgressProvider>
 				</QueryClientProvider>
 			</AuthProvider>
