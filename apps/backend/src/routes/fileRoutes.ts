@@ -3,7 +3,7 @@ import FileController from "../controllers/FileController.js";
 import checkAdmin from "../middlewares/checkAdmin.js";
 import upload from "../middlewares/uploadFile.js";
 import { route } from "../openapi/wrapper.js";
-import { file, object, string } from "valibot";
+import { object, string } from "valibot";
 import { messageSchema, uploadedFile } from "../utils/schemas.js";
 
 const router: Router = express.Router();
